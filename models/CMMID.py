@@ -2,34 +2,34 @@ import jax.numpy as np
 from jax import random, vmap, lax
 
 
-def simulate_individual(key, # Random key
-                    # scenario_pick = 'no_measures'. Do in boilerplate
-                    # max_low_fix = 4,      # Social distancing limit in these scenarios. replace with max_contacts
-                    max_contacts = 2e3,     # Enforced limit on number of contacts. Default of 200 to represent no limits
-                    wfh_prob = 0,           # Probability people are working from home
-                    # trace_prop = 0.95,    # Proportion of contacts traced. Replace with banded variables
-                    home_trace_prob = 1.,   # Probability of home contacts traces
-                    work_trace_prob = 0.95, # Probability of tracing a work contact
-                    othr_trace_prob = 0.95, # Probability of tracing an other contact
-                    app_cov = 0.53,         # App coverage
-                    symp_prob = 0.6,        # Probability of symptomatic
-                    asymp_trans_prob = 0.5, # Probability of asymptomatic transmission 
-                    isolate_distn = [0,0.25,0.25,0.2,0.3,0], # distribution of time to isolate (1st day presymp)
-                    pt_extra = 0,           # Optional extra transmission intervention
-                    pt_extra_reduce = 0,    # Reduction from extra intervention
-                    home_risk = 0.2,        # Risk of infection to household members
-                    non_home_risk = 0.06,   # Risk of infection to non-household members
-                    do_isolation = True,    # Impose isolation on symptomatic persons
-                    do_manual_tracing = True,      # Perform manual contact tracing 
-                    do_app_tracing = True,  # Perform app-based contact tracing.
+def simulate_individual(
+    key, # Random key
+    # scenario_pick = 'no_measures'. Do in boilerplate
+    # max_low_fix = 4,      # Social distancing limit in these scenarios. replace with max_contacts
+    max_contacts = 2e3,     # Enforced limit on number of contacts. Default of 200 to represent no limits
+    wfh_prob = 0,           # Probability people are working from home
+    # trace_prop = 0.95,    # Proportion of contacts traced. Replace with banded variables
+    home_trace_prob = 1.,   # Probability of home contacts traces
+    work_trace_prob = 0.95, # Probability of tracing a work contact
+    othr_trace_prob = 0.95, # Probability of tracing an other contact
+    app_cov = 0.53,         # App coverage
+    symp_prob = 0.6,        # Probability of symptomatic
+    asymp_trans_prob = 0.5, # Probability of asymptomatic transmission 
+    isolate_distn = [0,0.25,0.25,0.2,0.3,0], # distribution of time to isolate (1st day presymp)
+    pt_extra = 0,           # Optional extra transmission intervention
+    pt_extra_reduce = 0,    # Reduction from extra intervention
+    home_risk = 0.2,        # Risk of infection to household members
+    non_home_risk = 0.06,   # Risk of infection to non-household members
+    do_isolation = True,    # Impose isolation on symptomatic persons
+    do_manual_tracing = True,      # Perform manual contact tracing 
+    do_app_tracing = True,  # Perform app-based contact tracing.
 
-                    # range_n = None,       # Pick specific scenarios to run. Do in boilerplate
-                    # dir_pick = "",        # Output directory, do in biolerplate
-                    # output_r = False,     # Do in boilerplate
-                    # n_run = 5e3,          # Number of simualtions, do in boilerplate
-                    )
-
-    
+    # range_n = None,       # Pick specific scenarios to run. Do in boilerplate
+    # dir_pick = "",        # Output directory, do in boilerplate
+    # output_r = False,     # Do in boilerplate
+    n_run = 5e3,          # Number of simulations, do in boilerplate
+)
+   
     ##### Assumed Constants #####
 
     under_18_prob = 0.21
