@@ -22,7 +22,7 @@ def bool_bernoulli(p, rng):
 
 
 def categorical(pvals, rng):
-    return np.argwhere(rng.multinomial(1, pvals))
+    return np.argwhere(rng.multinomial(1, pvals)).item()
 
 # Add in notice symptoms
 # change period to 5 days
