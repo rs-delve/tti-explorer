@@ -4,6 +4,7 @@ from collections import namedtuple
 
 import numpy as np
 
+
 NOT_INFECTED = -1
 
 
@@ -32,7 +33,7 @@ class EmpiricalContactsSimulator:
         self.rng = rng
 
     def sample_row(self, case):
-        table = self.over18 if case.over18 else self.under18
+        table = self.under18 if case.under18 else self.over18
         return table[self.rng.randint(0, table.shape[0])]
 
     def __call__(self, case, home_sar, work_sar, other_sar, period):

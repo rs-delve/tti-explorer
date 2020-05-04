@@ -6,12 +6,13 @@ import numpy as np
 Case = namedtuple(
         'Case',
         [
-            "over18",
+            "under18",
             "covid",
             "symptomatic",
             "has_app",
             "report_nhs",
             "report_app",
+            "day_noticed_symptoms",
         ]
     )
 
@@ -23,6 +24,8 @@ def bool_bernoulli(p, rng):
 def categorical(pvals, rng):
     return np.argwhere(rng.multinomial(1, pvals))
 
+# Add in notice symptoms
+# change period to 5 days
 
 def simulate_case(config, rng):
     """simulate_case
@@ -39,7 +42,7 @@ def simulate_case(config, rng):
         - No double reporting
         - If asymptomatic and covid pos then don't have app
     """
-    over18 = bool_bernoulli(config.p_over18, rng)
+    under18 = bool_bernoulli(config.p_under18, rng)
 
     illness_pvals = [
                 config.p_asymptomatic_covid_pos,
@@ -55,13 +58,15 @@ def simulate_case(config, rng):
                 has_app=False,
                 report_nhs=False,
                 report_app=False,
-                over18=over18
+                under18=under18,
+                day_noticed_symptoms=-1
             )
     else:
         case_factors = dict(
                 covid=illness == 2,
                 symptomatic=True,
-                over18=over18
+                under18=under18,
+                day_noticed_symptoms=categorical(config.p_day_noticed_symptoms, rng)
             )
 
         if bool_bernoulli(config.p_has_app, rng):
@@ -130,7 +135,7 @@ if __name__ == "__main__":
  
     contacts_simulator = EmpiricalContactsSimulator(over18, under18, rng)
 
-    rs = np.zeros(args.nruns)
+    outputs = list()
     for i in range(args.nruns):
         case = simulate_case(case_config, rng)
         contacts = contacts_simulator(
@@ -140,9 +145,10 @@ if __name__ == "__main__":
                 work_sar=config.work_sar,
                 other_sar=config.other_sar
             )
-        rs[i] = strategy(case, contacts)
-
-    print(f"Average r is {np.mean(rs)}")
+        outputs.append(strategy(case, contacts, rng, **strategy_config))
+    
+    outputs = np.array(outputs)
+    print(np.mean(outputs, axis=0))
     print(f"took {time.time() - start:.2f} seconds")
 
 

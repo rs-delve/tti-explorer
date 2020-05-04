@@ -3,11 +3,11 @@
 home_sar = 0.2
 work_sar = 0.2
 other_sar = 0.2
-infectivity_period = 5
+infectivity_period = 6
 
 
 class CaseConfig:
-    p_over18 = 1 - 0.21
+    p_under18 = 0.21
     # following Kucharski.
     # This is currently independent from everything else.
 
@@ -23,13 +23,18 @@ class CaseConfig:
 
     # Conditional on not having app
     p_report_nhs_g_no_app = 0.5
-
+    
+    # Distribution of day on which the case notices their symptoms
+    # This is conditinal on them being symptomatic at all
+    # Should be length = infectivity_period
+    p_day_noticed_symptoms = [0, 0.25, 0.25, 0.2, 0.3, 0]
     groups = {
             'symptomatic_covid': [
                 p_symptomatic_covid_neg,
                 p_symptomatic_covid_pos,
                 p_asymptomatic_covid_pos
             ],
+            'day_noticed_symptoms': p_day_noticed_symptoms
         }
 
     def __init__(self):
