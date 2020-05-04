@@ -4,23 +4,23 @@ from jax import random, vmap, lax, jit
 from jax.interpreters.xla import DeviceArray
 
 @jit
-def factorial(x):
-    return np.exp(jax.scipy.special.gammaln(x+1))
+def log_factorial(x):
+    return jax.scipy.special.gammaln(x+1)
 
 @jit
-def nCk(n, k):
-    return factorial(n) / (factorial(n-k) * factorial(k))
+def log_nCk(n, k):
+    return log_factorial(n) - log_factorial(n-k) - log_factorial(k)
 
 @jit
 def uniform_sample(key):
     key, split_key = random.split(key)
     return key, random.uniform(split_key)
 
-
+@jit
 def binomial_sample(key, p, n): # 1-D only
     k = np.arange(100)
 
-    pdf = nCk(n, k) * (p ** k) * ((1-p) ** (n-k))
+    pdf = np.exp(log_nCk(n, k) + k * np.log(p) + (n-k) * np.log(1-p))
 
     cdf = np.cumsum(pdf, axis=0)
 
@@ -106,10 +106,22 @@ def simulate_individual(
     data_user_col_red_u18 = np.array([300,600,200])
 
     ### TEST CONDITIONS
+    do_tracing = True
     do_pop_test = True
     cell_phone_T = True
     pt_extra_T = True
     phone_coverage = 1. # Need to set as float not int
+    met_before_w = 0.79 # At work. At school = 90%, which is defined in function later on
+    met_before_h = 1 # Within HH
+    met_before_o = 0.52 # In other settings
+
+    # Set contact limit default high to avoid censoring in default scenarios
+    max_contacts = 2e3
+
+    # Tracing parameters - need to reset
+    ww_trace = work_trace_prob # Tracing at work
+    other_trace = othr_trace_prob # Tracing others
+
     # Sample user
     key, unif_rv = uniform_sample(key)
     o18_wfh = lax.cond(unif_rv < wfh_prob, None, lambda x: True, None, lambda x: False)
@@ -171,7 +183,7 @@ def simulate_individual(
     # work_contacts = 4
     # othr_contacts = 4
 
-    scale_other = min(1, (max_contacts * inf_period) / othr_contacts)
+    scale_other = np.minimum(1., (max_contacts * inf_period) / othr_contacts)
 
     # Sample the number of people that would be infected with no policy
     key, home_key, work_key, othr_key = random.split(key, 4)
@@ -181,7 +193,7 @@ def simulate_individual(
     rr_basic = home_infect_basic + work_infect_basic + othr_infect_basic
 
     key, sample = uniform_sample(key)
-    inf_ratio_work = lax.cond(wfh_true, None, lambda x: 0., None, lambda x: inf_ratio)
+    inf_ratio_work = lax.cond(wfh_t, None, lambda x: 0., None, lambda x: inf_ratio)
 
     # Sample the reduction in infections due to national policy (not including contact tracing)
     key, home_key, work_key, othr_key = random.split(key, 4)
@@ -208,8 +220,10 @@ def simulate_individual(
     work_infections_averted = binomial_sample(work_key, trace_adherence, work_infect_policy)
     othr_infections_averted = binomial_sample(othr_key, trace_adherence, othr_infect_policy)
 
+    symp_and_tested_T = np.logical_and(symp_T, tested_T)
+
     total_averted = lax.cond(
-        tested_T and symp_T and do_tracing,
+        np.logical_and(symp_and_tested_T, do_tracing),
         [home_infections_averted, work_infections_averted, othr_infections_averted],
         lambda x: np.sum(x),
         None,
