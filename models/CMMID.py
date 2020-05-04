@@ -41,7 +41,7 @@ def binomial_sample(key, p, n): # 1-D only
     #     selected = np.take(samples, idxs, axis=0)
     # return selected.sum()
     # return np.atleast_1d(random.bernoulli(key, p=np.atleast_1d(p), shape=[n]).astype(int).sum())
-    #   
+    #
 # binomial_sample = jit(binomial_sample)
 
 @jit
@@ -72,15 +72,15 @@ def simulate_individual(
     # output_r = False,     # Do in boilerplate
     n_run = 5e3,          # Number of simulations, do in boilerplate
 ):
-   
+
     ##### Assumed Constants #####
 
     # Demographic parameters
     under_18_prob = 0.21 # Probability under 18
-    
+
     # Transmission and baseline risk
     baseline_incident_cases = 2e4 # baseline incidence symptomatic cases
-    
+
     # Symptomatic and proportion getting tested
     trace_adherence = 0.9 # Adherence to testing/quarantine
     p_tested = trace_adherence # Proportion who get tested
@@ -105,8 +105,11 @@ def simulate_individual(
     data_user_col_red_o18 = np.array([300,600,200])
     data_user_col_red_u18 = np.array([300,600,200])
 
-    ###
-
+    ### TEST CONDITIONS
+    do_pop_test = True
+    cell_phone_T = True
+    pt_extra_T = True
+    phone_coverage = 1. # Need to set as float not int
     # Sample user
     key, unif_rv = uniform_sample(key)
     o18_wfh = lax.cond(unif_rv < wfh_prob, None, lambda x: True, None, lambda x: False)
@@ -130,7 +133,8 @@ def simulate_individual(
     time_isolate_logits = np.log(np.array(time_isolate))
     inf_period_ii = random.categorical(key, time_isolate_logits)
     key, subkey = random.split(key)
-    inf_period_ii = lax.cond(np.logical_and((do_isolation and symp_T),  tested_T), None, lambda x: inf_period_ii, None, lambda x: inf_period)
+    symp_and_tested_T = np.logical_and(symp_T, tested_T)
+    inf_period_ii = lax.cond(np.logical_and(do_isolation, symp_and_tested_T), None, lambda x: inf_period_ii, None, lambda x: inf_period)
 
     # Set infectious period for population test_single_nll
     pop_inf_period_probs = np.array([1/7, 1/7, 1/7, 1/7, 1/7, 2/7])
@@ -145,12 +149,12 @@ def simulate_individual(
     # Set relative transmission of asymptomatics
     inf_propn = lax.cond(symp_T, None, lambda x: 1., None, lambda x: transmission_asymp)
 
-    # Check if contacts phone traced (in cell phone scenario), need to define cell_phone_bool to be True if scenario == 'cell_phone' or 'cell_ohne_met_limit'
-    ww_trace, other_trace = lax.cond(cell_phone_bool and phone_T, (phone_coverage, phone_coverage), lambda x: x, (0., 0.), lambda x: x)
+    # Check if contacts phone traced (in cell phone scenario), need to define cell_phone_bool to be True if scenario == 'cell_phone' or 'cell_phone_met_limit'
+    ww_trace, other_trace = lax.cond(cell_phone_T and phone_T, (phone_coverage, phone_coverage), lambda x: x, (0., 0.), lambda x: x)
 
     # Extra transmission reduction
     key, unif_rv = uniform_sample(key)
-    tested_T, extra_red = lax.cond(pt_extra_bool and unif_rv < pt_extra, (True, 1-pt_extra_reduce), lambda x: x, (tested_T, extra_red), lambda x: x)
+    tested_T, extra_red = lax.cond(pt_extra_T and unif_rv < pt_extra, (True, 1-pt_extra_reduce), lambda x: x, (tested_T, extra_red), lambda x: x)
 
     # Proportion infectious
     inf_ratio = inf_period_ii / inf_period
@@ -186,12 +190,12 @@ def simulate_individual(
     othr_infect_policy = binomial_sample(othr_key, (inf_ratio * scale_other * extra_red), othr_infect_basic)
     rr_national_policy = home_infect_policy + work_infect_policy + othr_infect_policy
 
-    # Sample the number of contact successfully traced who were NOT infected 
+    # Sample the number of contact successfully traced who were NOT infected
     key, home_key, work_key, othr_key = random.split(key, 4)
     home_uninfected_traced = binomial_sample(home_key, home_trace_prob, home_contacts-home_infect_policy)
     work_uninfected_traced = binomial_sample(work_key, work_trace_prob * met_before_w, work_contacts-work_infect_policy)
     othr_uninfected_traced = binomial_sample(othr_key, othr_trace_prob * met_before_o, othr_contacts-othr_infect_policy)
-    
+
     # Sample the number of contacts successfully traced who WERE infected
     key, home_key, work_key, othr_key = random.split(key, 4)
     home_infected_traced = binomial_sample(home_key, home_trace_prob, home_infect_policy)
@@ -228,14 +232,14 @@ default_args = {
     'othr_trace_prob' : 0.95, # Probability of tracing an other contact
     'app_cov' : 0.53,         # App coverage
     'symp_prob' : 0.6,        # Probability of symptomatic
-    'asymp_trans_prob' : 0.5, # Probability of asymptomatic transmission 
+    'asymp_trans_prob' : 0.5, # Probability of asymptomatic transmission
     'isolate_distn' : [0,0.25,0.25,0.2,0.3,0], # distribution of time to isolate (1st day presymp)
     'pt_extra' : 0,           # Optional extra transmission intervention
     'pt_extra_reduce' : 0,    # Reduction from extra intervention
     'home_risk' : 0.2,        # Risk of infection to household members
     'non_home_risk' : 0.06,   # Risk of infection to non-household members
     'do_isolation' : True,    # Impose isolation on symptomatic persons
-    'do_manual_tracing' : True,      # Perform manual contact tracing 
+    'do_manual_tracing' : True,      # Perform manual contact tracing
     'do_app_tracing' : True,  # Perform app-based contact tracing.
     'n_run' : 5e3,          # Number of simulations, do in boilerplate
 }
