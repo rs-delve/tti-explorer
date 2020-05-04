@@ -37,20 +37,29 @@ class EmpiricalContactsSimulator:
 
     def __call__(self, case, home_sar, work_sar, other_sar, period):
         row = self.sample_row(case)
-        home, work, other = row
+        n_home, n_work, n_other = row
 
-        home_is_infected = self.rng.binomial(1, home_sar, size=(home, period))
-        work_is_infected = self.rng.binomial(1, work_sar, size=work * period)
-        other_is_infected = self.rng.binomial(1, other_sar, size=other * period)
+        home_is_infected = self.rng.binomial(1, home_sar, size=(n_home, period))
+        work_is_infected = self.rng.binomial(1, work_sar, size=n_work * period)
+        other_is_infected = self.rng.binomial(1, other_sar, size=n_other * period)
+
+        home_inf = get_day_infected_home(home_is_infected)
+        work_inf = get_day_infected_wo(work_is_infected, period, n_work)
+        other_inf = get_day_infected_wo(other_is_infected, period, n_other)
+
+        home_first_encounter = np.zeros(n_home)
+        work_first_encounter = np.repeat(np.arange(period), n_work)
+        other_first_encounter = np.repeat(np.arange(period), n_other)
         return Contacts(
-                n_daily=row,
-                home=get_day_infected_home(home_is_infected),
-                work=get_day_infected_wo(work_is_infected, period, work),
-                other=get_day_infected_wo(other_is_infected, period, other)
+                n_daily=dict(zip("home work other".split(), row)),
+                home=np.column_stack((home_inf, home_first_encounter)),
+                work=np.column_stack((work_inf, work_first_encounter)),
+                other=np.column_stack((other_inf, other_first_encounter))
             )
 
 
 if __name__ == "__main__":
+    # Basic testing
     import os 
     from types import SimpleNamespace
 
@@ -72,5 +81,20 @@ if __name__ == "__main__":
     for _ in range(10):
         over18 = np.random.choice([0, 1])
         case = SimpleNamespace(over18=over18)
+
+        n_home, n_work, n_other = contact_simluator.sample_row(case)
+
+        home_is_infected = rng.binomial(1, home_sar, size=(n_home, period))
+        work_is_infected = rng.binomial(1, work_sar, size=n_work * period)
+        other_is_infected = rng.binomial(1, other_sar, size=n_other * period)
+
+        home_inf = get_day_infected_home(home_is_infected)
+        work_inf = get_day_infected_wo(work_is_infected, period, n_work)
+        other_inf = get_day_infected_wo(other_is_infected, period, n_other)
+
+        home_first_encounter = np.zeros(n_home)
+        work_first_encounter = np.repeat(np.arange(period), n_work)
+        other_first_encounter = np.repeat(np.arange(period), n_other)
+
         contacts = contact_simluator(case, home_sar, work_sar, other_sar, period)
         print(contacts)
