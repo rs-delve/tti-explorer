@@ -98,7 +98,7 @@ if __name__ == "__main__":
     parser.add_argument('--nruns', default=20, type=int)
     parser.add_argument('--seed', default=0, type=int)
     args = parser.parse_args()
-    
+   
     case_config = CaseConfig()
 
     import time
@@ -116,34 +116,5 @@ if __name__ == "__main__":
 
     print(f"Average r is {np.mean(rs)}")
     print(f"took {time.time() - start:.2f} seconds")
-
-
-# p_leaves = [
-        # p_asymptomatic_covid_pos,
-        # p_symptomatic_covid_pos * p_has_app * p_report_app,
-        # p_symptomatic_covid_pos * (1 - p_has_app) * 
-
-        # ]
-
-# leaves = [
-    # Case(
-        # covid=True,
-        # symptomatic=False,
-        # has_app=False,
-        # report_app=False,
-        # report_nhs=False
-    # ),
-    # Case(
-        # covid=True,
-        # symptomatic=True,
-        # has_app=True,
-        # report_app=True,
-        # report_nhs=True
-    # ),
-    # Case(
-
-
-    # ]
-
 
 
