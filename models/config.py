@@ -3,7 +3,8 @@
 home_sar = 0.2
 work_sar = 0.2
 other_sar = 0.2
-infectivity_period = 5 
+infectivity_period = 5
+
 
 class CaseConfig:
     p_over18 = 1 - 0.21
@@ -39,7 +40,7 @@ class CaseConfig:
                         )
 
 
-policy_config = {
+_policy_config = {
         "cmmid":
         {
             "no_measures":
@@ -138,7 +139,7 @@ policy_config = {
 
 
 
-global_defaults = dict(
+_global_defaults = dict(
         do_isolation=True,    # Impose isolation on symptomatic persons
         do_manual_tracing=True,   # Perform manual contact tracing 
         do_app_tracing=True,  # Perform app-based contact tracing. ALT - could set phone prop to 0 if not active
@@ -162,13 +163,13 @@ global_defaults = dict(
     )
 
 
-policy_config = {
-        name: {k: dict(global_defaults, **params) for k, params in strat.items()}
-        for name, strat in policy_config.items()
+_policy_config = {
+        name: {k: dict(_global_defaults, **params) for k, params in strat.items()}
+        for name, strat in _policy_config.items()
     }
 
 
-def get_strategy_config(strat, cfg_name, _cfg_dct=policy_config):
+def get_strategy_config(strat, cfg_name, _cfg_dct=_policy_config):
     try:
         strategy = _cfg_dct[strat.lower()]
     except KeyError:
