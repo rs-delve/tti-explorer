@@ -95,28 +95,30 @@ def simulate_case(config, rng):
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
-    from config import CaseConfig
     import os
     import time
 
+    import config
+    from config import CaseConfig
     from contacts import EmpiricalContactsSimulator
     from strategies import registry
 
     parser = ArgumentParser()
     parser.add_argument('strategy', type=str)
+    parser.add_argument('strategy_config', type=str)
     parser.add_argument('--nruns', default=20, type=int)
     parser.add_argument('--seed', default=0, type=int)
     args = parser.parse_args()
 
-    infectivity_period = 5
-    sars = dict(home_sar=0.2, work_sar=0.2, other_sar=0.2)
-
     start = time.time()
-
     case_config = CaseConfig()
     rng = np.random.RandomState(seed=args.seed)
 
     strategy = registry[args.strategy]
+    strategy_config = config.get_strategy_config(
+            args.strategy,
+            args.strategy_config
+            )
 
     data_folder = "../data"
 
@@ -133,8 +135,10 @@ if __name__ == "__main__":
         case = simulate_case(case_config, rng)
         contacts = contacts_simulator(
                 case,
-                period=infectivity_period,
-                **sars
+                period=config.infectivity_period,
+                home_sar=config.home_sar,
+                work_sar=config.work_sar,
+                other_sar=config.other_sar
             )
         rs[i] = strategy(case, contacts)
 
