@@ -173,9 +173,9 @@ def simulate_individual(
 
     total_traced = home_uninfected_traced + home_infected_traced + work_uninfected_traced + work_infected_traced + othr_uninfected_traced + othr_infected_traced
 
-    # if home_contacts == 0: home_contacts += 1
-    # if work_contacts == 0: work_contacts += 1
-    # if othr_contacts == 0: othr_contacts += 1
+    if home_contacts == 0: home_contacts += 1
+    if work_contacts == 0: work_contacts += 1
+    if othr_contacts == 0: othr_contacts += 1
 
     # return np.array([home_infect_basic / home_contacts, work_infect_basic / work_contacts, othr_infect_basic / othr_contacts, rr_basic, rr_national_policy, rr_contact_trace])
     return np.array([rr_basic, rr_contact_trace, total_averted])
@@ -325,6 +325,6 @@ for scenario in kucharski_scenarios:
     results = np.array([
         simulate_individual(i, **build_scenario_args(scenario)) for i in range(50000)
     ])
-    print(scenario, np.mean(results, axis=0))
+    print(scenario, np.nanmean(results, axis=0))
 
 

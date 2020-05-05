@@ -159,7 +159,7 @@ if __name__ == "__main__":
             outputs.append(strategy(case, contacts, rng, **strategy_config))
 
         outputs = np.array(outputs)
-        print(scenario, outputs.mean(axis=0), f'took {time.time() - start}s')
+        print(scenario, np.nanmean(outputs, axis=0), f'took {time.time() - start}s')
 
 
 # if __name__ == "__main__":
@@ -221,9 +221,9 @@ if __name__ == "__main__":
 #         if num_work == 0: num_work += 1
 #         if num_other == 0: num_other += 1
 
-#         # outputs.append(np.array([home_infections/ num_home, work_infections / num_work, other_infections / num_other, home_infections + work_infections + other_infections]))
-#         outputs.append(strategy(case, contacts, rng, **strategy_config))
+#         outputs.append(np.array([home_infections/ num_home, work_infections / num_work, other_infections / num_other, home_infections + work_infections + other_infections]))
+#         # outputs.append(strategy(case, contacts, rng, **strategy_config))
     
 #     outputs = np.array(outputs)
-#     print(np.mean(outputs, axis=0))
+#     print(np.nanmean(outputs, axis=0))
 #     print(f"took {time.time() - start:.2f} seconds")

@@ -112,7 +112,7 @@ _policy_config = {
             "cell_phone":
                 {
                     "do_isolation": True,
-                    "do_manual_tracing": True,
+                    "do_manual_tracing": False,
                     "do_app_tracing": True,
                     "do_pop_testing": False,
 
@@ -122,7 +122,7 @@ _policy_config = {
             "cell_phone_met_limit":
                 {
                     "do_isolation": True,
-                    "do_manual_tracing": True,
+                    "do_manual_tracing": False,
                     "do_app_tracing": True,
                     "do_pop_testing": False,
 

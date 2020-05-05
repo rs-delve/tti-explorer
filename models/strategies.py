@@ -4,6 +4,26 @@ from utils import Registry
 
 registry = Registry()
 
+def limit_contact(contacts, max_per_day):
+    """Generates a boolean array describing if a contact would not have 
+    been contacted due daily contact limiting.
+
+    Parameters
+    ----------
+    contacts : 1d array of contact days
+    max_per_day : Max contacts per day
+    """
+    if contacts.size == 0:
+        return np.array([]).astype(bool)
+    contact_limited = np.zeros_like(contacts).astype(bool)
+    for day in range(np.max(contacts)+1):
+        is_day = (contacts == day)
+        n_on_day = is_day.cumsum()
+        allow_on_day = (n_on_day <= max_per_day) & (n_on_day != 0)
+        contact_limited = (contact_limited | allow_on_day)
+
+    return contact_limited
+
 @registry("CMMID")
 def CMMID_strategy(
     case, contacts, rng,
@@ -36,58 +56,70 @@ def CMMID_strategy(
     else:
         wfh = rng.uniform() < wfh_prob
 
-    got_tested = rng.uniform() < policy_adherence
+    # Get tested if symptomatic AND comply with policy 
+    got_tested = (rng.uniform() < policy_adherence) and case.symptomatic
 
     # For speed pull the shape of these arrays once
     home_contacts = contacts.home[:, 1]
     work_contacts = contacts.work[:, 1]
     othr_contacts = contacts.other[:, 1]
 
-    home_infections = contacts.home[:, 0] >= 0
-    work_infections = contacts.work[:, 0] >= 0
-    othr_infections = contacts.other[:, 0] >= 0
+    home_infections = (contacts.home[:, 0] >= 0).astype(bool)
+    work_infections = (contacts.work[:, 0] >= 0).astype(bool)
+    othr_infections = (contacts.other[:, 0] >= 0).astype(bool)
 
     n_home = home_infections.shape[0]
     n_work = work_infections.shape[0]
     n_othr = othr_infections.shape[0]
 
-    # If policy to do app tracing
-    if do_app_tracing:
-        has_app = rng.uniform() < app_cov
-        # If has app, we can trace contacts through the app. Assume home contacts not needed to trace this way
-        if has_app:
-            work_contacts_trace_app = rng.binomial(n=1, p=app_cov, size=n_work)
-            othr_contacts_trace_app = rng.binomial(n=1, p=app_cov, size=n_othr)
+    # If the person got tested
+    if got_tested:
+        # If policy to do app tracing
+        if do_app_tracing:
+            has_app = rng.uniform() < app_cov
+            # If has app, we can trace contacts through the app. Assume home contacts not needed to trace this way
+            if has_app:
+                work_contacts_trace_app = rng.binomial(n=1, p=app_cov, size=n_work).astype(bool)
+                othr_contacts_trace_app = rng.binomial(n=1, p=app_cov, size=n_othr).astype(bool)
+            else:
+                work_contacts_trace_app = np.zeros(shape=n_work, dtype=bool)
+                othr_contacts_trace_app = np.zeros(shape=n_othr, dtype=bool)
         else:
-            work_contacts_trace_app = np.zeros(shape=n_work, dtype=int)
-            othr_contacts_trace_app = np.zeros(shape=n_othr, dtype=int)
+            work_contacts_trace_app = np.zeros(shape=n_work, dtype=bool)
+            othr_contacts_trace_app = np.zeros(shape=n_othr, dtype=bool)
+
+        # If policy of manual tracing
+        if do_manual_tracing:
+            # Prob of manual tracing is a base chance, modified by the chance the person knows who the contact is.
+            home_contacts_trace_manual = rng.binomial(n=1, p=manual_home_trace_prob * met_before_h, size=n_home).astype(bool)
+            work_contacts_trace_manual = rng.binomial(n=1, p=manual_work_trace_prob * met_before_w, size=n_work).astype(bool)
+            othr_contacts_trace_manual = rng.binomial(n=1, p=manual_othr_trace_prob * met_before_o, size=n_othr).astype(bool)
+
+        else:
+            home_contacts_trace_manual = np.zeros(shape=n_home, dtype=bool)
+            work_contacts_trace_manual = np.zeros(shape=n_work, dtype=bool)
+            othr_contacts_trace_manual = np.zeros(shape=n_othr, dtype=bool)
+
+        # TODO: Different from Kucharski
+        # Work out if we have traced the individual in either way
+        home_contacts_traced = home_contacts_trace_manual
+        work_contacts_traced = work_contacts_trace_app | work_contacts_trace_manual
+        othr_contacts_traced = othr_contacts_trace_app | othr_contacts_trace_manual
+
+        manual_traces = home_contacts_trace_manual.sum() + work_contacts_trace_manual.sum() + othr_contacts_trace_manual.sum()
     else:
-        work_contacts_trace_app = np.zeros(shape=n_work, dtype=int)
-        othr_contacts_trace_app = np.zeros(shape=n_othr, dtype=int)
+        # No tracing took place if they didn't get tested
+        home_contacts_traced = np.zeros(shape=n_home, dtype=bool)
+        work_contacts_traced = np.zeros(shape=n_work, dtype=bool)
+        othr_contacts_traced = np.zeros(shape=n_othr, dtype=bool)
 
+        manual_traces = 0
 
-    # If policy of manual tracing
-    if do_manual_tracing:
-        # Prob of manual tracing is a base chance, modified by the chance the person knows who the contact is.
-        home_contacts_trace_manual = rng.binomial(n=1, p=manual_home_trace_prob * met_before_h, size=n_home)
-        work_contacts_trace_manual = rng.binomial(n=1, p=manual_work_trace_prob * met_before_w, size=n_work)
-        othr_contacts_trace_manual = rng.binomial(n=1, p=manual_othr_trace_prob * met_before_o, size=n_othr)
-
-    else:
-        home_contacts_trace_manual = np.zeros(shape=n_home, dtype=int)
-        work_contacts_trace_manual = np.zeros(shape=n_work, dtype=int)
-        othr_contacts_trace_manual = np.zeros(shape=n_othr, dtype=int)
-
-    # TODO: Different from Kucharski
-    # Work out if we have traced the individual in either way
-    home_contacts_traced = home_contacts_trace_manual
-    work_contacts_traced = work_contacts_trace_app | work_contacts_trace_manual
-    othr_contacts_traced = othr_contacts_trace_app | othr_contacts_trace_manual
 
     # Work out if each contact will adhere to the policy
-    home_contacts_adherence = rng.binomial(n=1, p=policy_adherence, size=n_home)
-    work_contacts_adherence = rng.binomial(n=1, p=policy_adherence, size=n_work)
-    othr_contacts_adherence = rng.binomial(n=1, p=policy_adherence, size=n_othr)
+    home_contacts_adherence = rng.binomial(n=1, p=policy_adherence, size=n_home).astype(bool)
+    work_contacts_adherence = rng.binomial(n=1, p=policy_adherence, size=n_work).astype(bool)
+    othr_contacts_adherence = rng.binomial(n=1, p=policy_adherence, size=n_othr).astype(bool)
 
     # Compute which contact will isolate because of the contact trace
     home_contacts_isolated = home_contacts_traced & home_contacts_adherence
@@ -100,38 +132,50 @@ def CMMID_strategy(
     # BE: is this calculation correct? shouldn't prevention be conditional on them having covid too? (not just symptoms)
         # Isolate only if you notice symptoms
         if case.day_noticed_symptoms >= 0:
-            home_contacts_prevented = home_contacts >= case.day_noticed_symptoms
-            work_contacts_prevented = work_contacts >= case.day_noticed_symptoms
-            othr_contacts_prevented = othr_contacts >= case.day_noticed_symptoms
+            home_contacts_prevented = (home_contacts >= case.day_noticed_symptoms).astype(bool)
+            work_contacts_prevented = (work_contacts >= case.day_noticed_symptoms).astype(bool)
+            othr_contacts_prevented = (othr_contacts >= case.day_noticed_symptoms).astype(bool)
         else:
-            home_contacts_prevented = np.zeros(shape=n_home, dtype=int)
-            work_contacts_prevented = np.zeros(shape=n_work, dtype=int)
-            othr_contacts_prevented = np.zeros(shape=n_othr, dtype=int)
+            home_contacts_prevented = np.zeros(shape=n_home, dtype=bool)
+            work_contacts_prevented = np.zeros(shape=n_work, dtype=bool)
+            othr_contacts_prevented = np.zeros(shape=n_othr, dtype=bool)
 
     else:
-        home_contacts_prevented = np.zeros(shape=n_home, dtype=int)
-        work_contacts_prevented = np.zeros(shape=n_work, dtype=int)
-        othr_contacts_prevented = np.zeros(shape=n_othr, dtype=int)
+        home_contacts_prevented = np.zeros(shape=n_home, dtype=bool)
+        work_contacts_prevented = np.zeros(shape=n_work, dtype=bool)
+        othr_contacts_prevented = np.zeros(shape=n_othr, dtype=bool)
+
+    # Compute reduction in contacts due to contact limiting
+    othr_contacts_limited = limit_contact(othr_contacts, max_contacts)
+    # Compute reduction in contacts due to wfh
+    if wfh:
+        work_contacts_wfh_limited = np.zeros_like(work_contacts).astype(bool)
+    else:
+        work_contacts_wfh_limited = np.ones_like(work_contacts).astype(bool)
 
     ## Compute the base reproduction rate
     base_rr = home_infections.sum() + work_infections.sum() + othr_infections.sum()
 
     ## Compute the reproduction rate due to the policy
     # Remove infections due to case isolation
-    home_infections_post_policy = home_infections & (~ home_contacts_prevented)
-    work_infections_post_policy = work_infections & (~ work_contacts_prevented)
-    othr_infections_post_policy = othr_infections & (~ othr_contacts_prevented)
+    home_infections_post_policy = home_infections & ~( home_contacts_prevented)
+    work_infections_post_policy = work_infections & ~( work_contacts_prevented)
+    othr_infections_post_policy = othr_infections & ~( othr_contacts_prevented)
 
     # Count traced contacts as not included in the R TODO: make a proportion
     home_infections_post_policy = home_infections_post_policy & ~home_contacts_isolated
     work_infections_post_policy = work_infections_post_policy & ~work_contacts_isolated
     othr_infections_post_policy = othr_infections_post_policy & ~othr_contacts_isolated
 
+    # Remove contacts not made due to work from home
+    work_infections_post_policy = work_infections_post_policy & work_contacts_wfh_limited
+
+    # Remove other contact limiting contacts
+    othr_infections_post_policy = othr_infections_post_policy & othr_contacts_limited
+
+    # Count the reduced infection rate
     reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum()
 
-    ## Count the number of manual traces needed
-
-    manual_traces = (home_contacts_trace_manual).sum() + work_contacts_trace_manual.sum() + othr_contacts_trace_manual.sum()
-
     return base_rr, reduced_rr, manual_traces
+    # return home_infections.sum() / n_home, work_infections.sum() / n_work, othr_infections.sum() / n_othr, home_infections.sum() + work_infections.sum() + othr_infections.sum(), base_rr, reduced_rr, manual_traces
 
