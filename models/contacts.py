@@ -8,6 +8,12 @@ import numpy as np
 NOT_INFECTED = -1
 
 
+def home_daily_infectivity(base_risk, infective_days):
+    # Compute daily risk such that the probability of a binomial sample of (infective_days, daily risk)
+    # has p(x=0) = 1 - base_risk (i.e. p(x>0) = base_risk) 
+    return 1 - np.power((1-base_risk), 1./float(infective_days))
+
+
 def get_day_infected_home(mat, not_infected=NOT_INFECTED):
     return np.where(mat.any(axis=1), mat.argmax(axis=1), not_infected)
 
@@ -40,15 +46,20 @@ class EmpiricalContactsSimulator:
         row = self.sample_row(case)
         n_home, n_work, n_other = row
 
-        home_is_infected = self.rng.binomial(1, home_sar, size=(n_home, period))
-        work_is_infected = self.rng.binomial(1, work_sar, size=n_work * period)
-        other_is_infected = self.rng.binomial(1, other_sar, size=n_other * period)
+        infectivity_propn = 1.0 if case.symptomatic else 0.5
+
+        # From the overall home SAR compute the daily infection chance
+        home_daily_sar = home_daily_infectivity(home_sar * infectivity_propn, period)
+
+        home_is_infected = self.rng.binomial(1, home_daily_sar, size=(n_home, period))
+        work_is_infected = self.rng.binomial(1, work_sar * infectivity_propn, size=n_work * period)
+        other_is_infected = self.rng.binomial(1, other_sar * infectivity_propn, size=n_other * period)
 
         home_inf = get_day_infected_home(home_is_infected)
         work_inf = get_day_infected_wo(work_is_infected, period, n_work)
         other_inf = get_day_infected_wo(other_is_infected, period, n_other)
 
-        home_first_encounter = np.zeros(n_home)
+        home_first_encounter = np.zeros(n_home, dtype=int)
         work_first_encounter = np.repeat(np.arange(period), n_work)
         other_first_encounter = np.repeat(np.arange(period), n_other)
         return Contacts(
@@ -80,7 +91,7 @@ if __name__ == "__main__":
     contact_simluator = EmpiricalContactsSimulator(over18, under18, rng)
 
     for _ in range(10):
-        over18 = np.random.choice([0, 1])
+        over18 = np.random.binomial(n=1, p=0.21)
         case = SimpleNamespace(over18=over18)
 
         n_home, n_work, n_other = contact_simluator.sample_row(case)
