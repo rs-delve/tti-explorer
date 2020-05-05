@@ -24,8 +24,6 @@ def bool_bernoulli(p, rng):
 def categorical(pvals, rng):
     return np.argwhere(rng.multinomial(1, pvals)).item()
 
-# Add in notice symptoms
-# change period to 5 days
 
 def simulate_case(config, rng):
     """simulate_case
@@ -120,6 +118,7 @@ if __name__ == "__main__":
     rng = np.random.RandomState(seed=args.seed)
 
     strategy = registry[args.strategy]
+    # Change config to multiple 
     strategy_config = config.get_strategy_config(
             args.strategy,
             args.strategy_config

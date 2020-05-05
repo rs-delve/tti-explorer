@@ -1,8 +1,8 @@
 
 # infectivity
 home_sar = 0.2
-work_sar = 0.2
-other_sar = 0.2
+work_sar = 0.06
+other_sar = 0.06
 infectivity_period = 6
 
 
@@ -174,16 +174,22 @@ _policy_config = {
     }
 
 
-def get_strategy_config(strat, cfg_name, _cfg_dct=_policy_config):
+def get_strategy_config(strat, cfg_names, _cfg_dct=_policy_config):
     try:
         strategy = _cfg_dct[strat.lower()]
     except KeyError:
         raise ValueError(f"Cannot find strategy {strat} in config.py")
     else:
-        try:
-            return strategy[cfg_name]
-        except KeyError:
-            raise ValueError(f"Cannot find configuration {cfg_name} under "
-                    "strategy {strat} in config.py")
+        if cfg_names == "all":
+            return dict(**strategy)
+        else:
+            output = dict()
+            for cfg_name in cfg_names:
+                try:
+                    output[cfg_name] = strategy[cfg_name]
+                except KeyError:
+                    raise ValueError(f"Cannot find configuration {cfg_name} under "
+                            "strategy {strat} in config.py")
+            return output
 
 
