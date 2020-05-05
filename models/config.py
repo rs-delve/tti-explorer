@@ -1,48 +1,80 @@
+from functools import partial
 
-# infectivity
-home_sar = 0.2
-work_sar = 0.06
-other_sar = 0.06
-infectivity_period = 6
-
-
-class CaseConfig:
-    p_under18 = 0.21
-    # following Kucharski.
-    # This is currently independent from everything else.
-
-    p_symptomatic_covid_neg = 200 / 260
-    p_symptomatic_covid_pos = 30 / 260
-    p_asymptomatic_covid_pos = 30 / 260
-
-    #Conditional on symptomatic
-    p_has_app = 0.35
-    # Conditional on having app
-    p_report_app = 0.75
-    p_report_nhs_g_app = 0.5
-
-    # Conditional on not having app
-    p_report_nhs_g_no_app = 0.5
-    
-    # Distribution of day on which the case notices their symptoms
-    # This is conditinal on them being symptomatic at all
-    # Should be length = infectivity_period
-    p_day_noticed_symptoms = [0, 0.25, 0.25, 0.2, 0.3, 0]
-    groups = {
-            'symptomatic_covid': [
-                p_symptomatic_covid_neg,
-                p_symptomatic_covid_pos,
-                p_asymptomatic_covid_pos
-            ],
-            'day_noticed_symptoms': p_day_noticed_symptoms
+_contacts_configs = {
+        "kucharski": dict(
+            # infectivity
+            home_sar=0.2,
+            work_sar=0.06,
+            other_sar=0.06,
+            # For some reason this is 5 in Kucharski paper,
+            # but there are 6 options for
+            # noticing symptoms in p_day_noticed_symptoms.
+            period=5  # Period of the simulation
+            )
         }
 
-    def __init__(self):
-        for name, group in self.groups.items():
-            if sum(group) != 1.:
-                raise ValueError(
-                        f"Probabilities in group {name} don't sum to 1. \n {group}\n"
-                        )
+
+def get_contacts_config(name, _cfg_dct=_contacts_configs):
+    try:
+        return _cfg_dct[name.lower()]
+    except KeyError:
+        raise ValueError(
+                f"Could not find config {name} in config.py."
+                "Available configs are: {list(_cfg_dct.keys()}"
+                )
+
+
+_case_configs = {
+        "kucharski": dict(
+            p_under18=0.21,
+            # following Kucharski.
+            # This is currently independent from everything else.
+
+            p_symptomatic_covid_neg=0, # 200 / 260
+            p_symptomatic_covid_pos=0.6, # 30 / 260
+            p_asymptomatic_covid_pos=0.4, # 30 / 260
+
+            #Conditional on symptomatic
+            p_has_app=0.35,
+            # Conditional on having app
+            p_report_app=0.75,
+            p_report_nhs_g_app=0.5,
+
+            # Conditional on not having app
+            p_report_nhs_g_no_app=0.5,
+            
+            # Distribution of day on which the case notices their symptoms
+            # This is conditinal on them being symptomatic at all
+            p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0]
+        ),
+        "anne": dict(
+            p_under18=0.21,
+            # following Kucharski.
+            # This is currently independent from everything else.
+
+            p_symptomatic_covid_neg=200 / 260,
+            p_symptomatic_covid_pos=30 / 260,
+            p_asymptomatic_covid_pos=30 / 260,
+
+            #Conditional on symptomatic
+            p_has_app=0.35,
+            # Conditional on having app
+            p_report_app=0.75,
+            p_report_nhs_g_app=0.5,
+
+            # Conditional on not having app
+            p_report_nhs_g_no_app=0.5,
+            
+            # Distribution of day on which the case notices their symptoms
+            # This is conditinal on them being symptomatic at all
+            p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0]
+        ),
+
+    }
+
+
+get_case_config = partial(get_contacts_config, _cfg_dct=_case_configs)
+
 
 
 _policy_config = {
@@ -69,8 +101,8 @@ _policy_config = {
                     "do_app_tracing": False,
                     "do_pop_testing": False,
 
-                    "work_trace_prob": 0.,
-                    "othr_trace_prob": 0.,
+                    "manual_work_trace_prob": 0.,
+                    "manual_othr_trace_prob": 0.,
                 },
              "hh_work_only":
                 {
@@ -80,8 +112,8 @@ _policy_config = {
                     "do_pop_testing": False,
 
                     "met_before_w": 1.,
-                    "met_before_0": 1.,
-                    "othr_trace_prob": 0.,
+                    "met_before_o": 1.,
+                    "manual_othr_trace_prob": 0.,
                 },
             "isolation_manual_tracing_met_limit":
                 {
