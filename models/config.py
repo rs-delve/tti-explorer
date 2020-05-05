@@ -1,9 +1,9 @@
 
 # infectivity
 home_sar = 0.2
-work_sar = 0.2
-other_sar = 0.2
-infectivity_period = 6
+work_sar = 0.06
+other_sar = 0.06
+infectivity_period = 5
 
 
 class CaseConfig:
@@ -11,9 +11,9 @@ class CaseConfig:
     # following Kucharski.
     # This is currently independent from everything else.
 
-    p_symptomatic_covid_neg = 200 / 260
-    p_symptomatic_covid_pos = 30 / 260
-    p_asymptomatic_covid_pos = 30 / 260
+    p_symptomatic_covid_neg = 0 # 200 / 260
+    p_symptomatic_covid_pos = 0.6 # 30 / 260
+    p_asymptomatic_covid_pos = 0.4 # 30 / 260
 
     #Conditional on symptomatic
     p_has_app = 0.35
@@ -69,8 +69,8 @@ _policy_config = {
                     "do_app_tracing": False,
                     "do_pop_testing": False,
 
-                    "work_trace_prob": 0.,
-                    "othr_trace_prob": 0.,
+                    "manual_work_trace_prob": 0.,
+                    "manual_othr_trace_prob": 0.,
                 },
              "hh_work_only":
                 {
@@ -80,8 +80,8 @@ _policy_config = {
                     "do_pop_testing": False,
 
                     "met_before_w": 1.,
-                    "met_before_0": 1.,
-                    "othr_trace_prob": 0.,
+                    "met_before_o": 1.,
+                    "manual_othr_trace_prob": 0.,
                 },
             "isolation_manual_tracing_met_limit":
                 {
