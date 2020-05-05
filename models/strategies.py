@@ -4,6 +4,7 @@ from utils import Registry
 
 registry = Registry()
 
+
 @registry("CMMID")
 def CMMID_strategy(
     case, contacts, rng,
@@ -58,7 +59,9 @@ def CMMID_strategy(
         if has_app:
             work_contacts_trace_app = rng.binomial(n=1, p=app_cov, size=n_work)
             othr_contacts_trace_app = rng.binomial(n=1, p=app_cov, size=n_othr)
-
+        else:
+            work_contacts_trace_app = np.zeros(shape=n_work, dtype=int)
+            othr_contacts_trace_app = np.zeros(shape=n_othr, dtype=int)
     else:
         work_contacts_trace_app = np.zeros(shape=n_work, dtype=int)
         othr_contacts_trace_app = np.zeros(shape=n_othr, dtype=int)
@@ -96,9 +99,15 @@ def CMMID_strategy(
     # TODO: assumes zero lag in the test -> result -> contact trace system
     if do_isolation:
     # BE: is this calculation correct? shouldn't prevention be conditional on them having covid too? (not just symptoms)
-        home_contacts_prevented = home_contacts >= case.day_noticed_symptoms
-        work_contacts_prevented = work_contacts >= case.day_noticed_symptoms
-        othr_contacts_prevented = othr_contacts >= case.day_noticed_symptoms
+        # Isolate only if you notice symptoms
+        if case.day_noticed_symptoms >= 0:
+            home_contacts_prevented = home_contacts >= case.day_noticed_symptoms
+            work_contacts_prevented = work_contacts >= case.day_noticed_symptoms
+            othr_contacts_prevented = othr_contacts >= case.day_noticed_symptoms
+        else:
+            home_contacts_prevented = np.zeros(shape=n_home, dtype=int)
+            work_contacts_prevented = np.zeros(shape=n_work, dtype=int)
+            othr_contacts_prevented = np.zeros(shape=n_othr, dtype=int)
 
     else:
         home_contacts_prevented = np.zeros(shape=n_home, dtype=int)
@@ -115,15 +124,15 @@ def CMMID_strategy(
     othr_infections_post_policy = othr_infections & (~ othr_contacts_prevented)
 
     # Count traced contacts as not included in the R TODO: make a proportion
-    home_infections_post_policy = home_infections_post_policy & home_contacts_isolated
-    work_infections_post_policy = work_infections_post_policy & work_contacts_isolated
-    othr_infections_post_policy = othr_infections_post_policy & othr_contacts_isolated
+    home_infections_post_policy = home_infections_post_policy & ~home_contacts_isolated
+    work_infections_post_policy = work_infections_post_policy & ~work_contacts_isolated
+    othr_infections_post_policy = othr_infections_post_policy & ~othr_contacts_isolated
 
     reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum()
 
     ## Count the number of manual traces needed
 
-    manual_traces = home_contacts_trace_manual.sum() + work_contacts_trace_manual.sum() + othr_contacts_trace_manual.sum()
+    manual_traces = (home_contacts_trace_manual).sum() + work_contacts_trace_manual.sum() + othr_contacts_trace_manual.sum()
 
     return base_rr, reduced_rr, manual_traces
 
