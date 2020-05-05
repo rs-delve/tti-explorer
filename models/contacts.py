@@ -6,6 +6,7 @@ import numpy as np
 
 
 NOT_INFECTED = -1
+NCOLS = 2
 
 
 def home_daily_infectivity(base_risk, infective_days):
@@ -46,10 +47,7 @@ class EmpiricalContactsSimulator:
         row = self.sample_row(case)
         n_home, n_work, n_other = row
 
-        if case.symptomatic:
-            infectivity_propn = 1.0
-        else: 
-            infectivity_propn = 0.5
+        infectivity_propn = 1.0 if case.symptomatic else 0.5
 
         # From the overall home SAR compute the daily infection chance
         home_daily_sar = home_daily_infectivity(home_sar * infectivity_propn, period)
@@ -62,7 +60,7 @@ class EmpiricalContactsSimulator:
         work_inf = get_day_infected_wo(work_is_infected, period, n_work)
         other_inf = get_day_infected_wo(other_is_infected, period, n_other)
 
-        home_first_encounter = np.zeros(n_home)
+        home_first_encounter = np.zeros(n_home, dtype=int)
         work_first_encounter = np.repeat(np.arange(period), n_work)
         other_first_encounter = np.repeat(np.arange(period), n_other)
         return Contacts(
