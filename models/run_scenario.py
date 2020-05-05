@@ -27,15 +27,6 @@ def categorical(pvals, rng):
 
 def simulate_case(config, rng):
     """simulate_case
-
-    Simulate a single case.
-
-    Args:
-        rng:
-        **hparams:
-
-    Returns (Case): a case with various parameters
-
     Assumptions:
         - No double reporting
         - If asymptomatic and covid pos then don't have app
@@ -100,31 +91,36 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     import os
     import time
+    from types import SimpleNamespace
 
     import config
-    from config import CaseConfig
     from contacts import EmpiricalContactsSimulator
     from strategies import registry
 
-    parser = ArgumentParser()
-    parser.add_argument('strategy', type=str)
-    parser.add_argument('strategy_config', type=str)
-    parser.add_argument('--nruns', default=20, type=int)
-    parser.add_argument('--seed', default=0, type=int)
-    args = parser.parse_args()
-
     start = time.time()
-    case_config = CaseConfig()
-    rng = np.random.RandomState(seed=args.seed)
+    case_config = config.get_case_config("kucharski")
+    # Next line is a bit odd, will change case generation function to
+    # take all parameters as args later.
+    case_config = SimpleNamespace(**case_config)
 
-    strategy = registry[args.strategy]
-    # Change config to multiple 
-    strategy_config = config.get_strategy_config(
-            args.strategy,
-            args.strategy_config
-            )
+    rng = np.random.RandomState(seed=1)
+    runs=50000
 
-    data_folder = "../data"
+    # strategy = registry[args.strategy]
+    # # Change config to multiple 
+    # strategy_config = config.get_strategy_config(
+            # args.strategy,
+            # args.strategy_config
+            # )
+    kucharski_scenarios = [
+    "no_measures","isolation_only","hh_quaratine_only","hh_work_only",
+                     "isolation_manual_tracing_met_only","isolation_manual_tracing_met_limit",
+                     "isolation_manual_tracing","cell_phone","cell_phone_met_limit",
+                     "pop_testing"]
+
+    # kucharski_scenarios = ["isolation_manual_tracing_met_only"]
+
+    data_folder = "data"
 
     def load_csv(pth):
         return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
@@ -134,8 +130,9 @@ if __name__ == "__main__":
  
     contacts_simulator = EmpiricalContactsSimulator(over18, under18, rng)
 
-    outputs = list()
-    for i in range(args.nruns):
+    start = time.time()
+    case_contacts = []
+    for i in range(runs):
         case = simulate_case(case_config, rng)
         contacts = contacts_simulator(
                 case,
@@ -144,10 +141,88 @@ if __name__ == "__main__":
                 work_sar=config.work_sar,
                 other_sar=config.other_sar
             )
-        outputs.append(strategy(case, contacts, rng, **strategy_config))
+        case_contacts.append((case, contacts))
+    print(f"Case generation took {time.time() - start:.2f} seconds")
+
+    for scenario in kucharski_scenarios:
+        outputs = list()
+        start = time.time()
+
+        strategy = registry["cmmid"]
+        strategy_config = config.get_strategy_config(
+                "cmmid",
+                scenario,
+                )
+
+        for case, contacts in case_contacts:
+            outputs.append(strategy(case, contacts, rng, **strategy_config))
+
+        outputs = np.array(outputs)
+        print(scenario, outputs.mean(axis=0), f'took {time.time() - start}s')
+
+
+# if __name__ == "__main__":
+#     from argparse import ArgumentParser
+#     import os
+#     import time
+
+#     import config
+#     from config import CaseConfig
+#     from contacts import EmpiricalContactsSimulator
+#     from strategies import registry
+
+#     parser = ArgumentParser()
+#     parser.add_argument('strategy', type=str)
+#     parser.add_argument('strategy_config', type=str)
+#     parser.add_argument('--nruns', default=20, type=int)
+#     parser.add_argument('--seed', default=0, type=int)
+#     args = parser.parse_args()
+
+#     start = time.time()
+#     case_config = CaseConfig()
+#     rng = np.random.RandomState(seed=args.seed)
+
+#     strategy = registry[args.strategy]
+#     strategy_config = config.get_strategy_config(
+#             args.strategy,
+#             args.strategy_config
+#             )
+
+#     data_folder = "data"
+
+#     def load_csv(pth):
+#         return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
     
-    outputs = np.array(outputs)
-    print(np.mean(outputs, axis=0))
-    print(f"took {time.time() - start:.2f} seconds")
+#     over18 = load_csv(os.path.join(data_folder, "contact_distributions_o18.csv"))
+#     under18 = load_csv(os.path.join(data_folder, "contact_distributions_u18.csv"))
+ 
+#     contacts_simulator = EmpiricalContactsSimulator(over18, under18, rng)
 
+#     outputs = list()
+#     for i in range(args.nruns):
+#         case = simulate_case(case_config, rng)
+#         contacts = contacts_simulator(
+#                 case,
+#                 period=config.infectivity_period,
+#                 home_sar=config.home_sar,
+#                 work_sar=config.work_sar,
+#                 other_sar=config.other_sar
+#             )
+#         home_infections = (contacts.home[:, 0] >= 0).sum()  
+#         work_infections = (contacts.work[:, 0] >= 0).sum() 
+#         other_infections = (contacts.other[:, 0] >= 0).sum()
 
+#         num_home = len(contacts.home[:, 0])
+#         num_work = len(contacts.work[:, 0])
+#         num_other = len(contacts.other[:, 0]) 
+
+#         if num_home == 0: num_home += 1
+#         if num_work == 0: num_work += 1
+#         if num_other == 0: num_other += 1
+
+#         # outputs.append(np.array([home_infections/ num_home, work_infections / num_work, other_infections / num_other, home_infections + work_infections + other_infections]))
+#         outputs.append(strategy(case, contacts, rng, **strategy_config))
+    
+#     outputs = np.array(outputs)
+#     print(np.mean(outputs, axis=0))
+#     print(f"took {time.time() - start:.2f} seconds")
