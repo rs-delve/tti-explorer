@@ -6,6 +6,7 @@ import numpy as np
 
 
 NOT_INFECTED = -1
+NCOLS = 2
 
 
 def home_daily_infectivity(base_risk, infective_days):
