@@ -46,7 +46,7 @@ if __name__ == "__main__":
     args = SimpleNamespace(
         cases_path="../data/cases/kucharski-cases.json",
         strategy="cmmid",
-        scenarios="all",
+        scenarios="no_measures pop_testing".split(),
         seed=1,
         maxruns=50000,
         output_fpath=""
@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
         scenario_outputs = np.array(scenario_outputs)
         results[scenario] = scenario_outputs
-        print(scenario, scenario_outputs.mean(axis=0), f'took {time.time() - start}s')
+        print(scenario, scenario_outputs.mean(axis=0), f'took {time.time() - start:.1f}s')
 
     # can save this for later analysis
     outputs = dict(
