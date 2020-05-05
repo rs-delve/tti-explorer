@@ -11,6 +11,7 @@ _contacts_configs = {
             # noticing symptoms in p_day_noticed_symptoms.
             period=5  # Period of the simulation
             )
+        }
 
 
 def get_contacts_config(name, _cfg_dct=_contacts_configs):
