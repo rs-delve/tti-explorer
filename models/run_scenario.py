@@ -1,6 +1,7 @@
 import json
 
 import numpy as np
+import pandas as pd
 
 from contacts import Contacts, NCOLS
 from generate_cases import Case
@@ -44,9 +45,20 @@ if __name__ == "__main__":
     from strategies import registry
 
     args = SimpleNamespace(
-        cases_path="../data/cases/kucharski-cases.json",
+        cases_path="data/cases/kucharski-cases.json",
         strategy="cmmid",
-        scenarios="no_measures pop_testing".split(),
+        scenarios=[
+            'no_measures',
+            'isolation_only',
+            'hh_quaratine_only',
+            'hh_work_only',
+            'isolation_manual_tracing_met_limit',
+            'isolation_manual_tracing_met_only',
+            'isolation_manual_tracing',
+            'cell_phone',
+            'cell_phone_met_limit',
+            'pop_testing',
+        ],
         seed=1,
         maxruns=50000,
         output_fpath=""
@@ -73,8 +85,16 @@ if __name__ == "__main__":
             scenario_outputs.append(strategy(case, contacts, rng, **cfg_dct))
 
         scenario_outputs = np.array(scenario_outputs)
-        results[scenario] = scenario_outputs
+        results[scenario] = scenario_outputs.mean(axis=0)
         print(scenario, scenario_outputs.mean(axis=0), f'took {time.time() - start:.1f}s')
+
+    print(results)
+    results = pd.DataFrame(results).T
+    results.columns = ['Base R', 'Reduced R', 'Manual Tests']
+
+    print(results)
+
+    
 
     # can save this for later analysis
     outputs = dict(

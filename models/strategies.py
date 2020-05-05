@@ -59,6 +59,9 @@ def CMMID_strategy(
     # Get tested if symptomatic AND comply with policy 
     got_tested = (rng.uniform() < policy_adherence) and case.symptomatic
 
+    if do_pop_testing:
+        got_tested = got_tested & (rng.uniform() < p_pop_test)
+
     # For speed pull the shape of these arrays once
     home_contacts = contacts.home[:, 1]
     work_contacts = contacts.work[:, 1]
@@ -132,7 +135,8 @@ def CMMID_strategy(
     # BE: is this calculation correct? shouldn't prevention be conditional on them having covid too? (not just symptoms)
         # Isolate only if you notice symptoms
         if case.day_noticed_symptoms >= 0:
-            home_contacts_prevented = (home_contacts >= case.day_noticed_symptoms).astype(bool)
+            # Home contacts not necessarily contacted and infected on the same day
+            home_contacts_prevented = (home_infections >= case.day_noticed_symptoms).astype(bool)
             work_contacts_prevented = (work_contacts >= case.day_noticed_symptoms).astype(bool)
             othr_contacts_prevented = (othr_contacts >= case.day_noticed_symptoms).astype(bool)
         else:
