@@ -2,7 +2,6 @@ from collections import namedtuple
 
 import numpy as np
 
-
 Case = namedtuple(
         'Case',
         [
@@ -13,6 +12,7 @@ Case = namedtuple(
             "report_nhs",
             "report_app",
             "day_noticed_symptoms",
+            # "infectivity_profile"
         ]
     )
 
@@ -24,6 +24,13 @@ def bool_bernoulli(p, rng):
 def categorical(pvals, rng):
     return np.argwhere(rng.multinomial(1, pvals)).item()
 
+"""
+TODO BE:
+    - change daily infectivity to draw from dist
+    - increase length of simulation
+    - use infectivity profile to generate contacts
+    - add new config entry
+"""
 
 def simulate_case(
         rng,
