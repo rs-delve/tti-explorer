@@ -19,12 +19,8 @@ def get_day_infected_home(mat, not_infected=NOT_INFECTED):
     return np.where(mat.any(axis=1), mat.argmax(axis=1), not_infected)
 
 
-def get_day_infected_wo(mat, period, n_ppl, not_infected=NOT_INFECTED):
-    return np.where(
-        mat,
-        np.repeat(np.arange(period), n_ppl),
-        not_infected
-    )
+def get_day_infected_wo(mat, first_encounter, not_infected=NOT_INFECTED):
+    return np.where(mat, first_encounter, not_infected)
 
 
 Contacts = namedtuple(
@@ -43,31 +39,55 @@ class EmpiricalContactsSimulator:
         table = self.under18 if case.under18 else self.over18
         return table[self.rng.randint(0, table.shape[0])]
 
-    def __call__(self, case, home_sar, work_sar, other_sar, period):
+    def __call__(self, case, home_sar, work_sar, other_sar, asymp_factor, period):
+        """__call__
+
+        Args:
+            case:
+            home_sar:
+            work_sar:
+            other_sar:
+            asymp_factor:
+            period:
+
+        Returns:
+        """
         row = self.sample_row(case)
         n_home, n_work, n_other = row
 
-        infectivity_propn = 1.0 if case.symptomatic else 0.5
-
-        # From the overall home SAR compute the daily infection chance
-        home_daily_sar = home_daily_infectivity(home_sar * infectivity_propn, period)
-
-        home_is_infected = self.rng.binomial(1, home_daily_sar, size=(n_home, period))
-        work_is_infected = self.rng.binomial(1, work_sar * infectivity_propn, size=n_work * period)
-        other_is_infected = self.rng.binomial(1, other_sar * infectivity_propn, size=n_other * period)
-
-        home_inf = get_day_infected_home(home_is_infected)
-        work_inf = get_day_infected_wo(work_is_infected, period, n_work)
-        other_inf = get_day_infected_wo(other_is_infected, period, n_other)
-
+        scale = 1.0 if case.symptomatic else asymp_factor
+        period = len(case.inf_profile)
+        
         home_first_encounter = np.zeros(n_home, dtype=int)
         work_first_encounter = np.repeat(np.arange(period), n_work)
         other_first_encounter = np.repeat(np.arange(period), n_other)
+
+        if case.covid:
+            home_day_inf = get_day_infected_home(
+                    self.rng.binomial(1, home_sar * scale * case.inf_profile[:period], (n_home, period))
+                )
+
+            work_day_inf = np.where(
+                    self.rng.binomial(1, work_sar * scale * case.inf_profile[work_first_encounter]),
+                    work_first_encounter,
+                    NOT_INFECTED
+                )
+
+            other_day_inf = np.where(
+                    self.rng.binomial(1, other_sar * scale * case.inf_profile[other_first_encounter]),
+                    other_first_encounter,
+                    NOT_INFECTED
+                )
+        else:
+            home_day_inf = np.full_like(home_first_encounter, -1)
+            work_day_inf = np.full_like(work_first_encounter, -1)
+            other_day_inf = np.full_like(other_first_encounter, -1)
+
         return Contacts(
                 n_daily=dict(zip("home work other".split(), row)),
-                home=np.column_stack((home_inf, home_first_encounter)),
-                work=np.column_stack((work_inf, work_first_encounter)),
-                other=np.column_stack((other_inf, other_first_encounter))
+                home=np.column_stack((home_day_inf, home_first_encounter)),
+                work=np.column_stack((work_day_inf, work_first_encounter)),
+                other=np.column_stack((other_day_inf, other_first_encounter))
             )
 
 

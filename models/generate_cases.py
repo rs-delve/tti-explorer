@@ -2,6 +2,8 @@ from collections import namedtuple
 
 import numpy as np
 
+from utils import bool_bernoulli, categorical
+
 Case = namedtuple(
         'Case',
         [
@@ -12,47 +14,34 @@ Case = namedtuple(
             "report_nhs",
             "report_app",
             "day_noticed_symptoms",
-            # "infectivity_profile"
+            "inf_profile"
         ]
     )
 
 
-def bool_bernoulli(p, rng):
-    return bool(rng.binomial(1, p))
-
-
-def categorical(pvals, rng):
-    return np.argwhere(rng.multinomial(1, pvals)).item()
-
-"""
-TODO BE:
-    - change daily infectivity to draw from dist
-    - increase length of simulation
-    - use infectivity profile to generate contacts
-    - add new config entry
-"""
-
-def simulate_case(
-        rng,
-        p_under18,
-        p_symptomatic_covid_neg,
-        p_symptomatic_covid_pos,
-        p_asymptomatic_covid_pos,
-        # Conditional on symptomatic
-        p_has_app,
-        # Conditional on having app
-        p_report_app,
-        p_report_nhs_g_app,
-        # Conditional on not having app
-        p_report_nhs_g_no_app,
-        # Distribution of day on which the case notices their symptoms
-        # This is conditinal on them being symptomatic at all
-        p_day_noticed_symptoms
-    ):
+def simulate_case(rng, p_under18, p_symptomatic_covid_neg,
+        p_symptomatic_covid_pos, p_asymptomatic_covid_pos, p_has_app,
+        p_report_app, p_report_nhs_g_app, p_report_nhs_g_no_app,
+        p_day_noticed_symptoms, inf_profile):
     """simulate_case
-    Assumptions:
-        - No double reporting
-        - If asymptomatic and covid pos then don't have app
+
+    Args:
+        rng (np.random.RandomState): random number generator.
+        p_under18 (float): Probability of case being under 18
+        p_symptomatic_covid_neg (float): Probability of being symptomatic and covid negative
+        p_symptomatic_covid_pos (float): Probability of being symptomatic and covid positive
+        p_asymptomatic_covid_pos (float): Probability of being asymptomatic and covid positive
+        p_has_app (float): Probability of having app given symptomatic
+        p_report_app (float): Probability of reporting through app conditional on having app
+        p_report_nhs_g_app (float): Probability reporting with app given have app
+        p_report_nhs_g_no_app (float): Probability of reporting through nhs given not have app
+        p_day_noticed_symptoms (np.array[float]): Distribution of day on which case notices
+            their symptoms. (In our model this is same as reporting symptoms.)
+            Conditional on being symptomatic.
+        inf_profile (list[float]): Probability of encounter with case
+            on a given day causing a contact to be infected.
+
+    Returns (Case): case with attributes populated.
     """
     under18 = bool_bernoulli(p_under18, rng)
 
@@ -71,14 +60,16 @@ def simulate_case(
                 report_nhs=False,
                 report_app=False,
                 under18=under18,
-                day_noticed_symptoms=-1
+                day_noticed_symptoms=-1,
+                inf_profile=np.zeros(len(inf_profile))
             )
     else:
         case_factors = dict(
                 covid=illness == 2,
                 symptomatic=True,
                 under18=under18,
-                day_noticed_symptoms=categorical(p_day_noticed_symptoms, rng)
+                day_noticed_symptoms=categorical(p_day_noticed_symptoms, rng),
+                inf_profile=np.array(inf_profile)
             )
 
         if bool_bernoulli(p_has_app, rng):
@@ -108,6 +99,22 @@ def simulate_case(
                     report_app=False,
                     **case_factors
                 )
+
+
+def case_as_dict(case):
+    dct = case._asdict()
+    dct['inf_profile'] = dct['inf_profile'].tolist()
+    return dct
+
+
+def contacts_as_dict(contacts):
+    contacts_dct = {
+            k:
+            v.tolist() if isinstance(v, np.ndarray) else v
+            for k, v in contacts._asdict().items()
+        }
+    contacts_dct['n_daily'] = {k: int(v) for k,v in contacts_dct['n_daily'].items()}
+    return contacts_dct
 
 
 if __name__ == "__main__":
@@ -159,14 +166,8 @@ if __name__ == "__main__":
                 **contacts_config
             )
         output = dict()
-        output['case'] = case._asdict()
-        contacts_dct = {
-                k:
-                v.tolist() if isinstance(v, np.ndarray) else v
-                for k, v in contacts._asdict().items()
-            }
-        contacts_dct['n_daily'] = {k: int(v) for k,v in contacts_dct['n_daily'].items()}
-        output['contacts'] = contacts_dct
+        output['case'] = case_as_dict(case)
+        output['contacts'] = contacts_as_dict(contacts)
         cases_and_contacts.append(output)
 
     full_output = dict(

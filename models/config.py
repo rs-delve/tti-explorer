@@ -1,5 +1,10 @@
 from functools import partial
 
+import numpy as np
+
+import utils
+
+
 _contacts_configs = {
         "kucharski": dict(
             # infectivity
@@ -8,10 +13,18 @@ _contacts_configs = {
             other_sar=0.06,
             # For some reason this is 5 in Kucharski paper,
             # but there are 6 options for
+            period=5,
             # noticing symptoms in p_day_noticed_symptoms.
-            period=5  # Period of the simulation
-            )
-        }
+            asymp_factor=0.5
+            ),
+        "oxteam": dict(
+             home_sar=0.2,
+             work_sar=0.03,
+             other_sar=0.03,
+             period=10,
+             asymp_factor=0.5
+             ),
+         }
 
 
 def get_contacts_config(name, _cfg_dct=_contacts_configs):
@@ -31,9 +44,9 @@ _case_configs = {
             # following Kucharski.
             # This is currently independent from everything else.
 
-            p_symptomatic_covid_neg=0, # 200 / 260
-            p_symptomatic_covid_pos=0.6, # 30 / 260
-            p_asymptomatic_covid_pos=0.4, # 30 / 260
+            p_symptomatic_covid_neg=0,
+            p_symptomatic_covid_pos=0.6,
+            p_asymptomatic_covid_pos=0.4,
 
             #Conditional on symptomatic
             p_has_app=0.35,
@@ -46,9 +59,12 @@ _case_configs = {
             
             # Distribution of day on which the case notices their symptoms
             # This is conditinal on them being symptomatic at all
-            p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0]
+            p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0],
+            
+            # length of this determines simulation length
+            inf_profile=np.ones(5).tolist()
         ),
-        "anne": dict(
+        "oxteam": dict(
             p_under18=0.21,
             # following Kucharski.
             # This is currently independent from everything else.
@@ -68,9 +84,15 @@ _case_configs = {
             
             # Distribution of day on which the case notices their symptoms
             # This is conditinal on them being symptomatic at all
-            p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0]
-        ),
+            p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0, 0, 0, 0, 0],
 
+            # daily infectivity profile
+            # length of this determines simulation length
+            inf_profile=utils.he_infection_profile(
+                period=10,
+                gamma_params={'a': 2.11, 'scale': 1/0.69}
+                ).tolist()
+        )
     }
 
 
