@@ -61,15 +61,17 @@ def simulate_case(rng, p_under18, p_symptomatic_covid_neg,
                 report_app=False,
                 under18=under18,
                 day_noticed_symptoms=-1,
-                inf_profile=np.zeros(len(inf_profile))
+                inf_profile=np.array(inf_profile)
             )
     else:
+        covid = illness == 2
+        profile = np.array(inf_profile) if covid else np.zeros(len(inf_profile))
         case_factors = dict(
-                covid=illness == 2,
+                covid=covid,
                 symptomatic=True,
                 under18=under18,
                 day_noticed_symptoms=categorical(p_day_noticed_symptoms, rng),
-                inf_profile=np.array(inf_profile)
+                inf_profile=profile
             )
 
         if bool_bernoulli(p_has_app, rng):
