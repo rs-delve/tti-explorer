@@ -179,6 +179,167 @@ _policy_config = {
 
                     "p_pop_test": 0.05,
                 },
+        },
+        "cmmid_better":
+        {
+            "no_measures":
+                {
+                    "do_individual_isolation": False,
+                    "do_household_isolation": False,
+                    "do_isolation": False,
+                    "do_manual_tracing": False,
+                    "do_app_tracing": False,
+                    "do_pop_testing": False,
+
+                    # "manual_home_trace_prob": 0.,
+                    # "manual_work_trace_prob": 0.,
+                    # "manual_othr_trace_prob": 0.,
+                },
+            "isolation_only":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": False,
+                    "do_manual_tracing": False,
+                    "do_app_tracing": False,
+                    "do_pop_testing": False,
+
+                    # "manual_home_trace_prob": 0.,
+                    # "manual_work_trace_prob": 0.,
+                    # "manual_othr_trace_prob": 0.,
+                },
+            "hh_quarantine_only":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": False,
+                    "do_app_tracing": False,
+                    "do_pop_testing": False,
+                },
+            "manual_work_trace_only":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": True,
+                    "do_app_tracing": False,
+                    "do_pop_testing": False,
+
+                    # "met_before_w": 1.,
+                    # "met_before_o": 1.,
+                    "manual_othr_trace_prob": 0.,
+                },
+            "manual_tracing":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": True,
+                    "do_app_tracing": False,
+                    "do_pop_testing": False,
+
+                    # "met_before_w": 1.,
+                    # "met_before_o": 1.
+                },
+            "manual_tracing_met_limit":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": True,
+                    "do_app_tracing": False,
+                    "do_pop_testing": False,
+
+                    "max_contacts": 4
+                },
+            "manual_tracing_met_all_before":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": True,
+                    "do_app_tracing": False,
+                    "do_pop_testing": False,
+
+                    "met_before_w": 1.,
+                    "met_before_o": 1.
+                },
+            "app_tracing":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": False,
+                    "do_app_tracing": True,
+                    "do_pop_testing": False,
+
+                    # "met_before_w": 1.,
+                    # "met_before_o": 1.
+                },
+            "app_tracing_met_limit":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": False,
+                    "do_app_tracing": True,
+                    "do_pop_testing": False,
+
+                    # "met_before_w": 1.,
+                    # "met_before_o": 1.,
+                    "max_contacts": 4
+                },
+            "both_tracing":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+                    "do_pop_testing": False,
+
+                    # "met_before_w": 1.,
+                    # "met_before_o": 1.
+                },
+            "both_tracing_met_limit":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+                    "do_pop_testing": False,
+
+                    # "met_before_w": 1.,
+                    # "met_before_o": 1.,
+                    "max_contacts": 4
+                },
+            "pop_testing":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": False,
+                    "do_app_tracing": False,
+                    "do_pop_testing": True,
+
+                    "p_pop_test": 0.05,
+                },
+            "all":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+                    "do_pop_testing": True,
+
+                    # "met_before_w": 1.,
+                    # "met_before_o": 1.
+                    "p_pop_test": 0.05,
+                },
+            "all_met_limit":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+                    "do_pop_testing": True,
+
+                    # "met_before_w": 1.,
+                    # "met_before_o": 1.,
+                    "max_contacts": 4,
+                    "p_pop_test": 0.05,
+                },
         }
     }
 

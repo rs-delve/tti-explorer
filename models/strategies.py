@@ -145,6 +145,7 @@ def CMMID_strategy(
     return rr_basic_ii, rr_reduced, 0.
     # return home_infections.sum() / n_home, work_infections.sum() / n_work, othr_infections.sum() / n_othr, home_infections.sum() + work_infections.sum() + othr_infections.sum(), base_rr, reduced_rr, manual_traces
 
+@registry("CMMID_better")
 def CMMID_strategy_better(
     case, contacts, rng,
 
@@ -290,9 +291,9 @@ def CMMID_strategy_better(
 
     # Compute reduction in contacts due to wfh. Independent of test status.
     if wfh:
-        work_contacts_wfh_limited = np.zeros_like(work_contacts).astype(bool)
-    else:
         work_contacts_wfh_limited = np.ones_like(work_contacts).astype(bool)
+    else:
+        work_contacts_wfh_limited = np.zeros_like(work_contacts).astype(bool)
 
     ## Compute the base reproduction rate
     base_rr = home_infections.sum() + work_infections.sum() + othr_infections.sum()
