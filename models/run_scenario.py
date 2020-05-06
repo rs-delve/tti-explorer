@@ -38,12 +38,15 @@ def load_cases(fpath):
 
 if __name__ == "__main__":
     from datetime import datetime
+    import os
     import time
     from types import SimpleNamespace
 
     import config
     from strategies import registry
 
+    # If you run from eg vscode with working dir as the repo dir then set this to ""
+    repo_prefix = os.pardir
     args = SimpleNamespace(
         cases_paths=[
             "data/cases/kucharski_cases_1.json",
@@ -100,7 +103,7 @@ if __name__ == "__main__":
     results = dict()
     for j, cases_path in enumerate(args.cases_paths):
 
-        case_contacts, metadata = load_cases(cases_path)
+        case_contacts, metadata = load_cases(os.path.join(repo_prefix, cases_path))
 
         for scenario, cfg_dct in strategy_configs.items():
             scenario_outputs = list()
@@ -114,7 +117,7 @@ if __name__ == "__main__":
             scenario_outputs = np.array(scenario_outputs)
             results[scenario + f'-{j}'] = scenario_outputs.mean(axis=0)
             print(scenario, scenario_outputs.mean(axis=0), f'took {time.time() - start:.1f}s')
-
+    
     results = pd.DataFrame(results).T
     results.reset_index(inplace=True)
     results.columns = ['temp', 'Base R', 'Reduced R', 'Manual Tests']
