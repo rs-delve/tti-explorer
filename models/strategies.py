@@ -4,6 +4,13 @@ from utils import Registry
 
 registry = Registry()
 
+
+# BE: this type of masking might be useful to limit contacts
+# for home contacts n_days would be 1
+def limit_contact_mask(n_daily, n_days, max_per_day):
+    return np.repeat(np.arange(1, n_daily + 1), n_days) <= max_per_day
+
+
 def limit_contact(contacts, max_per_day):
     """Generates a boolean array describing if a contact would not have 
     been contacted due daily contact limiting.
@@ -23,6 +30,7 @@ def limit_contact(contacts, max_per_day):
         contact_limited = (contact_limited | allow_on_day)
 
     return contact_limited
+
 
 @registry("CMMID")
 def CMMID_strategy(

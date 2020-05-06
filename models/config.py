@@ -25,6 +25,7 @@ def get_contacts_config(name, _cfg_dct=_contacts_configs):
 
 
 _case_configs = {
+        # These are supposed to be exactly as with Kucharski paper
         "kucharski": dict(
             p_under18=0.21,
             # following Kucharski.
@@ -74,7 +75,6 @@ _case_configs = {
 
 
 get_case_config = partial(get_contacts_config, _cfg_dct=_case_configs)
-
 
 
 _policy_config = {
@@ -345,7 +345,8 @@ _policy_config = {
 
 
 
-_global_defaults = dict(
+_global_defaults = {
+        'cmmid': dict(
         do_isolation=True,    # Impose isolation on symptomatic persons
         do_manual_tracing=True,   # Perform manual contact tracing 
         do_app_tracing=True,  # Perform app-based contact tracing. ALT - could set phone prop to 0 if not active
@@ -366,11 +367,14 @@ _global_defaults = dict(
         app_cov=0.53,         # App coverage
         p_pop_test=0.05,      # Proportion mass tested (5% per week)
         policy_adherence=0.9, # Adherence to testing/trace and quarantine
-    )
+    ),
+        "cmmid_better":
+        {}
+}
 
 
 _policy_config = {
-        name: {k: dict(_global_defaults, **params) for k, params in strat.items()}
+        name: {k: dict(_global_defaults[name], **params) for k, params in strat.items()}
         for name, strat in _policy_config.items()
     }
 

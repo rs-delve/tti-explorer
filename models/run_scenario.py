@@ -96,7 +96,7 @@ if __name__ == "__main__":
 
 
     rng = np.random.RandomState(seed=args.seed)
-   
+  
     results = dict()
     for j, cases_path in enumerate(args.cases_paths):
 
@@ -133,12 +133,17 @@ if __name__ == "__main__":
 
     print(results)
 
+    # outputs = dict(
+            # timestamp=datetime.now().strftime("%c"),
+            # results=results,
+            # case_metadata=metadata,
+            # args=args.__dict__
+        # )
     
-
-    # can save this for later analysis
-    outputs = dict(
-            timestamp=datetime.now().strftime("%c"),
-            results=results,
-            case_metadata=metadata,
-            args=args.__dict__
-        )
+    # # BE: method of  generating results table from dict in pandas
+    # summary_df = pd.DataFrame.from_dict(
+            # {k: v.mean(0) for k, v in results.items()},
+            # orient='index',
+            # columns=['Base R', 'Reduced R', 'Manual Tests']
+        # )
+    # print(summary_df)
