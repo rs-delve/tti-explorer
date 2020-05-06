@@ -62,7 +62,7 @@ _case_configs = {
             p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0],
             
             # length of this determines simulation length
-            inf_profile=np.ones(5).tolist()
+            inf_profile=np.full(5, 1/5).tolist()
         ),
         "oxteam": dict(
             p_under18=0.21,
@@ -88,10 +88,13 @@ _case_configs = {
 
             # daily infectivity profile
             # length of this determines simulation length
-            inf_profile=utils.he_infection_profile(
-                period=10,
-                gamma_params={'a': 2.11, 'scale': 1/0.69}
-                ).tolist()
+            # should sum to 1
+            inf_profile=(
+                utils.he_infection_profile(
+                    period=10,
+                    gamma_params={'a': 2.11, 'scale': 1/0.69}
+                    )
+            ).tolist()
         )
     }
 
