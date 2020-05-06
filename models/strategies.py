@@ -121,7 +121,6 @@ def CMMID_strategy(
     else:
         inf_ratio_w = inf_ratio
 
-    # othr_contacts_limited = limit_contact(othr_contacts, max_contacts)
 
     if n_othr > 0:
         scale_othr = np.minimum(1., (max_contacts * 5.) / n_othr)
@@ -159,9 +158,13 @@ def CMMID_strategy_better(
 
     do_individual_isolation,
     do_household_isolation,
+
     do_manual_tracing,
     do_app_tracing,
+
     do_pop_testing,
+    do_symptom_testing,
+
     do_schools_open,
 
     manual_home_trace_prob,
@@ -187,7 +190,7 @@ def CMMID_strategy_better(
         wfh = rng.uniform() < wfh_prob
 
     # Assume testing all symptomatic. tested if symptomatic AND comply with policy. TODO: Assumes no test lag
-    got_symptom_tested = (rng.uniform() < policy_adherence) and case.symptomatic
+    got_symptom_tested = (rng.uniform() < policy_adherence) and case.symptomatic and do_symptom_testing
     symptom_test_day = case.day_noticed_symptoms
 
     # get randomly tested if doing random testing
@@ -242,9 +245,9 @@ def CMMID_strategy_better(
         # If we have the household isolation policy, (TODO: makes no sense without the other tracing policies)
         # Isolate the household. TODO: Doesn't distinguish between prevented infections and traced
         if do_household_isolation:
-            home_contacts_trace = np.ones(shape=n_home, dtype=bool)
+            home_contacts_traced = np.ones(shape=n_home, dtype=bool)
         else:
-            home_contacts_trace = np.zeros(shape=n_home, dtype=bool)
+            home_contacts_traced = np.zeros(shape=n_home, dtype=bool)
 
         # Traced if traced either way
         work_contacts_traced = work_contacts_trace_app | work_contacts_trace_manual
@@ -277,14 +280,19 @@ def CMMID_strategy_better(
             isolate_day = random_test_day
 
         # Prevent contact after isolation day
-        home_contacts_prevented = (home_infections >= isolate_day).astype(bool)
-        work_contacts_prevented = (work_contacts >= isolate_day).astype(bool)
-        othr_contacts_prevented = (othr_contacts >= isolate_day).astype(bool)
+        if do_individual_isolation:
+            home_contacts_prevented = (home_infections >= isolate_day).astype(bool)
+            work_contacts_prevented = (work_contacts >= isolate_day).astype(bool)
+            othr_contacts_prevented = (othr_contacts >= isolate_day).astype(bool)
+        else:
+            home_contacts_prevented = np.zeros(shape=n_home, dtype=bool)
+            work_contacts_prevented = np.zeros(shape=n_work, dtype=bool)
+            othr_contacts_prevented = np.zeros(shape=n_othr, dtype=bool)
     else:
         # No tracing took place if they didn't get tested positive.
-        home_contacts_traced = np.zeros(shape=n_home, dtype=bool)
-        work_contacts_traced = np.zeros(shape=n_work, dtype=bool)
-        othr_contacts_traced = np.zeros(shape=n_othr, dtype=bool)
+        home_contacts_isolated = np.zeros(shape=n_home, dtype=bool)
+        work_contacts_isolated = np.zeros(shape=n_work, dtype=bool)
+        othr_contacts_isolated = np.zeros(shape=n_othr, dtype=bool)
 
         # Default cases prevented (none)
         home_contacts_prevented = np.zeros(shape=n_home, dtype=bool)
@@ -295,7 +303,7 @@ def CMMID_strategy_better(
         app_traces = 0
 
     # Compute reduction in contacts due to contact limiting policy. Independent of test status.
-    othr_contacts_limited = limit_contact(othr_contacts, max_contacts)
+    othr_contacts_limited = ~limit_contact(othr_contacts, max_contacts)
 
     # Compute reduction in contacts due to wfh. Independent of test status.
     if wfh:
@@ -318,10 +326,10 @@ def CMMID_strategy_better(
     othr_infections_post_policy = othr_infections_post_policy & ~othr_contacts_isolated
 
     # Remove contacts not made due to work from home
-    work_infections_post_policy = work_infections_post_policy & work_contacts_wfh_limited
+    work_infections_post_policy = work_infections_post_policy & ~work_contacts_wfh_limited
 
     # Remove other contact limiting contacts
-    othr_infections_post_policy = othr_infections_post_policy & othr_contacts_limited
+    othr_infections_post_policy = othr_infections_post_policy & ~othr_contacts_limited
 
     # Count the reduced infection rate
     reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum()

@@ -186,7 +186,6 @@ _policy_config = {
                 {
                     "do_individual_isolation": False,
                     "do_household_isolation": False,
-                    "do_isolation": False,
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
                     "do_pop_testing": False,
@@ -215,7 +214,7 @@ _policy_config = {
                     "do_app_tracing": False,
                     "do_pop_testing": False,
                 },
-            "manual_work_trace_only":
+            "manual_tracing_work_only":
                 {
                     "do_individual_isolation": True,
                     "do_household_isolation": True,
@@ -238,7 +237,7 @@ _policy_config = {
                     # "met_before_w": 1.,
                     # "met_before_o": 1.
                 },
-            "manual_tracing_met_limit":
+            "manual_tracing_limit_othr_contact":
                 {
                     "do_individual_isolation": True,
                     "do_household_isolation": True,
@@ -257,7 +256,22 @@ _policy_config = {
                     "do_pop_testing": False,
 
                     "met_before_w": 1.,
-                    "met_before_o": 1.
+                    "met_before_o": 1.,
+
+                },
+            "manual_tracing_met_all_before_limit_othr_contact":
+                {
+                    "do_individual_isolation": True,
+                    "do_household_isolation": True,
+                    "do_manual_tracing": True,
+                    "do_app_tracing": False,
+                    "do_pop_testing": False,
+
+                    "met_before_w": 1.,
+                    "met_before_o": 1.,
+
+                    "max_contacts": 4,
+
                 },
             "app_tracing":
                 {
@@ -270,7 +284,7 @@ _policy_config = {
                     # "met_before_w": 1.,
                     # "met_before_o": 1.
                 },
-            "app_tracing_met_limit":
+            "app_tracing_limit_othr_contact":
                 {
                     "do_individual_isolation": True,
                     "do_household_isolation": True,
@@ -293,7 +307,7 @@ _policy_config = {
                     # "met_before_w": 1.,
                     # "met_before_o": 1.
                 },
-            "both_tracing_met_limit":
+            "both_tracing_limit_othr_contact":
                 {
                     "do_individual_isolation": True,
                     "do_household_isolation": True,
@@ -308,10 +322,11 @@ _policy_config = {
             "pop_testing":
                 {
                     "do_individual_isolation": True,
-                    "do_household_isolation": True,
+                    "do_household_isolation": False,
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
                     "do_pop_testing": True,
+                    "do_symptom_testing": False,
 
                     "p_pop_test": 0.05,
                 },
@@ -346,10 +361,10 @@ _policy_config = {
 
 
 _global_defaults = {
-        'cmmid': dict(
-        do_isolation=True,    # Impose isolation on symptomatic persons
-        do_manual_tracing=True,   # Perform manual contact tracing 
-        do_app_tracing=True,  # Perform app-based contact tracing. ALT - could set phone prop to 0 if not active
+    'cmmid': dict(
+        do_isolation=False, # Impose isolation on symptomatic individual
+        do_manual_tracing=False,   # Perform manual contact tracing 
+        do_app_tracing=False,  # Perform app-based contact tracing. ALT - could set phone prop to 0 if not active
         do_pop_testing=False, # Randomly test a proportion of the population
         do_schools_open=True, # If schools in the country are open or not
 
@@ -368,8 +383,33 @@ _global_defaults = {
         p_pop_test=0.05,      # Proportion mass tested (5% per week)
         policy_adherence=0.9, # Adherence to testing/trace and quarantine
     ),
-        "cmmid_better":
-        {}
+    "cmmid_better": dict(
+        do_individual_isolation=False, # Impose isolation on symptomatic individual
+        do_household_isolation=False,    # Impose isolation on household of symptomatic individual
+        
+        do_manual_tracing=False,   # Perform manual contact tracing 
+        do_app_tracing=False,  # Perform app-based contact tracing. ALT - could set phone prop to 0 if not active
+        
+        do_pop_testing=False, # Randomly test a proportion of the population
+        do_symptom_testing=True,
+        
+        do_schools_open=True, # If schools in the country are open or not
+
+        manual_home_trace_prob=1.,   # Probability of home contacts traces
+        manual_work_trace_prob=0.95, # Probability of tracing a work contact
+        manual_othr_trace_prob=0.95, # Probability of tracing an other contact
+
+        met_before_w=0.79, # At work. At school=90%, which is defined in function later on
+        met_before_s=0.9,  # At school. Will replace at work for under 18's
+        met_before_h=1,    # Within HH
+        met_before_o=0.52, # In other settings
+
+        max_contacts=2e3,     # Enforced limit on number of contacts. Default of 200 to represent no limits
+        wfh_prob=0,           # Probability people are working from home
+        app_cov=0.53,         # App coverage
+        p_pop_test=0.05,      # Proportion mass tested (5% per week)
+        policy_adherence=0.9, # Adherence to testing/trace and quarantine
+    ),
 }
 
 
