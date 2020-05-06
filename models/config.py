@@ -70,8 +70,8 @@ _case_configs = {
             # This is currently independent from everything else.
 
             p_symptomatic_covid_neg=200 / 260,
-            p_symptomatic_covid_pos=30 / 260,
-            p_asymptomatic_covid_pos=30 / 260,
+            p_symptomatic_covid_pos=60 * 0.6 / 260,
+            p_asymptomatic_covid_pos=60 * 0.4 / 260,
 
             #Conditional on symptomatic
             p_has_app=0.35,
