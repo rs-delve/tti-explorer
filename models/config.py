@@ -62,7 +62,7 @@ _case_configs = {
             p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0],
             
             # length of this determines simulation length
-            inf_profile=np.ones(5).tolist()
+            inf_profile=np.full(5, 1/5).tolist()
         ),
         "oxteam": dict(
             p_under18=0.21,

@@ -12,7 +12,6 @@ def categorical(pvals, rng):
 
 def he_infection_profile(period, gamma_params):
     inf_days = np.arange(period)
-
     mass = gamma.cdf(inf_days + 1, **gamma_params) - gamma.cdf(inf_days, **gamma_params)
     return mass / np.sum(mass)
 
