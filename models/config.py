@@ -25,6 +25,7 @@ def get_contacts_config(name, _cfg_dct=_contacts_configs):
 
 
 _case_configs = {
+        # These are supposed to be exactly as with Kucharski paper
         "kucharski": dict(
             p_under18=0.21,
             # following Kucharski.
@@ -74,7 +75,6 @@ _case_configs = {
 
 
 get_case_config = partial(get_contacts_config, _cfg_dct=_case_configs)
-
 
 
 _policy_config = {
