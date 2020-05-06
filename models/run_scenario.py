@@ -46,11 +46,16 @@ if __name__ == "__main__":
 
     args = SimpleNamespace(
         cases_paths=[
-            "data/cases/kucharski_cases_1.json",
-            "data/cases/kucharski_cases_2.json",
-            "data/cases/kucharski_cases_3.json",
-            "data/cases/kucharski_cases_4.json",
-            "data/cases/kucharski_cases_5.json",
+            "data/cases/kucharski_1.json",
+            "data/cases/kucharski_2.json",
+            "data/cases/kucharski_3.json",
+            "data/cases/kucharski_4.json",
+            "data/cases/kucharski_5.json",
+            # "data/cases/oxteam_1.json",
+            # "data/cases/oxteam_2.json",
+            # "data/cases/oxteam_3.json",
+            # "data/cases/oxteam_4.json",
+            # "data/cases/oxteam_5.json",
         ],
         # strategy="cmmid",
         # scenarios=[
@@ -117,8 +122,8 @@ if __name__ == "__main__":
                 scenario_outputs.append(strategy(case, contacts, rng, **cfg_dct))
 
             scenario_outputs = np.array(scenario_outputs)
-            results[scenario + f'-{j}'] = scenario_outputs.mean(axis=0)
-            print(scenario, scenario_outputs.mean(axis=0), f'took {time.time() - start:.1f}s')
+            results[scenario + f'-{j}'] = np.nanmean(scenario_outputs, axis=0)
+            print(scenario, np.nanmean(scenario_outputs, axis=0), f'took {time.time() - start:.1f}s')
 
 
     results = pd.DataFrame.from_dict(results, orient='index', columns=['Base R', 'Reduced R', 'Manual Traces', 'App Traces', 'Tests Needed', 'PersonDays Quarantined', 'Wasted PersonDay Quarantined'])
@@ -127,7 +132,7 @@ if __name__ == "__main__":
     results[['scenario', 'case set']] = results['index'].str.split("-", expand=True)
     results.drop(columns='index', inplace=True)
 
-    results = results.groupby('scenario').agg([np.nanmean, np.nanstd])
+    results = results.groupby('scenario').agg(['mean', 'std'])
 
     results.to_csv('results.csv')
 
