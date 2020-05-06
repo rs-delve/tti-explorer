@@ -63,18 +63,17 @@ class EmpiricalContactsSimulator:
 
         if case.covid:
             home_is_infected = np.random.binomial(1, scale * home_sar, n_home)
-            dist = case.inf_profile / np.sum(case.inf_profile)
-            day_infected = np.argmax(np.random.multinomial(1, dist, n_home), axis=1)
+            day_infected = np.argmax(np.random.multinomial(1, case.inf_profile, n_home), axis=1)
             home_day_inf = np.where(home_is_infected, day_infected, NOT_INFECTED)
-    
+            
             work_day_inf = np.where(
-                    self.rng.binomial(n=1, p=work_sar * scale * case.inf_profile[work_first_encounter]),
+                    self.rng.binomial(n=1, p=work_sar * scale * period * case.inf_profile[work_first_encounter]),
                     work_first_encounter,
                     NOT_INFECTED
                 )
 
             other_day_inf = np.where(
-                    self.rng.binomial(n=1, p=other_sar * scale * case.inf_profile[other_first_encounter]),
+                    self.rng.binomial(n=1, p=other_sar * scale * period * case.inf_profile[other_first_encounter]),
                     other_first_encounter,
                     NOT_INFECTED
                 )
