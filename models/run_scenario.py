@@ -45,7 +45,7 @@ if __name__ == "__main__":
     from strategies import registry
 
     args = SimpleNamespace(
-        cases_path="data/cases/kucharski-cases.json",
+        cases_path="../data/cases/kucharski-cases.json",
         strategy="cmmid",
         scenarios=[
             'no_measures',
@@ -73,7 +73,7 @@ if __name__ == "__main__":
     case_contacts, metadata = load_cases(args.cases_path)
 
     rng = np.random.RandomState(seed=args.seed)
-   
+  
     results = dict()
     for scenario, cfg_dct in strategy_configs.items():
         scenario_outputs = list()
@@ -85,21 +85,20 @@ if __name__ == "__main__":
             scenario_outputs.append(strategy(case, contacts, rng, **cfg_dct))
 
         scenario_outputs = np.array(scenario_outputs)
-        results[scenario] = scenario_outputs.mean(axis=0)
-        print(scenario, scenario_outputs.mean(axis=0), f'took {time.time() - start:.1f}s')
+        results[scenario] = scenario_outputs
+        print(scenario, f'took {time.time() - start:.1f}s')
 
-    print(results)
-    results = pd.DataFrame(results).T
-    results.columns = ['Base R', 'Reduced R', 'Manual Tests']
-
-    print(results)
-
-    
-
-    # can save this for later analysis
+    # will be saved to disk for later analysis (hence keeping full results dist)
     outputs = dict(
             timestamp=datetime.now().strftime("%c"),
             results=results,
             case_metadata=metadata,
             args=args.__dict__
         )
+
+    summary_df = pd.DataFrame.from_dict(
+            {k: v.mean(0) for k, v in results.items()},
+            orient='index',
+            columns=['Base R', 'Reduced R', 'Manual Tests']
+        )
+    print(summary_df)
