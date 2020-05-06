@@ -184,7 +184,8 @@ _policy_config = {
 
 
 
-_global_defaults = dict(
+_global_defaults = {
+        'cmmid': dict(
         do_isolation=True,    # Impose isolation on symptomatic persons
         do_manual_tracing=True,   # Perform manual contact tracing 
         do_app_tracing=True,  # Perform app-based contact tracing. ALT - could set phone prop to 0 if not active
@@ -205,11 +206,14 @@ _global_defaults = dict(
         app_cov=0.53,         # App coverage
         p_pop_test=0.05,      # Proportion mass tested (5% per week)
         policy_adherence=0.9, # Adherence to testing/trace and quarantine
-    )
+    ),
+        "cmmid_better":
+        {}
+}
 
 
 _policy_config = {
-        name: {k: dict(_global_defaults, **params) for k, params in strat.items()}
+        name: {k: dict(_global_defaults[name], **params) for k, params in strat.items()}
         for name, strat in _policy_config.items()
     }
 
