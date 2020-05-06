@@ -45,7 +45,13 @@ if __name__ == "__main__":
     from strategies import registry
 
     args = SimpleNamespace(
-        cases_path="../data/cases/kucharski-cases.json",
+        cases_paths=[
+            "data/cases/kucharski_cases_1.json",
+            "data/cases/kucharski_cases_2.json",
+            "data/cases/kucharski_cases_3.json",
+            "data/cases/kucharski_cases_4.json",
+            "data/cases/kucharski_cases_5.json",
+        ],
         strategy="cmmid",
         scenarios=[
             'no_measures',
@@ -70,35 +76,56 @@ if __name__ == "__main__":
             args.scenarios
         )
 
-    case_contacts, metadata = load_cases(args.cases_path)
 
     rng = np.random.RandomState(seed=args.seed)
   
     results = dict()
-    for scenario, cfg_dct in strategy_configs.items():
-        scenario_outputs = list()
+    for j, cases_path in enumerate(args.cases_paths):
 
-        start = time.time()
-        for i, (case, contacts) in enumerate(case_contacts):
-            if i == args.maxruns:
-                break
-            scenario_outputs.append(strategy(case, contacts, rng, **cfg_dct))
+        case_contacts, metadata = load_cases(cases_path)
 
-        scenario_outputs = np.array(scenario_outputs)
-        results[scenario] = scenario_outputs
-        print(scenario, f'took {time.time() - start:.1f}s')
+        for scenario, cfg_dct in strategy_configs.items():
+            scenario_outputs = list()
 
-    # will be saved to disk for later analysis (hence keeping full results dist)
-    outputs = dict(
-            timestamp=datetime.now().strftime("%c"),
-            results=results,
-            case_metadata=metadata,
-            args=args.__dict__
-        )
+            start = time.time()
+            for i, (case, contacts) in enumerate(case_contacts):
+                if i == args.maxruns:
+                    break
+                scenario_outputs.append(strategy(case, contacts, rng, **cfg_dct))
 
-    summary_df = pd.DataFrame.from_dict(
-            {k: v.mean(0) for k, v in results.items()},
-            orient='index',
-            columns=['Base R', 'Reduced R', 'Manual Tests']
-        )
-    print(summary_df)
+            scenario_outputs = np.array(scenario_outputs)
+            results[scenario + f'-{j}'] = scenario_outputs.mean(axis=0)
+            print(scenario, scenario_outputs.mean(axis=0), f'took {time.time() - start:.1f}s')
+
+    results = pd.DataFrame(results).T
+    results.reset_index(inplace=True)
+    results.columns = ['temp', 'Base R', 'Reduced R', 'Manual Tests']
+
+    results[['scenario', 'case set']] = results.temp.str.split("-", expand=True)
+    results.drop(columns='temp', inplace=True)
+
+    results_mean = results.groupby(by='scenario').mean()
+    results_mean.columns = ['Base R (mean)', 'Reduced R (mean)', 'Manual Tests (mean)']
+    results_std = results.groupby(by='scenario').std()
+    results_std.columns = ['Base R (std)', 'Reduced R (std)', 'Manual Tests (std)']
+    results = pd.concat([results_mean, results_std], axis=1)
+    results = results[["Base R (mean)", "Base R (std)", "Reduced R (mean)", "Reduced R (std)", "Manual Tests (mean)", "Manual Tests (std)"]]
+
+    results.to_csv('results.csv')
+
+    print(results)
+
+    # outputs = dict(
+            # timestamp=datetime.now().strftime("%c"),
+            # results=results,
+            # case_metadata=metadata,
+            # args=args.__dict__
+        # )
+    
+    # # BE: method of  generating results table from dict in pandas
+    # summary_df = pd.DataFrame.from_dict(
+            # {k: v.mean(0) for k, v in results.items()},
+            # orient='index',
+            # columns=['Base R', 'Reduced R', 'Manual Tests']
+        # )
+    # print(summary_df)

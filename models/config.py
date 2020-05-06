@@ -86,6 +86,10 @@ _policy_config = {
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
                     "do_pop_testing": False,
+
+                    # "manual_home_trace_prob": 0.,
+                    # "manual_work_trace_prob": 0.,
+                    # "manual_othr_trace_prob": 0.,
                 },
             "isolation_only":
                 {
@@ -93,7 +97,11 @@ _policy_config = {
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
                     "do_pop_testing": False,
-                    },
+
+                    # "manual_home_trace_prob": 0.,
+                    # "manual_work_trace_prob": 0.,
+                    # "manual_othr_trace_prob": 0.,
+                },
             "hh_quaratine_only":
                 {
                     "do_isolation": True,
@@ -180,7 +188,7 @@ _global_defaults = dict(
         do_isolation=True,    # Impose isolation on symptomatic persons
         do_manual_tracing=True,   # Perform manual contact tracing 
         do_app_tracing=True,  # Perform app-based contact tracing. ALT - could set phone prop to 0 if not active
-        do_pop_testing=False, # Randomly test a proportion of the populatuion
+        do_pop_testing=False, # Randomly test a proportion of the population
         do_schools_open=True, # If schools in the country are open or not
 
         manual_home_trace_prob=1.,   # Probability of home contacts traces
