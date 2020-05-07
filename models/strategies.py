@@ -379,6 +379,10 @@ def temporal_anne_flowchart(
 
     fractional_infections,          # Include infected but traced individuals as a fraction of their infection period not isolated
 
+    quarantine_length,              # Length of quarantine imposed on COVID cases (and household)
+
+    latent_period,              # Length of a cases incubation period (from infection to start of infectious period) 
+
     ## Returns: 
     #   - base_rr : number of infections caused without any measures. NaN if doesn't have COVID.
     #   - reduced_rr : number of infections caused with measures. To include fractional cases if desired.
@@ -464,7 +468,33 @@ def temporal_anne_flowchart(
 
     # If the person got tested
     if test_performed:
+
+        ### ISOLATING
+
+        # If isolate the person on day of test
+        if isolate_individual_on_symptoms:
+            isolate_day = test_perform_day
+        # If isolate on positive and would be positive
+        elif isolate_individual_on_positive and case.covid:
+            isolate_day = test_results_day
+        else:
+            # TODO: Should never get here. Nan > all numbers but will cause warning.
+            isolate_day = np.nan
+
+        # Prevent contact after isolation day
+        home_contacts_prevented = (home_infections >= isolate_day).astype(bool)
+        work_contacts_prevented = (work_contacts >= isolate_day).astype(bool)
+        othr_contacts_prevented = (othr_contacts >= isolate_day).astype(bool)
+
+        # Remove contacts not made due to work from home
+        work_contacts_prevented = work_contacts_prevented | work_contacts_wfh_limited
+
+        # Remove other contact limiting contacts
+        othr_contacts_prevented = othr_contacts_prevented | othr_contacts_limited
+
+
         ### TRACING CONTACTS
+
         # If policy to do app tracing
         if do_app_tracing:
             # If has app and reported through it, we can trace contacts through the app. Assume home contacts not needed to trace this way
@@ -493,13 +523,27 @@ def temporal_anne_flowchart(
 
         # Assume all home contacts traced 
         home_contacts_traced = np.ones_like(n_home, dtype=bool)
-        # Traced if traced either way
-        work_contacts_traced = work_contacts_trace_app | work_contacts_trace_manual
-        othr_contacts_traced = othr_contacts_trace_app | othr_contacts_trace_manual
+
+        # Remove traces that didn't happen as case was isolated
+        work_contacts_trace_app = work_contacts_trace_app & ~work_contacts_prevented
+        othr_contacts_trace_app = othr_contacts_trace_app & ~othr_contacts_prevented
+
+        # Remove traces that didn't happen as case was isolated
+        work_contacts_trace_manual = work_contacts_trace_manual & ~work_contacts_prevented
+        othr_contacts_trace_manual = othr_contacts_trace_manual & ~othr_contacts_prevented
+        
+        # Traced if traced either way and didn't isolate and prevent contact
+        work_contacts_traced = (work_contacts_trace_app | work_contacts_trace_manual)
+        othr_contacts_traced = (othr_contacts_trace_app | othr_contacts_trace_manual)
 
         # Compute trace statistics
-        manual_traces = work_contacts_trace_manual.sum() + othr_contacts_trace_manual.sum()
-        app_traces = work_contacts_trace_app.sum() + othr_contacts_trace_app.sum()
+        # Only trace if we want to isolate
+        if isolate_contacts_on_symptoms or (isolate_contacts_on_positive and case.covid):
+            manual_traces = work_contacts_trace_manual.sum() + othr_contacts_trace_manual.sum()
+            app_traces = work_contacts_trace_app.sum() + othr_contacts_trace_app.sum()
+        else:
+            manual_traces = 0.
+            app_traces = 0.
 
         # Work out if each contact will adhere to the policy
         home_contacts_adherence = rng.binomial(n=1, p=trace_adherence, size=n_home).astype(bool)
@@ -507,56 +551,32 @@ def temporal_anne_flowchart(
         othr_contacts_adherence = rng.binomial(n=1, p=trace_adherence, size=n_othr).astype(bool)
 
         # Compute which contact will isolate because of the contact trace
-        home_contacts_isolated = home_contacts_traced & home_contacts_adherence 
-        work_contacts_isolated = work_contacts_traced & work_contacts_adherence
-        othr_contacts_isolated = othr_contacts_traced & othr_contacts_adherence
+        home_contacts_isolated = home_contacts_traced & home_contacts_adherence & ~home_contacts_prevented 
+        work_contacts_isolated = work_contacts_traced & work_contacts_adherence & ~work_contacts_prevented
+        othr_contacts_isolated = othr_contacts_traced & othr_contacts_adherence & ~othr_contacts_prevented
 
-        ### ISOLATING
-
-        # If isolate the person on day of test
-        if isolate_individual_on_symptoms:
-            isolate_day = test_perform_day
-        # If isolate on positive and would be positive
-        elif isolate_individual_on_positive and case.covid:
-            isolate_day = test_results_day
-        else:
-            # TODO: Should never get here. Nan > all numbers but will cause warning.
-            isolate_day = np.nan
-
-        # Prevent contact after isolation day
-        home_contacts_prevented = (home_infections >= isolate_day).astype(bool)
-        work_contacts_prevented = (work_contacts >= isolate_day).astype(bool)
-        othr_contacts_prevented = (othr_contacts >= isolate_day).astype(bool)
-
-        # Remove contacts not made due to work from home
-        work_contacts_prevented = work_contacts_prevented & work_contacts_wfh_limited
-
-        # Remove other contact limiting contacts
-        othr_contacts_prevented = othr_contacts_prevented & othr_contacts_limited
 
         ## Compute tests required
         # Assume we test every contact that is isolated
         # Those who would be quarantined are those who are isolating, but not totally prevented (due to the way isolated is computed)
-        home_contacts_quarantined = home_contacts_isolated & ~home_contacts_prevented
-        work_contacts_quarantined = work_contacts_isolated & ~work_contacts_prevented
-        othr_contacts_quarantined = othr_contacts_isolated & ~othr_contacts_prevented
+        # home_contacts_quarantined = home_contacts_isolated 
+        # work_contacts_quarantined = work_contacts_isolated 
+        # othr_contacts_quarantined = othr_contacts_isolated 
 
         # count own test
         total_tests_performed = 1
         # If house isolated on symptoms, or on positive
-        if isolate_household_on_symptoms or (isolate_household_on_positive and case.covid):
-            total_tests_performed += home_contacts_quarantined.sum()
+        # TODO: Assume for now that we only TEST contacts AFTER the primary tests positive
+        if case.covid:
+            total_tests_performed += home_contacts_isolated.sum()
 
         # If contacts isolated on symptoms, or on positive
-        if isolate_contacts_on_symptoms or isolate_contacts_on_positive and case.covid:
-            total_tests_performed += work_contacts_quarantined.sum() + othr_contacts_quarantined.sum()
+        if case.covid:
+            total_tests_performed += work_contacts_isolated.sum() + othr_contacts_isolated.sum()
 
         ## Compute the quarantine days
         person_days_quarantine = 0
         person_days_wasted_quarantine = 0
-        # TODO: placeholder for length of quarantine imposed
-        quarantine_length = 14
-
 
         # If person has covid, require full lockdown
         if case.covid and (isolate_individual_on_symptoms or isolate_individual_on_positive):
@@ -577,24 +597,25 @@ def temporal_anne_flowchart(
         elif (isolate_contacts_on_positive or isolate_contacts_on_symptoms) and case.covid:
             person_days_quarantine += quarantine_length * home_contacts_isolated.sum()
             # TODO: Count as wasted the time that house members who do not have covid locked down as wasted
-            person_days_wasted_quarantine += quarantine_length * (home_contacts_isolated & ~ home_infections).sum()
+            person_days_wasted_quarantine += quarantine_length * (home_contacts_isolated & ~home_infections).sum()
         ## Don't add any if: Not isolating at all, or if waiting for positive test to isolate and doesn't have coivd
 
         # For traced contacts, if isolating on positive and doesn't have covid, waste test days
         ## NOTE: working with "quarantined" as this represents those traced who were still contacted and complied
         if isolate_contacts_on_symptoms and not case.covid:
-            person_days_quarantine += testing_delay * (work_contacts_quarantined.sum() + othr_contacts_quarantined.sum())
+            person_days_quarantine += testing_delay * (work_contacts_isolated.sum() + othr_contacts_isolated.sum())
+            person_days_wasted_quarantine += testing_delay * (work_contacts_isolated.sum() + othr_contacts_isolated.sum())
         elif (isolate_contacts_on_positive or isolate_contacts_on_symptoms) and case.covid:
             # NOTE: for now assume that people are tested on the same day as isolated. So for contacts, same day as
             # the primary case if isolating on the day of symptoms, 3 days later if delaying. Will be the same number of days regardless.
             #  Probably would be an additional lag here.
             
             # All quarantined for 3 days at least to get test
-            person_days_quarantine += testing_delay * (work_contacts_quarantined.sum() + othr_contacts_quarantined.sum())
+            person_days_quarantine += testing_delay * (work_contacts_isolated.sum() + othr_contacts_isolated.sum())
             # Those testing positive will be fully quarantined (minus the test lag days counted)
-            person_days_quarantine += (quarantine_length - testing_delay) * ((work_contacts_quarantined & work_infections).sum() + (othr_contacts_quarantined & othr_infections).sum())
+            person_days_quarantine += (quarantine_length - testing_delay) * ((work_contacts_isolated & work_infections).sum() + (othr_contacts_isolated & othr_infections).sum())
             # Those who test negative will have "wasted" the 3 days
-            person_days_wasted_quarantine += (testing_delay) * ((work_contacts_quarantined & ~work_infections).sum() + (othr_contacts_quarantined & ~othr_infections).sum())
+            person_days_wasted_quarantine += (testing_delay) * ((work_contacts_isolated & ~work_infections).sum() + (othr_contacts_isolated & ~othr_infections).sum())
 
     else:
         # No tracing took place if they didn't get tested positive.
@@ -629,9 +650,59 @@ def temporal_anne_flowchart(
     work_infections_post_policy = work_infections_post_policy & ~work_contacts_isolated
     othr_infections_post_policy = othr_infections_post_policy & ~othr_contacts_isolated
         
+    ## Count fractional cases - will only occur if got tested
+    if test_performed and fractional_infections:
+        infectiousness_by_day = case.inf_profile
+        cumulative_infectiousness = np.cumsum(infectiousness_by_day)
+        infectious_period = len(infectiousness_by_day)
+
+        # Get the days on which infections that were quarantined happened
+        home_infection_days = home_infected_day[home_infections & ~home_infections_post_policy]
+        work_infection_days = work_contacts[work_infections & ~work_infections_post_policy]
+        othr_infection_days = othr_contacts[othr_infections & ~othr_infections_post_policy]
+
+        # Compute day of contact becoming infectious after case started being infectious
+        home_infectious_start = home_infection_days + latent_period
+        work_infectious_start = work_infection_days + latent_period
+        othr_infectious_start = othr_infection_days + latent_period
+
+        # Compute the days home cases are left out in the world infectious
+        if isolate_household_on_symptoms:
+            home_infections_days_not_quarantined = test_perform_day - home_infectious_start
+        elif isolate_household_on_positive:
+            home_infections_days_not_quarantined = test_results_day - home_infectious_start
+        else:
+            # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
+            home_infections_days_not_quarantined = np.array([])
+
+        # Compute the days a work/othr case is left out in the world infectious
+        if isolate_contacts_on_symptoms:
+            work_infections_days_not_quarantined = test_perform_day - work_infectious_start
+            othr_infections_days_not_quarantined = test_perform_day - othr_infectious_start
+        elif isolate_contacts_on_positive:
+            work_infections_days_not_quarantined = test_results_day - work_infectious_start
+            othr_infections_days_not_quarantined = test_results_day - othr_infectious_start
+        else:
+            work_infections_days_not_quarantined = np.array([])
+            othr_infections_days_not_quarantined = np.array([])
+
+        # Only care about ones where there is more than zero days spent unisolated
+        home_infections_days_not_quarantined = home_infections_days_not_quarantined[home_infections_days_not_quarantined > 0]
+        work_infections_days_not_quarantined = work_infections_days_not_quarantined[work_infections_days_not_quarantined > 0]
+        othr_infections_days_not_quarantined = othr_infections_days_not_quarantined[othr_infections_days_not_quarantined > 0]
+
+        # Add one to get indexing correct - 1st day infectious is 0 in array
+        home_cumulative_infectiousness = cumulative_infectiousness[home_infections_days_not_quarantined - 1].sum()
+        work_cumulative_infectiousness = cumulative_infectiousness[work_infections_days_not_quarantined - 1].sum()
+        othr_cumulative_infectiousness = cumulative_infectiousness[othr_infections_days_not_quarantined - 1].sum()
+
+        fractional_R = home_cumulative_infectiousness + work_cumulative_infectiousness + othr_cumulative_infectiousness
+    else:
+        fractional_R = 0.
+        
 
     # Count the reduced infection rate
-    reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum()
+    reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() + fractional_R
 
     if case.covid:
         return base_rr, reduced_rr, manual_traces, app_traces, total_tests_performed, person_days_quarantine, person_days_wasted_quarantine
