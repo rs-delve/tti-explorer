@@ -119,6 +119,10 @@ def contacts_as_dict(contacts):
     return contacts_dct
 
 
+def load_csv(pth):
+    return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
+
+
 if __name__ == "__main__":
     from argparse import ArgumentParser
     from datetime import datetime
@@ -129,15 +133,21 @@ if __name__ == "__main__":
     import config
     from contacts import EmpiricalContactsSimulator
 
-    parser = ArgumentParser()
+    parser = ArgumentParser(description="Generate JSON files of cases and contacts")
     parser.add_argument(
             'config_name',
             type=str,
             help="Name for config of cases and contacts. Will pull from config.py."
             )
     parser.add_argument('ncases', help="Number of cases w/ contacts to generate", type=int)
-    parser.add_argument('output', help="json file in which to store cases and contacts", type=str)
-    parser.add_argument('--seed', help="random seed", default=0, type=int)
+    parser.add_argument('output_folder', help="Folder in which to store json files of cases and contacts", type=str)
+    parser.add_argument(
+            '--seeds',
+            help="random seeds for each population, comma separated",
+            default="",
+            type=str
+        )
+    parser.add_argument('--n-pops', help="Number of i.i.d. populations to draw. Ignored if seeds is given.", type=int, default=0)
     parser.add_argument(
             '--data-dir',
             default="../data",
@@ -145,42 +155,43 @@ if __name__ == "__main__":
             help="Folder containing empirical tables of contact numbers"
         )
     args = parser.parse_args()
-
+    seeds = [int(s) for s in args.seeds.split(",")] if args.seeds else range(args.n_pops)
+    
+    os.makedirs(args.output_folder, exist_ok=True)
+    
     start = time.time()
 
     case_config = config.get_case_config(args.config_name)
     contacts_config = config.get_contacts_config(args.config_name)
-    rng = np.random.RandomState(seed=args.seed)
-    
-    def load_csv(pth):
-        return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
     
     over18 = load_csv(os.path.join(args.data_dir, "contact_distributions_o18.csv"))
     under18 = load_csv(os.path.join(args.data_dir, "contact_distributions_u18.csv"))
     
-    contacts_simulator = EmpiricalContactsSimulator(over18, under18, rng)
+    for seed in seeds:
+        rng = np.random.RandomState(seed=seed)
+        contacts_simulator = EmpiricalContactsSimulator(over18, under18, rng)
 
-    cases_and_contacts = list()
-    for i in range(args.ncases):
-        case = simulate_case(rng, **case_config)
-        contacts = contacts_simulator(
-                case,
-                **contacts_config
+        cases_and_contacts = list()
+        for i in range(args.ncases):
+            case = simulate_case(rng, **case_config)
+            contacts = contacts_simulator(
+                    case,
+                    **contacts_config
+                )
+            output = dict()
+            output['case'] = case_as_dict(case)
+            output['contacts'] = contacts_as_dict(contacts)
+            cases_and_contacts.append(output)
+        
+        full_output = dict(
+                timestamp=datetime.now().strftime('%c'),
+                case_config=case_config,
+                contacts_config=contacts_config,
+                args=dict(args.__dict__, seed=seed),
+                cases=cases_and_contacts
             )
-        output = dict()
-        output['case'] = case_as_dict(case)
-        output['contacts'] = contacts_as_dict(contacts)
-        cases_and_contacts.append(output)
 
-    full_output = dict(
-            timestamp=datetime.now().strftime('%c'),
-            case_config=case_config,
-            contacts_config=contacts_config,
-            args=args.__dict__,
-            cases=cases_and_contacts
-        )
+        with open(os.path.join(args.output_folder, f"{args.config_name}_seed{seed}.json"), "w") as f:
+            json.dump(full_output, f)
 
-    with open(args.output, "w") as f:
-        json.dump(full_output, f)
-
-    print(f"Case and contact generation took {time.time() - start:.2f} seconds\n")
+    print(f"Case and contact generation for {len(seeds)} populations of size {args.ncases} took {time.time() - start:.2f} seconds\n")
