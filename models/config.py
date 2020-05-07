@@ -391,163 +391,49 @@ _policy_config = {
                     "isolate_household_on_positive": False,  
                     "isolate_contacts_on_symptoms": False,  
                     "isolate_contacts_on_positive": False,
+
                     "do_symptom_testing": False, 
                     "do_manual_tracing": False,
-                    # "manual_home_trace_prob": 0.,
-                    # "manual_work_trace_prob": 0.,
-                    # "manual_othr_trace_prob": 0.,
+                    "do_app_tracing": False, 
                 },
-            "default_scenario":
+            "isolate_individual_on_symptoms":
                 {
-                },
-            "hh_quarantine_only":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
-                    "do_manual_tracing": False,
-                    "do_app_tracing": False,
-                    "do_pop_testing": False,
-                },
-            "manual_tracing_work_only":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
+                    "isolate_individual_on_symptoms": True, 
+                    "isolate_individual_on_positive": True, 
+                    "isolate_household_on_symptoms": False, 
+                    "isolate_household_on_positive": True,  
+                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_contacts_on_positive": True,
+                    
+                    "do_symptom_testing": True, 
                     "do_manual_tracing": True,
-                    "do_app_tracing": False,
-                    "do_pop_testing": False,
-
-                    # "met_before_w": 1.,
-                    # "met_before_o": 1.,
-                    "manual_othr_trace_prob": 0.,
+                    "do_app_tracing": True, 
                 },
-            "manual_tracing":
+            "isolate_household_on_symptoms":
                 {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
+                    "isolate_individual_on_symptoms": True, 
+                    "isolate_individual_on_positive": True, 
+                    "isolate_household_on_symptoms": True, 
+                    "isolate_household_on_positive": True,  
+                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_contacts_on_positive": True,
+
+                    "do_symptom_testing": True, 
                     "do_manual_tracing": True,
-                    "do_app_tracing": False,
-                    "do_pop_testing": False,
-
-                    # "met_before_w": 1.,
-                    # "met_before_o": 1.
+                    "do_app_tracing": True, 
                 },
-            "manual_tracing_limit_othr_contact":
+            "isolate_contacts_on_symptoms":
                 {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
+                    "isolate_individual_on_symptoms": True, 
+                    "isolate_individual_on_positive": True, 
+                    "isolate_household_on_symptoms": True, 
+                    "isolate_household_on_positive": True,  
+                    "isolate_contacts_on_symptoms": True,  
+                    "isolate_contacts_on_positive": True,
+
+                    "do_symptom_testing": True, 
                     "do_manual_tracing": True,
-                    "do_app_tracing": False,
-                    "do_pop_testing": False,
-
-                    "max_contacts": 4
-                },
-            "manual_tracing_met_all_before":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
-                    "do_manual_tracing": True,
-                    "do_app_tracing": False,
-                    "do_pop_testing": False,
-
-                    "met_before_w": 1.,
-                    "met_before_o": 1.,
-
-                },
-            "manual_tracing_met_all_before_limit_othr_contact":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
-                    "do_manual_tracing": True,
-                    "do_app_tracing": False,
-                    "do_pop_testing": False,
-
-                    "met_before_w": 1.,
-                    "met_before_o": 1.,
-
-                    "max_contacts": 4,
-
-                },
-            "app_tracing":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
-                    "do_manual_tracing": False,
-                    "do_app_tracing": True,
-                    "do_pop_testing": False,
-
-                    # "met_before_w": 1.,
-                    # "met_before_o": 1.
-                },
-            "app_tracing_limit_othr_contact":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
-                    "do_manual_tracing": False,
-                    "do_app_tracing": True,
-                    "do_pop_testing": False,
-
-                    # "met_before_w": 1.,
-                    # "met_before_o": 1.,
-                    "max_contacts": 4
-                },
-            "both_tracing":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True,
-                    "do_pop_testing": False,
-
-                    # "met_before_w": 1.,
-                    # "met_before_o": 1.
-                },
-            "both_tracing_limit_othr_contact":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True,
-                    "do_pop_testing": False,
-
-                    # "met_before_w": 1.,
-                    # "met_before_o": 1.,
-                    "max_contacts": 4
-                },
-            "pop_testing":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": False,
-                    "do_manual_tracing": False,
-                    "do_app_tracing": False,
-                    "do_pop_testing": True,
-                    "do_symptom_testing": False,
-
-                    "p_pop_test": 0.05,
-                },
-            "all":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True,
-                    "do_pop_testing": True,
-
-                    # "met_before_w": 1.,
-                    # "met_before_o": 1.
-                    "p_pop_test": 0.05,
-                },
-            "all_met_limit":
-                {
-                    "do_individual_isolation": True,
-                    "do_household_isolation": True,
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True,
-                    "do_pop_testing": True,
-
-                    # "met_before_w": 1.,
-                    # "met_before_o": 1.,
-                    "max_contacts": 4,
-                    "p_pop_test": 0.05,
+                    "do_app_tracing": True, 
                 },
         }
     }
@@ -641,7 +527,11 @@ _global_defaults = {
 
         wfh_prob=0.,                            # Proportion or the population working from home
 
-        fractional_infections=False,            # Include infected but traced individuals as a fraction of their infection period not isolated
+        fractional_infections=True,            # Include infected but traced individuals as a fraction of their infection period not isolated
+    
+        quarantine_length=14,                   # Length of quarantine imposed on COVID cases (and household)
+    
+        latent_period=3,                    # Length of a cases incubation period (from infection to start of infectious period) 
     ),
 }
 
