@@ -112,7 +112,7 @@ if __name__ == "__main__":
 
     for _ in range(10):
         over18 = np.random.binomial(n=1, p=0.21)
-        case = SimpleNamespace(over18=over18)
+        case = SimpleNamespace(under18=under18)
 
         n_home, n_work, n_other = contact_simluator.sample_row(case)
 
