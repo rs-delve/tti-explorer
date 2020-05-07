@@ -62,7 +62,7 @@ class EmpiricalContactsSimulator:
         other_first_encounter = np.repeat(np.arange(period, dtype=int), n_other)
 
         if case.covid:
-            home_is_infected = rng.binomial(1, scale * home_sar, n_home)
+            home_is_infected = self.rng.binomial(1, scale * home_sar, n_home)
             day_infected = np.argmax(np.random.multinomial(1, case.inf_profile, n_home), axis=1)
             home_day_inf = np.where(home_is_infected, day_infected, NOT_INFECTED)
             
@@ -111,7 +111,7 @@ if __name__ == "__main__":
     contact_simluator = EmpiricalContactsSimulator(over18, under18, rng)
 
     for _ in range(10):
-        over18 = np.random.binomial(n=1, p=0.21)
+        under = np.random.binomial(n=1, p=0.21)
         case = SimpleNamespace(under18=under18)
 
         n_home, n_work, n_other = contact_simluator.sample_row(case)
