@@ -38,8 +38,8 @@ def simulate_case(rng, p_under18, p_symptomatic_covid_neg,
         p_day_noticed_symptoms (np.array[float]): Distribution of day on which case notices
             their symptoms. (In our model this is same as reporting symptoms.)
             Conditional on being symptomatic.
-        inf_profile (list[float]): Probability of encounter with case
-            on a given day causing a contact to be infected.
+        inf_profile (list[float]): Distribution of initial exposure of positive secondary cases
+            relative to start of primary case's infectious period.
 
     Returns (Case): case with attributes populated.
     """
