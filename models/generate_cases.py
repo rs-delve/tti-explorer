@@ -147,7 +147,7 @@ if __name__ == "__main__":
             default="",
             type=str
         )
-    parser.add_argument('--n-pops', help="Number of i.i.d. populations to draw. Ignored if seeds is given.", type=int, default=0)
+    parser.add_argument('--n-pops', help="Number of i.i.d. populations to draw. Ignored if seeds is given.", type=int, default=1)
     parser.add_argument(
             '--data-dir',
             default="../data",
