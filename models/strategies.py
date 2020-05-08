@@ -599,7 +599,7 @@ def temporal_anne_flowchart(
         # If contacts isolated on symptoms, or on positive
         # TODO: Again, after conversations, we will not test traced contacts unless a particular policy decision is made.
         # We do not count cases that would become positive and symptomatic against the primary case, but do count others. 
-        if case.covid and test_contacts_on_positive:
+        if case.covid: # and test_contacts_on_positive:
             total_tests_performed += 0 # work_contacts_isolated.sum() + othr_contacts_isolated.sum()
 
         ## Compute the quarantine days

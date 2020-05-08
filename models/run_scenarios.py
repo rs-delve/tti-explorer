@@ -89,7 +89,8 @@ if __name__ == "__main__":
             "--scenarios",
             help=("Which scenarios to run from config.py. If 'all' then all are run. "
             "Default %(default)s."),
-            default="all",
+            default=["all"],
+            nargs='*',
             type=str
         )
     parser.add_argument(
@@ -106,7 +107,6 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     # remove all this when dict output fo stratefies is done
-    col_names = TABLE_COLUMNS[args.strategy]
 
     strategy = registry[args.strategy]
     strategy_configs = config.get_strategy_config(
@@ -115,17 +115,19 @@ if __name__ == "__main__":
         )
 
     scenario_results = defaultdict(dict)
-    for case_file in find_case_files(args.population):
+    case_files = list(find_case_files(args.population))
+    for i, case_file in enumerate(case_files):
         case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
         rng = np.random.RandomState(seed=args.seed)
 
-        for scenario, cfg_dct in strategy_configs.items():
+        for j, (scenario, cfg_dct) in enumerate(strategy_configs.items()):
             scenario_results[scenario][tidy_fname(case_file)] = run_scenario(
                     case_contacts,
                     strategy,
                     rng,
                     cfg_dct
                 ).mean(0)
+            print(f'Case set {i+1}/{len(case_files)}, strategy {j+1}/{len(strategy_configs)}')
 
     os.makedirs(args.output_folder, exist_ok=True)
     for k, v in scenario_results.items():
@@ -135,6 +137,13 @@ if __name__ == "__main__":
                     f"{k}.csv"
                 )
             )
+
+    all_results = pd.DataFrame.from_dict({ (i,j): scenario_results[i][j] for i in scenario_results.keys() for j in scenario_results[i].keys()}, orient='index') 
+    all_results.reset_index(inplace=True)
+    all_results.columns = ['scenario', 'case_set'] + list(all_results.columns[2:])
+    all_results = all_results.groupby('scenario').agg(['mean', 'std'])
+
+    all_results.to_csv(os.path.join(args.output_folder, 'all.csv'))
 
         # TODO:
         # Save all configs and arguments
