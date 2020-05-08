@@ -50,7 +50,7 @@ def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
 
 
 def find_case_files(folder, ending=".json"):
-    return filter(lambda x: x.endswith(ending), os.listdir(folder))
+    return list(filter(lambda x: x.endswith(ending), os.listdir(folder)))
 
 
 def tidy_fname(fname, ending=".json"):
@@ -65,10 +65,12 @@ if __name__ == "__main__":
     from types import SimpleNamespace
     import os
 
+    from tqdm import tqdm
+
     import config
     from strategies import registry
     
-    parser = ArgumentParser()
+    parser = ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument(
             "strategy",
             help="The name of the strategy to use",
@@ -94,11 +96,6 @@ if __name__ == "__main__":
             nargs="*"
         )
     parser.add_argument(
-            "--ablate",
-            help="Whether to ablate over parameters designated for ablation in config.py. Default %(default)s.",
-            action="store_true"
-        )
-    parser.add_argument(
             "--seed",
             help="Seed for random number generator. All runs will be re-seeded with this value. Default %(default)s.",
             default=0,
@@ -113,7 +110,13 @@ if __name__ == "__main__":
         )
 
     scenario_results = defaultdict(dict)
-    for case_file in find_case_files(args.population):
+    case_files = find_case_files(args.population)
+    pbar = tqdm(
+            desc="Running strategies",
+            total=len(case_files) * len(strategy_configs),
+            smoothing=0
+        )
+    for i, case_file in enumerate(case_files):
         case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
         rng = np.random.RandomState(seed=args.seed)
 
@@ -124,17 +127,26 @@ if __name__ == "__main__":
                     rng,
                     cfg_dct
                 ).mean(0)
-
+            pbar.update(1)
+    
+    tables = dict()
     os.makedirs(args.output_folder, exist_ok=True)
-    for k, v in scenario_results.items():
-        results_table(v).to_csv(
+    for scenario, v in scenario_results.items():
+        table = results_table(v)
+        table.to_csv(
                 os.path.join(
                     args.output_folder,
-                    f"{k}.csv"
+                    f"{scenario}.csv"
                 )
             )
+        tables[scenario] = table.mean(0)
+    df = pd.DataFrame.from_dict(tables, orient="index")
+    df.groupby(level=0).agg(['mean', 'std']).to_csv(os.path.join(args.output_folder, 'all_results.csv'))
 
-        # TODO:
-        # Save all configs and arguments
-        # Implement ablation 
-        # Implement population ablations (?)
+
+    # all_results = pd.DataFrame.from_dict({ (i,j): scenario_results[i][j] for i in scenario_results.keys() for j in scenario_results[i].keys()}, orient='index') 
+    # all_results.reset_index(inplace=True)
+    # all_results.columns = ['scenario', 'case_set'] + list(all_results.columns[2:])
+    # all_results = all_results.groupby('scenario').agg(['mean', 'std'])
+
+    # all_results.to_csv(os.path.join(args.output_folder, 'all.csv'))

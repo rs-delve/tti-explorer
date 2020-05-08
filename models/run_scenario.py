@@ -51,16 +51,16 @@ if __name__ == "__main__":
             # "data/cases/kucharski_3.json",
             # "data/cases/kucharski_4.json",
             # "data/cases/kucharski_5.json",
-            # "data/cases/oxteam_1.json",
-            # "data/cases/oxteam_2.json",
-            # "data/cases/oxteam_3.json",
-            # "data/cases/oxteam_4.json",
-            # "data/cases/oxteam_5.json",
-            "data/cases/oxteam_1_large.json",
-            "data/cases/oxteam_2_large.json",
-            "data/cases/oxteam_3_large.json",
-            "data/cases/oxteam_4_large.json",
-            "data/cases/oxteam_5_large.json",
+            "data/cases/oxteam_1.json",
+            "data/cases/oxteam_2.json",
+            "data/cases/oxteam_3.json",
+            "data/cases/oxteam_4.json",
+            "data/cases/oxteam_5.json",
+            # "data/cases/oxteam_1_large.json",
+            # "data/cases/oxteam_2_large.json",
+            # "data/cases/oxteam_3_large.json",
+            # "data/cases/oxteam_4_large.json",
+            # "data/cases/oxteam_5_large.json",
         ],
         # strategy="cmmid",
         # scenarios=[
@@ -95,11 +95,27 @@ if __name__ == "__main__":
         # ],
         strategy="temporal_anne_flowchart",
         scenarios=[
-            "no_measures",
-            "isolate_individual_on_symptoms",
-            "isolate_household_on_symptoms",
-            "isolate_contacts_on_symptoms"
+            "L3_current_situation_c_1_wfh_0.45",
+            "L3_current_situation_c_1_wfh_0.60",
+            "L3_current_situation_c_1_wfh_0.75",
+            "L3_current_situation_c_4_wfh_0.45",
+            "L3_current_situation_c_4_wfh_0.60",
+            "L3_current_situation_c_4_wfh_0.75",
+            "L0_no_measures",
+            # "isolate_individual_on_symptoms",
+            # "isolate_household_on_symptoms",
+            # "isolate_household_on_symptoms_reduced_tracing_effectiveness",
+            # "isolate_household_on_symptoms_45_wfh",
+            # "isolate_household_on_symptoms_45_wfh_reduced_tracing_effectiveness",
+            # "isolate_household_on_symptoms_45_wfh_reduced_tracing_effectiveness_contact_limiting",
+            # "isolate_household_on_symptoms_45_wfh_reduced_tracing_effectiveness_contact_limiting_schools_close",
+            # "isolate_household_on_symptoms_45_wfh_reduced_tracing_effectiveness_contact_limiting_schools_close_app_cov_up",
+            # "isolate_contacts_on_symptoms"
         ],
+        # sensitivity_sweep_dict={
+        #     'wfh_prob': [0.0, 0.3,0.6,1.0],
+        #     'max_contacts': [2e3, 50, 4, 1, 0]
+        # }
         seed=1,
         maxruns=50000,
         output_fpath=""
@@ -141,7 +157,7 @@ if __name__ == "__main__":
 
     results = results.groupby('scenario').agg(['mean', 'std'])
 
-    results.to_csv('anne_model_oxteam_cases_large_fractional_R.csv')
+    results.to_csv('anne_model_oxteam_cases_fractional_R_new_confs.csv')
 
     print(results)
 

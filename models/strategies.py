@@ -362,6 +362,8 @@ def CMMID_strategy_better(
 def temporal_anne_flowchart(
     case, contacts, rng,
 
+    # proportion_symptomatic,         # The proportion of positive cases that are symptomatic
+
     isolate_individual_on_symptoms, # Isolate the individual after they present with symptoms
     isolate_individual_on_positive, # Isolate the individual after they test positive
 
@@ -370,6 +372,8 @@ def temporal_anne_flowchart(
 
     isolate_contacts_on_symptoms,   # Isolate the contacts after individual present with symptoms
     isolate_contacts_on_positive,   # Isolate the contacts after individual test positive
+
+    # test_contacts_on_positive,    # TODO: this option will require more work  # Do we test contacts of a positive case immediately, or wait for them to develop symptoms
 
     do_symptom_testing,             # Test symptomatic individuals
     app_cov,                        # % Coverage of the app
@@ -503,7 +507,7 @@ def temporal_anne_flowchart(
             isolate_day = np.nan
 
         # Prevent contact after isolation day
-        home_contacts_prevented = (home_infections >= isolate_day).astype(bool)
+        home_contacts_prevented = (home_infected_day >= isolate_day).astype(bool)
         work_contacts_prevented = (work_contacts >= isolate_day).astype(bool)
         othr_contacts_prevented = (othr_contacts >= isolate_day).astype(bool)
 
@@ -512,7 +516,6 @@ def temporal_anne_flowchart(
 
         # Remove other contact limiting contacts
         othr_contacts_prevented = othr_contacts_prevented | othr_contacts_limited
-
 
         ### TRACING CONTACTS
 
@@ -588,14 +591,19 @@ def temporal_anne_flowchart(
         total_tests_performed = 1
         # If house isolated on symptoms, or on positive
         # TODO: Assume for now that we only TEST contacts AFTER the primary tests positive
+        # TODO: After discussion, we will not test home contacts until they develop symptoms. 
+        # These tests will not count against the primary case, as these would have been tested regardless.
         if case.covid:
-            total_tests_performed += home_contacts_isolated.sum()
+            total_tests_performed += 0. # home_contacts_isolated.sum()
 
         # If contacts isolated on symptoms, or on positive
-        if case.covid:
-            total_tests_performed += work_contacts_isolated.sum() + othr_contacts_isolated.sum()
+        # TODO: Again, after conversations, we will not test traced contacts unless a particular policy decision is made.
+        # We do not count cases that would become positive and symptomatic against the primary case, but do count others. 
+        if case.covid: # and test_contacts_on_positive:
+            total_tests_performed += 0 # work_contacts_isolated.sum() + othr_contacts_isolated.sum()
 
         ## Compute the quarantine days
+
         person_days_quarantine = 0
         person_days_wasted_quarantine = 0
 
@@ -630,7 +638,7 @@ def temporal_anne_flowchart(
             # NOTE: for now assume that people are tested on the same day as isolated. So for contacts, same day as
             # the primary case if isolating on the day of symptoms, 3 days later if delaying. Will be the same number of days regardless.
             #  Probably would be an additional lag here.
-            
+                       
             # All quarantined for 3 days at least to get test
             person_days_quarantine += testing_delay * (work_contacts_isolated.sum() + othr_contacts_isolated.sum())
             # Those testing positive will be fully quarantined (minus the test lag days counted)
@@ -694,7 +702,7 @@ def temporal_anne_flowchart(
             home_infections_days_not_quarantined = test_results_day - home_infectious_start
         else:
             # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
-            home_infections_days_not_quarantined = np.array([])
+            home_infections_days_not_quarantined = np.array([], dtype=int)
 
         # Compute the days a work/othr case is left out in the world infectious
         if isolate_contacts_on_symptoms:
@@ -704,8 +712,8 @@ def temporal_anne_flowchart(
             work_infections_days_not_quarantined = test_results_day - work_infectious_start
             othr_infections_days_not_quarantined = test_results_day - othr_infectious_start
         else:
-            work_infections_days_not_quarantined = np.array([])
-            othr_infections_days_not_quarantined = np.array([])
+            work_infections_days_not_quarantined = np.array([], dtype=int)
+            othr_infections_days_not_quarantined = np.array([], dtype=int)
 
         # Only care about ones where there is more than zero days spent unisolated
         home_infections_days_not_quarantined = home_infections_days_not_quarantined[home_infections_days_not_quarantined > 0]
