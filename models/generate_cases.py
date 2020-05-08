@@ -4,6 +4,8 @@ import numpy as np
 
 from utils import bool_bernoulli, categorical
 
+# TODO BE: remove the unwanted attributes of cases from teh codebase
+
 Case = namedtuple(
         'Case',
         [
@@ -130,6 +132,8 @@ if __name__ == "__main__":
     import os
     import time
 
+    from tqdm import trange
+
     import config
     from contacts import EmpiricalContactsSimulator
 
@@ -172,7 +176,7 @@ if __name__ == "__main__":
         contacts_simulator = EmpiricalContactsSimulator(over18, under18, rng)
 
         cases_and_contacts = list()
-        for i in range(args.ncases):
+        for i in trange(args.ncases, smoothing=0, desc=f"Generating case set with seed {seed}."):
             case = simulate_case(rng, **case_config)
             contacts = contacts_simulator(
                     case,
