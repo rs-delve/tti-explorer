@@ -7,29 +7,6 @@ from contacts import Contacts, NCOLS
 from generate_cases import Case
 
 
-TABLE_COLUMNS = {
-    'cmmid': [
-        'Base R',
-        'Reduced R',
-        'Manual Traces',
-    ],
-    'cmmid_better': [
-        'Base R',
-        'Reduced R',
-        'Manual Traces',
-    ],
-    'temporal_anne_flowchart': [
-        'Base R',
-        'Reduced R',
-        'Manual Traces',
-        'App Traces',
-        'Tests Needed',
-        'PersonDays Quarantined',
-        'Wasted PersonDays Quarantined'
-        ]
-    }
-
-
 def results_table(results_dct, index_name="scenario"):
     df = pd.DataFrame.from_dict(
             results_dct,
@@ -162,3 +139,4 @@ if __name__ == "__main__":
         # TODO:
         # Save all configs and arguments
         # Implement ablation 
+        # Implement population ablations (?)
