@@ -6,8 +6,11 @@ def bool_bernoulli(p, rng):
     return bool(rng.binomial(1, p))
 
 
-def categorical(pvals, rng):
-    return np.argwhere(rng.multinomial(1, pvals)).item()
+def categorical(pvals, rng, n=1):
+    outputs = np.argmax(rng.multinomial(1, pvals, size=n), axis=-1)
+    return outputs.item() if n == 1 else outputs
+# BE, weird to have different output types but also weird to return
+# a 1 item array
 
 
 def he_infection_profile(period, gamma_params):
