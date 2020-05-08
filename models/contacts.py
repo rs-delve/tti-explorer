@@ -49,14 +49,15 @@ class EmpiricalContactsSimulator:
         n_home, n_work, n_other = row
 
         scale = 1.0 if case.symptomatic else asymp_factor
-        
+
         home_first_encounter = np.zeros(n_home, dtype=int)
         work_first_encounter = np.repeat(np.arange(period, dtype=int), n_work)
         other_first_encounter = np.repeat(np.arange(period, dtype=int), n_other)
 
         if case.covid:
             home_is_infected = self.rng.binomial(1, scale * home_sar, n_home)
-            day_infected = utils.categorical(case.inf_profile, rng=self.rng, n=n_home)
+            home_inf_profile = utils.home_daily_infectivity(case.inf_profile)
+            day_infected = utils.categorical(home_inf_profile, rng=self.rng, n=n_home)
             home_day_inf = np.where(home_is_infected, day_infected, NOT_INFECTED)
 
             work_day_inf = day_infected_wo(
@@ -87,7 +88,7 @@ class EmpiricalContactsSimulator:
 
 if __name__ == "__main__":
     # Basic testing
-    import os 
+    import os
     from types import SimpleNamespace
 
     from generate_cases import simulate_case
@@ -102,10 +103,10 @@ if __name__ == "__main__":
 
     def load_csv(pth):
         return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
-    
+
     over18 = load_csv(os.path.join(data_folder, "contact_distributions_o18.csv"))
     under18 = load_csv(os.path.join(data_folder, "contact_distributions_u18.csv"))
-    
+
     contact_simluator = EmpiricalContactsSimulator(over18, under18, rng)
 
     for _ in range(10):

@@ -18,15 +18,22 @@ def he_infection_profile(period, gamma_params):
     mass = gamma.cdf(inf_days + 1, **gamma_params) - gamma.cdf(inf_days, **gamma_params)
     return mass / np.sum(mass)
 
+def home_daily_infectivity(base_mass):
+    fail_prod = np.cumprod(1 - base_mass)
+    fail_prod = np.roll(fail_prod, 1)
+    np.put(fail_prod, 0, 1.)
+    skewed_mass = fail_prod * base_mass
+    return skewed_mass / np.sum(skewed_mass)
+
 
 class Registry:
     "Case insensitive registry"
     def __init__(self):
         self._register = dict()
-    
+
     def __getitem__(self, key):
         return self._register[key.lower()]
-    
+
     def __call__(self, name):
         def add(thing):
             self._register[name.lower()] = thing
