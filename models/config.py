@@ -57,11 +57,11 @@ _case_configs = {
 
             # Conditional on not having app
             p_report_nhs_g_no_app=0.5,
-            
+
             # Distribution of day on which the case notices their symptoms
             # This is conditinal on them being symptomatic at all
             p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0],
-            
+
             # length of this determines simulation length
             inf_profile=np.full(5, 1/5).tolist()
         ),
@@ -69,7 +69,7 @@ _case_configs = {
             p_under18=0.21,
             # following Kucharski.
             # This is currently independent from everything else.
-            
+
             p_symptomatic_covid_neg=200 / 260,
             p_symptomatic_covid_pos=60 * 0.6 / 260,
             p_asymptomatic_covid_pos=60 * 0.4 / 260,
@@ -82,10 +82,10 @@ _case_configs = {
 
             # Conditional on not having app
             p_report_nhs_g_no_app=0.5,
-            
+
             # Distribution of day on which the case notices their symptoms
             # This is conditinal on them being symptomatic at all
-            p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.3, 0, 0, 0, 0, 0],
+            p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05, 0.00], # mean delay 3.05 days
 
             # daily infectivity profile
             # length of this determines simulation length
@@ -386,55 +386,55 @@ _policy_configs = {
         {
             "no_measures":
                 {
-                    "isolate_individual_on_symptoms": False, 
-                    "isolate_individual_on_positive": False, 
-                    "isolate_household_on_symptoms": False, 
-                    "isolate_household_on_positive": False,  
-                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_individual_on_symptoms": False,
+                    "isolate_individual_on_positive": False,
+                    "isolate_household_on_symptoms": False,
+                    "isolate_household_on_positive": False,
+                    "isolate_contacts_on_symptoms": False,
                     "isolate_contacts_on_positive": False,
 
-                    "do_symptom_testing": False, 
+                    "do_symptom_testing": False,
                     "do_manual_tracing": False,
-                    "do_app_tracing": False, 
+                    "do_app_tracing": False,
                 },
             "isolate_individual_on_symptoms":
                 {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": False, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_individual_on_symptoms": True,
+                    "isolate_individual_on_positive": True,
+                    "isolate_household_on_symptoms": False,
+                    "isolate_household_on_positive": True,
+                    "isolate_contacts_on_symptoms": False,
                     "isolate_contacts_on_positive": True,
-                    
-                    "do_symptom_testing": True, 
+
+                    "do_symptom_testing": True,
                     "do_manual_tracing": True,
-                    "do_app_tracing": True, 
+                    "do_app_tracing": True,
                 },
             "isolate_household_on_symptoms":
                 {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_individual_on_symptoms": True,
+                    "isolate_individual_on_positive": True,
+                    "isolate_household_on_symptoms": True,
+                    "isolate_household_on_positive": True,
+                    "isolate_contacts_on_symptoms": False,
                     "isolate_contacts_on_positive": True,
 
-                    "do_symptom_testing": True, 
+                    "do_symptom_testing": True,
                     "do_manual_tracing": True,
-                    "do_app_tracing": True, 
+                    "do_app_tracing": True,
                 },
             "isolate_contacts_on_symptoms":
                 {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": True,  
+                    "isolate_individual_on_symptoms": True,
+                    "isolate_individual_on_positive": True,
+                    "isolate_household_on_symptoms": True,
+                    "isolate_household_on_positive": True,
+                    "isolate_contacts_on_symptoms": True,
                     "isolate_contacts_on_positive": True,
 
-                    "do_symptom_testing": True, 
+                    "do_symptom_testing": True,
                     "do_manual_tracing": True,
-                    "do_app_tracing": True, 
+                    "do_app_tracing": True,
                 },
         }
     }
@@ -444,7 +444,7 @@ _policy_configs = {
 _global_defaults = {
     'cmmid': dict(
         do_isolation=False, # Impose isolation on symptomatic individual
-        do_manual_tracing=False,   # Perform manual contact tracing 
+        do_manual_tracing=False,   # Perform manual contact tracing
         do_app_tracing=False,  # Perform app-based contact tracing. ALT - could set phone prop to 0 if not active
         do_pop_testing=False, # Randomly test a proportion of the population
         do_schools_open=True, # If schools in the country are open or not
@@ -467,13 +467,13 @@ _global_defaults = {
     "cmmid_better": dict(
         do_individual_isolation=False, # Impose isolation on symptomatic individual
         do_household_isolation=False,    # Impose isolation on household of symptomatic individual
-        
-        do_manual_tracing=False,   # Perform manual contact tracing 
+
+        do_manual_tracing=False,   # Perform manual contact tracing
         do_app_tracing=False,  # Perform app-based contact tracing. ALT - could set phone prop to 0 if not active
-        
+
         do_pop_testing=False, # Randomly test a proportion of the population
         do_symptom_testing=True,
-        
+
         do_schools_open=True, # If schools in the country are open or not
 
         manual_home_trace_prob=1.,   # Probability of home contacts traces
@@ -529,10 +529,10 @@ _global_defaults = {
         wfh_prob=0.,                            # Proportion or the population working from home
 
         fractional_infections=True,            # Include infected but traced individuals as a fraction of their infection period not isolated
-    
+
         quarantine_length=14,                   # Length of quarantine imposed on COVID cases (and household)
-    
-        latent_period=3,                    # Length of a cases incubation period (from infection to start of infectious period) 
+
+        latent_period=3,                    # Length of a cases incubation period (from infection to start of infectious period)
     ),
 }
 
@@ -582,7 +582,7 @@ _policy_ablations = {
                 bounds=(0, 1),
                 values=np.linspace(0.25, 0.75, num=4)
             ),
-            
+
             test_delay=Ablation(
                 bounds=None,
                 values=[2, 3, 4]
@@ -598,8 +598,8 @@ _policy_ablations = {
             p_day_noticed_symptoms=Ablation(
                 bounds=None,
                 values=[
-                    [],  # first dist @bobby
-                    [],  # second dist @bobby
+                    [0., 0., 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05],  # pessimistic, mean delay 4.05 days
+                    [0., 0.5, 0.2, 0.1, 0.1, 0.1, 0., 0., 0., 0.],  # optimistic, mean delay 2.1 days
                 ]
             ),
             # what are sensible values for this???
@@ -634,5 +634,3 @@ if __name__ == "__main__":
 
     for k, v in _case_ablations.items():
         assert k in _case_configs
-
-
