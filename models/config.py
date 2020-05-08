@@ -6,6 +6,9 @@ import numpy as np
 import utils
 
 
+ALL_CFG_FLAG = "xasaflsfakhasfkhsdfkjhlsdf"
+
+
 _contacts_configs = {
         "kucharski": dict(
             # infectivity
@@ -808,7 +811,7 @@ def get_strategy_config(strat, cfg_names, _cfg_dct=_policy_configs):
     except KeyError:
         raise ValueError(f"Cannot find strategy {strat} in config.py")
     else:
-        if cfg_names == "all":
+        if cfg_names == ALL_CFG_FLAG:
             return dict(**strategy)
         else:
             output = dict()
@@ -831,7 +834,7 @@ _policy_ablations = {
         "temporal_anne_flowchart": dict(
             app_cov=Ablation(
                 bounds=(0, 1),
-                values=np.linspace(0, 1, num=4)
+                values=np.linspace(0.35, 0.75, num=4)
             ),
             app_report_prob=Ablation(
                 bounds=(0, 1),
@@ -841,23 +844,19 @@ _policy_ablations = {
                 bounds=(0, 1),
                 values=np.linspace(0.25, 0.75, num=4)
             ),
-
-            test_delay=Ablation(
+            testing_delay=Ablation(
                 bounds=None,
                 values=[2, 3, 4]
             ),
             latent_period=Ablation(
                 bounds=None,
-                values=[2, 3, 4]
-            ),
-            quarantine_length=Ablation(
-                bounds=None,
-                values=[7, 14]
+                values=[2, 3]
             ),
             p_day_noticed_symptoms=Ablation(
                 bounds=None,
                 values=[
                     [0., 0., 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05],  # pessimistic, mean delay 4.05 days
+                    [0, 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05, 0.00], # mean delay 3.05 days
                     [0., 0.5, 0.2, 0.1, 0.1, 0.1, 0., 0., 0., 0.],  # optimistic, mean delay 2.1 days
                 ]
             ),

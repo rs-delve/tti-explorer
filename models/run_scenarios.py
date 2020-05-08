@@ -106,8 +106,6 @@ if __name__ == "__main__":
         )
     args = parser.parse_args()
 
-    # remove all this when dict output fo stratefies is done
-
     strategy = registry[args.strategy]
     strategy_configs = config.get_strategy_config(
             args.strategy,
