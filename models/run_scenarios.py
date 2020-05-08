@@ -105,9 +105,6 @@ if __name__ == "__main__":
         )
     args = parser.parse_args()
 
-    # remove all this when dict output fo stratefies is done
-    col_names = TABLE_COLUMNS[args.strategy]
-
     strategy = registry[args.strategy]
     strategy_configs = config.get_strategy_config(
             args.strategy,
