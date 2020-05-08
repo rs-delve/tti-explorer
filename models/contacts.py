@@ -1,26 +1,19 @@
-import itertools
-
 from collections import namedtuple
 
 import numpy as np
 
+import utils
 
 NOT_INFECTED = -1
 NCOLS = 2
 
 
-def home_daily_infectivity(base_risk, infective_days):
-    # Compute daily risk such that the probability of a binomial sample of (infective_days, daily risk)
-    # has p(x=0) = 1 - base_risk (i.e. p(x>0) = base_risk) 
-    return 1 - np.power((1-base_risk), 1./float(infective_days))
-
-
-def get_day_infected_home(mat, not_infected=NOT_INFECTED):
-    return np.where(mat.any(axis=1), mat.argmax(axis=1), not_infected)
-
-
-def get_day_infected_wo(mat, first_encounter, not_infected=NOT_INFECTED):
-    return np.where(mat, first_encounter, not_infected)
+def day_infected_wo(rng, probs, first_encounter, not_infected=NOT_INFECTED):
+    return np.where(
+        rng.binomial(n=1, p=probs),
+        first_encounter,
+        not_infected
+    )
 
 
 Contacts = namedtuple(
@@ -56,26 +49,29 @@ class EmpiricalContactsSimulator:
         n_home, n_work, n_other = row
 
         scale = 1.0 if case.symptomatic else asymp_factor
-        
+
         home_first_encounter = np.zeros(n_home, dtype=int)
         work_first_encounter = np.repeat(np.arange(period, dtype=int), n_work)
         other_first_encounter = np.repeat(np.arange(period, dtype=int), n_other)
 
         if case.covid:
-            home_is_infected = rng.binomial(1, scale * home_sar, n_home)
-            day_infected = np.argmax(np.random.multinomial(1, case.inf_profile, n_home), axis=1)
+            home_is_infected = self.rng.binomial(1, scale * home_sar, n_home)
+            home_inf_profile = utils.home_daily_infectivity(case.inf_profile)
+            day_infected = utils.categorical(home_inf_profile, rng=self.rng, n=n_home)
             home_day_inf = np.where(home_is_infected, day_infected, NOT_INFECTED)
-            
-            work_day_inf = np.where(
-                    self.rng.binomial(n=1, p=work_sar * scale * period * case.inf_profile[work_first_encounter]),
-                    work_first_encounter,
-                    NOT_INFECTED
+
+            work_day_inf = day_infected_wo(
+                    self.rng,
+                    probs=work_sar * scale * period * case.inf_profile[work_first_encounter],
+                    first_encounter=work_first_encounter,
+                    not_infected=NOT_INFECTED
                 )
 
-            other_day_inf = np.where(
-                    self.rng.binomial(n=1, p=other_sar * scale * period * case.inf_profile[other_first_encounter]),
-                    other_first_encounter,
-                    NOT_INFECTED
+            other_day_inf = day_infected_wo(
+                    self.rng,
+                    probs=other_sar * scale * period * case.inf_profile[other_first_encounter],
+                    first_encounter=other_first_encounter,
+                    not_infected=NOT_INFECTED
                 )
         else:
             home_day_inf = np.full_like(home_first_encounter, -1)
@@ -92,8 +88,11 @@ class EmpiricalContactsSimulator:
 
 if __name__ == "__main__":
     # Basic testing
-    import os 
+    import os
     from types import SimpleNamespace
+
+    from generate_cases import simulate_case
+    from config import get_case_config
 
     data_folder = "../data"
 
@@ -104,29 +103,12 @@ if __name__ == "__main__":
 
     def load_csv(pth):
         return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
-    
+
     over18 = load_csv(os.path.join(data_folder, "contact_distributions_o18.csv"))
     under18 = load_csv(os.path.join(data_folder, "contact_distributions_u18.csv"))
-    
+
     contact_simluator = EmpiricalContactsSimulator(over18, under18, rng)
 
     for _ in range(10):
-        over18 = np.random.binomial(n=1, p=0.21)
-        case = SimpleNamespace(over18=over18)
-
-        n_home, n_work, n_other = contact_simluator.sample_row(case)
-
-        home_is_infected = rng.binomial(1, home_sar, size=(n_home, period))
-        work_is_infected = rng.binomial(1, work_sar, size=n_work * period)
-        other_is_infected = rng.binomial(1, other_sar, size=n_other * period)
-
-        home_inf = get_day_infected_home(home_is_infected)
-        work_inf = get_day_infected_wo(work_is_infected, period, n_work)
-        other_inf = get_day_infected_wo(other_is_infected, period, n_other)
-
-        home_first_encounter = np.zeros(n_home)
-        work_first_encounter = np.repeat(np.arange(period), n_work)
-        other_first_encounter = np.repeat(np.arange(period), n_other)
-
-        contacts = contact_simluator(case, home_sar, work_sar, other_sar, period)
-        print(contacts)
+        case = simulate_case(rng, **get_case_config("oxteam"))
+        print(contact_simluator(case, 0.2, 0.03, 0.03, 0.5, 10))

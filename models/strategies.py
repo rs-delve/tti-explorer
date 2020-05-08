@@ -1,9 +1,22 @@
+from types import SimpleNamespace
+
 import numpy as np
 
 from utils import Registry
 
 registry = Registry()
 
+# Changing the string values here saves having to change them
+# in every strategy and will keep tables consistent
+RETURN_KEYS = SimpleNamespace(
+        base_r="Base R",
+        reduced_r='Reduced R',
+        man_trace='Manual Traces',
+        app_trace='App Traces',
+        tests='Tests Needed',
+        quarantine='PersonDays Quarantined',
+        wasted_quarantine='Wasted PersonDays Quarantined'
+    )
 
 # BE: this type of masking might be useful to limit contacts
 # for home contacts n_days would be 1
@@ -149,7 +162,11 @@ def CMMID_strategy(
 
     rr_reduced = rr_ii - total_averted
 
-    return rr_basic_ii, rr_reduced, 0.
+    return {
+            RETURN_KEYS.base_r: rr_basic_ii,
+            RETURN_KEYS.reduced_r: rr_reduced,
+            RETURN_KEYS.man_trace: 0
+        }
     # return home_infections.sum() / n_home, work_infections.sum() / n_work, othr_infections.sum() / n_othr, home_infections.sum() + work_infections.sum() + othr_infections.sum(), base_rr, reduced_rr, manual_traces
 
 @registry("CMMID_better")
@@ -334,7 +351,11 @@ def CMMID_strategy_better(
     # Count the reduced infection rate
     reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum()
 
-    return base_rr, reduced_rr, manual_traces
+    return {
+            RETURN_KEYS.base_r: base_rr,
+            RETURN_KEYS.reduced_r: reduced_rr,
+            RETURN_KEYS.man_trace: manual_traces
+        }
 
 
 @registry("temporal_anne_flowchart")
@@ -712,8 +733,12 @@ def temporal_anne_flowchart(
     # Count the reduced infection rate
     reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() + fractional_R
 
-    if case.covid:
-        return base_rr, reduced_rr, manual_traces, app_traces, total_tests_performed, person_days_quarantine, person_days_wasted_quarantine
-    else:
-        return np.nan, np.nan, manual_traces, app_traces, total_tests_performed, person_days_quarantine, person_days_wasted_quarantine
-
+    return {
+            RETURN_KEYS.base_r: base_rr if case.covid else np.nan,
+            RETURN_KEYS.reduced_r: reduced_rr if case.covid else np.nan,
+            RETURN_KEYS.man_trace: manual_traces,
+            RETURN_KEYS.app_trace: app_traces,
+            RETURN_KEYS.tests: total_tests_performed,
+            RETURN_KEYS.quarantine: person_days_quarantine,
+            RETURN_KEYS.wasted_quarantine: person_days_wasted_quarantine
+        }

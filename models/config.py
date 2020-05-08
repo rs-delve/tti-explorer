@@ -1,3 +1,4 @@
+from collections import namedtuple
 from functools import partial
 
 import numpy as np
@@ -32,9 +33,9 @@ def get_contacts_config(name, _cfg_dct=_contacts_configs):
         return _cfg_dct[name.lower()]
     except KeyError:
         raise ValueError(
-                f"Could not find config {name} in config.py."
-                "Available configs are: {list(_cfg_dct.keys()}"
-                )
+                f"Could not find config {name} in config.py. "
+                f"Available configs are: {list(_cfg_dct.keys())}"
+            )
 
 
 _case_configs = {
@@ -68,7 +69,7 @@ _case_configs = {
             p_under18=0.21,
             # following Kucharski.
             # This is currently independent from everything else.
-
+            
             p_symptomatic_covid_neg=200 / 260,
             p_symptomatic_covid_pos=60 * 0.6 / 260,
             p_asymptomatic_covid_pos=60 * 0.4 / 260,
@@ -102,7 +103,7 @@ _case_configs = {
 get_case_config = partial(get_contacts_config, _cfg_dct=_case_configs)
 
 
-_policy_config = {
+_policy_configs = {
         "cmmid":
         {
             "no_measures":
@@ -795,13 +796,13 @@ _global_defaults = {
 }
 
 
-_policy_config = {
+_policy_configs = {
         name: {k: dict(_global_defaults[name], **params) for k, params in strat.items()}
-        for name, strat in _policy_config.items()
+        for name, strat in _policy_configs.items()
     }
 
 
-def get_strategy_config(strat, cfg_names, _cfg_dct=_policy_config):
+def get_strategy_config(strat, cfg_names, _cfg_dct=_policy_configs):
     try:
         strategy = _cfg_dct[strat.lower()]
     except KeyError:
@@ -818,5 +819,79 @@ def get_strategy_config(strat, cfg_names, _cfg_dct=_policy_config):
                     raise ValueError(f"Cannot find configuration {cfg_name} under "
                             "strategy {strat} in config.py")
             return output
+
+
+Ablation = namedtuple(
+        'Ablation',
+        ['bounds', 'values']
+    )
+
+
+_policy_ablations = {
+        "temporal_anne_flowchart": dict(
+            app_cov=Ablation(
+                bounds=(0, 1),
+                values=np.linspace(0, 1, num=4)
+            ),
+            app_report_prob=Ablation(
+                bounds=(0, 1),
+                values=np.linspace(0.5, 1, num=4)
+            ),
+            manual_report_prob=Ablation(
+                bounds=(0, 1),
+                values=np.linspace(0.25, 0.75, num=4)
+            ),
+            
+            test_delay=Ablation(
+                bounds=None,
+                values=[2, 3, 4]
+            ),
+            latent_period=Ablation(
+                bounds=None,
+                values=[2, 3, 4]
+            ),
+            quarantine_length=Ablation(
+                bounds=None,
+                values=[7, 14]
+            ),
+            p_day_noticed_symptoms=Ablation(
+                bounds=None,
+                values=[
+                    [],  # first dist @bobby
+                    [],  # second dist @bobby
+                ]
+            ),
+            # what are sensible values for this???
+            met_before_o=Ablation(
+                bounds=(0.5, 1.),
+                values=np.linspace(0.5, 1, num=4)
+            ),
+            max_contacts=Ablation(
+                bounds=None,  # what on earth to put for this?!!?
+                values=[4, 2e3]  # what to put for these???
+            ),
+            wfh_prob=Ablation(
+                bounds=(0, .65),
+                values=np.linspace(0, 0.65, num=4)
+            )
+        )
+    }
+
+_case_ablations = {
+        # to be decided!
+        "oxteam": dict(infection_proportions=Ablation(None, None))
+    }
+
+
+get_policy_ablations = partial(get_contacts_config, _cfg_dct=_policy_ablations)
+get_case_ablations = partial(get_contacts_config, _cfg_dct=_case_ablations)
+
+
+if __name__ == "__main__":
+    for k, v in _policy_ablations.items():
+        assert k in _policy_configs
+
+    for k, v in _case_ablations.items():
+        assert k in _case_configs
 
 
