@@ -89,8 +89,9 @@ if __name__ == "__main__":
             "--scenarios",
             help=("Which scenarios to run from config.py. If 'all' then all are run. "
             "Default %(default)s."),
-            default="all",
-            type=str
+            default=config.ALL_CFG_FLAG,
+            type=str,
+            nargs="*"
         )
     parser.add_argument(
             "--ablate",
