@@ -182,7 +182,7 @@ def CMMID_strategy_better(
     do_pop_testing,
     do_symptom_testing,
 
-    do_schools_open,
+    go_to_school_prob,
 
     manual_home_trace_prob,
     manual_work_trace_prob,
@@ -201,7 +201,7 @@ def CMMID_strategy_better(
 ):
 
     if case.under18:
-        wfh = not do_schools_open
+        wfh = rng.uniform() < go_to_school_prob
         met_before_w = met_before_s
     else:
         wfh = rng.uniform() < wfh_prob
@@ -624,7 +624,7 @@ def temporal_anne_flowchart(
             person_days_wasted_quarantine += testing_delay * home_contacts_isolated.sum()
         # If person has covid, whole house will have to do full lockdown for the period
         # TODO: might be able to let some out if the test negative?
-        elif (isolate_contacts_on_positive or isolate_contacts_on_symptoms) and case.covid:
+        elif (isolate_household_on_positive or isolate_household_on_symptoms) and case.covid:
             person_days_quarantine += quarantine_length * home_contacts_isolated.sum()
             # TODO: Count as wasted the time that house members who do not have covid locked down as wasted
             person_days_wasted_quarantine += quarantine_length * (home_contacts_isolated & ~home_infections).sum()
@@ -703,7 +703,7 @@ def temporal_anne_flowchart(
             home_infections_days_not_quarantined = test_results_day - home_infectious_start
         else:
             # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
-            home_infections_days_not_quarantined = np.array([], dtype=int)
+            home_infections_days_not_quarantined = (len(home_infectious_start)) * np.ones(n_home, dtype=int)
 
         # Compute the days a work/othr case is left out in the world infectious
         if isolate_contacts_on_symptoms:
@@ -713,8 +713,8 @@ def temporal_anne_flowchart(
             work_infections_days_not_quarantined = test_results_day - work_infectious_start
             othr_infections_days_not_quarantined = test_results_day - othr_infectious_start
         else:
-            work_infections_days_not_quarantined = np.array([], dtype=int)
-            othr_infections_days_not_quarantined = np.array([], dtype=int)
+            work_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(work_infectious_start), dtype=int)
+            othr_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(othr_infectious_start), dtype=int)
 
         # Only care about ones where there is more than zero days spent unisolated
         home_infections_days_not_quarantined = home_infections_days_not_quarantined[home_infections_days_not_quarantined > 0]
