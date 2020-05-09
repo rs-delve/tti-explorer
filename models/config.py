@@ -6,7 +6,7 @@ import numpy as np
 import utils
 
 
-ALL_CFG_FLAG = "xasaflsfakhasfkhsdfkjhlsdf"
+ALL_CFG_FLAG = "all"
 
 
 _contacts_configs = {
@@ -394,7 +394,7 @@ _policy_configs = {
                     "isolate_household_on_symptoms": True, 
                     "isolate_household_on_positive": True,  
                     "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": False,
+                    "isolate_contacts_on_positive": True,
 
                     "do_symptom_testing": True, 
                     "do_manual_tracing": False,
@@ -413,7 +413,7 @@ _policy_configs = {
                     "isolate_household_on_symptoms": True, 
                     "isolate_household_on_positive": True,  
                     "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": False,
+                    "isolate_contacts_on_positive": True,
 
                     "do_symptom_testing": True, 
                     "do_manual_tracing": False,
@@ -432,7 +432,7 @@ _policy_configs = {
                     "isolate_household_on_symptoms": True, 
                     "isolate_household_on_positive": True,  
                     "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": False,
+                    "isolate_contacts_on_positive": True,
 
                     "do_symptom_testing": True, 
                     "do_manual_tracing": False,
@@ -451,11 +451,111 @@ _policy_configs = {
                     "isolate_household_on_symptoms": True, 
                     "isolate_household_on_positive": True,  
                     "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": False,
+                    "isolate_contacts_on_positive": True,
 
                     "do_symptom_testing": True, 
                     "do_manual_tracing": False,
                     "do_app_tracing": False, 
+                    
+                    "wfh_prob": 0.60,
+                    "max_contacts": 4,
+
+                    "do_schools_open": False,
+
+                },
+             "L3_current_situation_c_1_wfh_0.45_contact_trace":
+                {
+                    "isolate_individual_on_symptoms": True, 
+                    "isolate_individual_on_positive": True, 
+                    "isolate_household_on_symptoms": True, 
+                    "isolate_household_on_positive": True,  
+                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_contacts_on_positive": True,
+
+                    "do_symptom_testing": True, 
+
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+
+                    "met_before_w": 0.79,
+                    "met_before_s": 0.9,
+                    "met_before_h": 1, 
+                    "met_before_o": 0.52,
+                    
+                    "wfh_prob": 0.45,
+                    "max_contacts": 1,
+
+                    "do_schools_open": False,
+
+                },
+            "L3_current_situation_c_1_wfh_0.65_contact_trace":
+                {
+                    "isolate_individual_on_symptoms": True, 
+                    "isolate_individual_on_positive": True, 
+                    "isolate_household_on_symptoms": True, 
+                    "isolate_household_on_positive": True,  
+                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_contacts_on_positive": True,
+
+                    "do_symptom_testing": True, 
+
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+
+                    "met_before_w": 0.79,
+                    "met_before_s": 0.9,
+                    "met_before_h": 1, 
+                    "met_before_o": 0.52,
+                    
+                    "wfh_prob": 0.6,
+                    "max_contacts": 1,
+
+                    "do_schools_open": False,
+
+                },
+                "L3_current_situation_c_4_wfh_0.45_contact_trace":
+                {
+                    "isolate_individual_on_symptoms": True, 
+                    "isolate_individual_on_positive": True, 
+                    "isolate_household_on_symptoms": True, 
+                    "isolate_household_on_positive": True,  
+                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_contacts_on_positive": True,
+
+                    "do_symptom_testing": True, 
+
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+                    
+                    "met_before_w": 0.79,
+                    "met_before_s": 0.9,
+                    "met_before_h": 1, 
+                    "met_before_o": 0.52,
+                    
+                    "wfh_prob": 0.45,
+                    "max_contacts": 4,
+
+                    "do_schools_open": False,
+
+                },
+                "L3_current_situation_c_4_wfh_0.65_contact_trace":
+                {
+                    "isolate_individual_on_symptoms": True, 
+                    "isolate_individual_on_positive": True, 
+                    "isolate_household_on_symptoms": True, 
+                    "isolate_household_on_positive": True,  
+                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_contacts_on_positive": True,
+
+                    "do_symptom_testing": True, 
+
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+                    
+                    "met_before_w": 0.79,
+                    "met_before_s": 0.9,
+                    "met_before_h": 1, 
+                    "met_before_o": 0.52,
                     
                     "wfh_prob": 0.60,
                     "max_contacts": 4,
@@ -470,11 +570,30 @@ _policy_configs = {
                     "isolate_household_on_symptoms": False,
                     "isolate_household_on_positive": False,
                     "isolate_contacts_on_symptoms": False,
-                    "isolate_contacts_on_positive": False,
+                    "isolate_contacts_on_positive": True,
 
                     "do_symptom_testing": False,
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
+                },
+            "L0_no_measures_contact_trace":
+                {
+                    "isolate_individual_on_symptoms": False,
+                    "isolate_individual_on_positive": False,
+                    "isolate_household_on_symptoms": False,
+                    "isolate_household_on_positive": False,
+                    "isolate_contacts_on_symptoms": False,
+                    "isolate_contacts_on_positive": True,
+
+                    "do_symptom_testing": True,
+                
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+                    
+                    "met_before_w": 0.79,
+                    "met_before_s": 0.9,
+                    "met_before_h": 1, 
+                    "met_before_o": 0.52,
                 },
         }
     }
@@ -589,7 +708,7 @@ def get_strategy_config(strat, cfg_names, _cfg_dct=_policy_configs):
     except KeyError:
         raise ValueError(f"Cannot find strategy {strat} in config.py")
     else:
-        if cfg_names == ALL_CFG_FLAG:
+        if (len(cfg_names) == 1) and (cfg_names[0] == ALL_CFG_FLAG):
             return dict(**strategy)
         else:
             output = dict()
