@@ -140,13 +140,13 @@ if __name__ == "__main__":
                 )
             )
         tables[scenario] = table.mean(0)
-    df = pd.DataFrame.from_dict(tables, orient="index")
-    df.groupby(level=0).agg(['mean', 'std']).to_csv(os.path.join(args.output_folder, 'all_results.csv'))
+    # df = pd.DataFrame.from_dict(tables, orient="index")
+    # df.groupby(level=0).agg(['mean', 'std']).to_csv(os.path.join(args.output_folder, 'all_results.csv'))
 
 
-    # all_results = pd.DataFrame.from_dict({ (i,j): scenario_results[i][j] for i in scenario_results.keys() for j in scenario_results[i].keys()}, orient='index') 
-    # all_results.reset_index(inplace=True)
-    # all_results.columns = ['scenario', 'case_set'] + list(all_results.columns[2:])
-    # all_results = all_results.groupby('scenario').agg(['mean', 'std'])
+    all_results = pd.DataFrame.from_dict({ (i,j): scenario_results[i][j] for i in scenario_results.keys() for j in scenario_results[i].keys()}, orient='index') 
+    all_results.reset_index(inplace=True)
+    all_results.columns = ['scenario', 'case_set'] + list(all_results.columns[2:])
+    all_results = all_results.groupby('scenario').agg(['mean', 'std'])
 
-    # all_results.to_csv(os.path.join(args.output_folder, 'all.csv'))
+    all_results.to_csv(os.path.join(args.output_folder, 'all_results.csv'))
