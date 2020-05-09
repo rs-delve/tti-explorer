@@ -580,20 +580,6 @@ _policy_configs = {
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
                 },
-            "default_contact_trace":
-                {
-                    "isolate_individual_on_symptoms": True,
-                    "isolate_individual_on_positive": True,
-                    "isolate_household_on_symptoms": True,
-                    "isolate_household_on_positive": True,
-                    "isolate_contacts_on_symptoms": False,
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True,
-                
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True,
-                },
         }
     }
 
