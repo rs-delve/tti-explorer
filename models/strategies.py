@@ -1,5 +1,4 @@
 from types import SimpleNamespace
-from enum import Enum
 
 import numpy as np
 
@@ -44,12 +43,6 @@ def limit_contact(contacts, max_per_day):
         contact_limited = (contact_limited | allow_on_day)
 
     return contact_limited
-
-
-class ContactType(Enum):
-    Home = 'home'
-    Work = 'work'
-    Other = 'other'
 
 
 @registry("CMMID")
@@ -491,7 +484,7 @@ def temporal_anne_flowchart(
         test_results_day = test_perform_day + testing_delay
 
 
-    class ContactTypeTBN():
+    class ContactsBase():
         def __init__(self):
             self.contacts = getattr(contacts, self.contact_type)[:, 1]
             self.infections = (getattr(contacts, self.contact_type)[:, 0] >= 0).astype(bool)
@@ -641,10 +634,10 @@ def temporal_anne_flowchart(
             return metrics
         
 
-    class HomeTBN(ContactTypeTBN):
+    class HomeContacts(ContactsBase):
         def __init__(self):
             self.contact_type = 'home'
-            super(HomeTBN, self).__init__()
+            super(HomeContacts, self).__init__()
 
             self.isolate_on_symptoms = isolate_household_on_symptoms
             self.isolate_on_positive = isolate_household_on_positive
@@ -686,10 +679,10 @@ def temporal_anne_flowchart(
             return person_days_quarantine, person_days_wasted_quarantine
 
 
-    class WorkTBN(ContactTypeTBN):
+    class WorkContacts(ContactsBase):
         def __init__(self):
             self.contact_type = 'work'
-            super(WorkTBN, self).__init__()
+            super(WorkContacts, self).__init__()
 
             self.isolate_on_symptoms = isolate_contacts_on_symptoms
             self.isolate_on_positive = isolate_contacts_on_positive
@@ -740,10 +733,10 @@ def temporal_anne_flowchart(
             return person_days_quarantine, person_days_wasted_quarantine
 
 
-    class OtherTBN(ContactTypeTBN):
+    class OtherContacts(ContactsBase):
         def __init__(self):
             self.contact_type = 'other'
-            super(OtherTBN, self).__init__()
+            super(OtherContacts, self).__init__()
 
             self.isolate_on_symptoms = isolate_contacts_on_symptoms
             self.isolate_on_positive = isolate_contacts_on_positive
@@ -791,9 +784,9 @@ def temporal_anne_flowchart(
             return person_days_quarantine, person_days_wasted_quarantine
 
 
-    home_metrics = HomeTBN().run()
-    work_metrics = WorkTBN().run()
-    other_metrics = OtherTBN().run()
+    home_metrics = HomeContacts().run()
+    work_metrics = WorkContacts().run()
+    other_metrics = OtherContacts().run()
 
     # Compute the base reproduction rate
     base_rr = home_metrics['base_rr'] + work_metrics['base_rr'] + other_metrics['base_rr']
