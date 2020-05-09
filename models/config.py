@@ -774,9 +774,16 @@ _case_sensitivities = {
                         [0, 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05, 0.00], # mean delay 3.05 days
                         [0., 0.5, 0.2, 0.1, 0.1, 0.1, 0., 0., 0., 0.],  # optimistic, mean delay 2.1 days
                     ]
-                )
-
+                ),
+            inf_profile=Sensitivity(
+                bounds=None,
+                values=[
+                    [],
+                    [],
+                    [],  # @ bobby he
+                    ]
             )
+        )
     }
 
 
