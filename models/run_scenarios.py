@@ -121,12 +121,15 @@ if __name__ == "__main__":
         rng = np.random.RandomState(seed=args.seed)
 
         for scenario, cfg_dct in strategy_configs.items():
-            scenario_results[scenario][tidy_fname(case_file)] = run_scenario(
+            r = run_scenario(
                     case_contacts,
                     strategy,
                     rng,
                     cfg_dct
-                ).mean(0)
+                )
+
+            scenario_results[scenario][tidy_fname(case_file)] = r.mean(0)
+                
             pbar.update(1)
     
     tables = dict()
