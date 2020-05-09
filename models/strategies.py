@@ -623,7 +623,7 @@ def temporal_anne_flowchart(
             person_days_wasted_quarantine += testing_delay * home_contacts_isolated.sum()
         # If person has covid, whole house will have to do full lockdown for the period
         # TODO: might be able to let some out if the test negative?
-        elif (isolate_contacts_on_positive or isolate_contacts_on_symptoms) and case.covid:
+        elif (isolate_household_on_positive or isolate_household_on_symptoms) and case.covid:
             person_days_quarantine += quarantine_length * home_contacts_isolated.sum()
             # TODO: Count as wasted the time that house members who do not have covid locked down as wasted
             person_days_wasted_quarantine += quarantine_length * (home_contacts_isolated & ~home_infections).sum()
