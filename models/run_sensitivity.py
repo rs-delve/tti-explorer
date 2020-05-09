@@ -26,7 +26,6 @@ def load_cases(fpath):
     Returns (tuple[list[tuple[Case, Contact], dict]):
         pairs: list of Case, Contact pairs
         meta: dictionary of meta-data for case/contact generation
-        
     """
     with open(fpath, "r") as f:
         raw = json.load(f)
@@ -61,6 +60,7 @@ if __name__ == "__main__":
     from argparse import ArgumentParser
     from collections import defaultdict
     from datetime import datetime
+    import json
     import time
     from types import SimpleNamespace
     import os
@@ -68,9 +68,11 @@ if __name__ == "__main__":
     from tqdm import tqdm
 
     import config
-    from strategies import registry
+    import sensitivity
+    import strategies
+
     
-    parser = ArgumentParser(fromfile_prefix_chars="@")
+    parser = ArgumentParser("Run sensitivity analysis on strategy")
     parser.add_argument(
             "strategy",
             help="The name of the strategy to use",
@@ -84,16 +86,23 @@ if __name__ == "__main__":
         )
     parser.add_argument(
         "output_folder",
-        help="Folder in which to save the outputs. Will be made for you if not specified.",
+        help="Folder in which to save the outputs. Will be made for you if needed.",
         type=str
         )
     parser.add_argument(
             "--scenarios",
-            help=("Which scenarios to run from config.py. If 'all' then all are run. "
-            "Default %(default)s."),
+            help="Which scenarios to run from config.py. If not given then all are run.",
             default=config.ALL_CFG_FLAG,
             type=str,
             nargs="*"
+        )
+    parser.add_argument(
+            "--ablation",
+            help=("Ablation method for sensitivity analysis "
+                "over parameters designated for ablation in config.py. "
+                "Empty string does no ablation. Default '%(default)s'."),
+            default="",
+            type=str
         )
     parser.add_argument(
             "--seed",
@@ -103,50 +112,64 @@ if __name__ == "__main__":
         )
     args = parser.parse_args()
 
-    strategy = registry[args.strategy]
+    strategy = strategies.registry[args.strategy]
     strategy_configs = config.get_strategy_config(
             args.strategy,
             args.scenarios
         )
+    ablator = sensitivity.registry[args.ablation] if args.ablation else None
 
-    scenario_results = defaultdict(dict)
     case_files = find_case_files(args.population)
     pbar = tqdm(
-            desc="Running strategies",
+            desc="Running configurations/ablations",
             total=len(case_files) * len(strategy_configs),
-            smoothing=0
+            smoothing=None
         )
-    for i, case_file in enumerate(case_files):
+    scenario_results = defaultdict(lambda: defaultdict(dict))
+    configs_dct = defaultdict(dict)
+    for case_file in case_files:
         case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
-        rng = np.random.RandomState(seed=args.seed)
 
         for scenario, cfg_dct in strategy_configs.items():
-            scenario_results[scenario][tidy_fname(case_file)] = run_scenario(
-                    case_contacts,
-                    strategy,
-                    rng,
-                    cfg_dct
-                ).mean(0)
+            cfgs = ablator(cfg_dct, config.get_policy_ablations(args.strategy)) if args.ablation else [cfg_dct]
+
+            for i, cfg in enumerate(cfgs):
+                # this is so uglY!
+                scenario_results[scenario][i][tidy_fname(case_file)] = run_scenario(
+                        case_contacts,
+                        strategy,
+                        np.random.RandomState(seed=args.seed),
+                        cfg
+                    ).mean(0)
+                configs_dct[scenario][i] = cfg
             pbar.update(1)
-    
-    tables = dict()
+
     os.makedirs(args.output_folder, exist_ok=True)
-    for scenario, v in scenario_results.items():
-        table = results_table(v)
-        table.to_csv(
+    for scenario, res_dict in scenario_results.items():
+        odir = os.path.join(args.output_folder, scenario)
+        os.makedirs(odir, exist_ok=True)
+        res_tables = dict()
+        for i, res_dct_over_seeds in res_dict.items():
+            with open(os.path.join(odir, f"config_{i}.json"), "w") as f:
+                    json.dump(
+                        dict(
+                            configs_dct[scenario][i],
+                            seed=args.seed,
+                            population=args.population,
+                            strategy=args.strategy
+                        ),
+                        f
+                    )
+
+            table = results_table(res_dct_over_seeds)
+            table.to_csv(
                 os.path.join(
-                    args.output_folder,
-                    f"{scenario}.csv"
+                    odir,
+                    f"run_{i}.csv"
                 )
             )
-        tables[scenario] = table.mean(0)
-    df = pd.DataFrame.from_dict(tables, orient="index")
-    df.groupby(level=0).agg(['mean', 'std']).to_csv(os.path.join(args.output_folder, 'all_results.csv'))
+            res_tables[i] = table
+        pd.concat(res_tables).agg(
+                ['mean', 'std']
+            ).to_csv(os.path.join(odir, "over_all_seeds.csv"))
 
-
-    # all_results = pd.DataFrame.from_dict({ (i,j): scenario_results[i][j] for i in scenario_results.keys() for j in scenario_results[i].keys()}, orient='index') 
-    # all_results.reset_index(inplace=True)
-    # all_results.columns = ['scenario', 'case_set'] + list(all_results.columns[2:])
-    # all_results = all_results.groupby('scenario').agg(['mean', 'std'])
-
-    # all_results.to_csv(os.path.join(args.output_folder, 'all.csv'))

@@ -630,14 +630,6 @@ _policy_ablations = {
                 bounds=None,
                 values=[2, 3]
             ),
-            p_day_noticed_symptoms=Ablation(
-                bounds=None,
-                values=[
-                    [0., 0., 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05],  # pessimistic, mean delay 4.05 days
-                    [0, 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05, 0.00], # mean delay 3.05 days
-                    [0., 0.5, 0.2, 0.1, 0.1, 0.1, 0., 0., 0., 0.],  # optimistic, mean delay 2.1 days
-                ]
-            ),
             # what are sensible values for this???
             met_before_o=Ablation(
                 bounds=(0.5, 1.),
@@ -656,7 +648,18 @@ _policy_ablations = {
 
 _case_ablations = {
         # to be decided!
-        "oxteam": dict(infection_proportions=Ablation(None, None))
+        "oxteam": dict(
+            infection_proportions=Ablation(None, None),
+            p_day_noticed_symptoms=Ablation(
+                    bounds=None,
+                    values=[
+                        [0., 0., 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05],  # pessimistic, mean delay 4.05 days
+                        [0, 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05, 0.00], # mean delay 3.05 days
+                        [0., 0.5, 0.2, 0.1, 0.1, 0.1, 0., 0., 0., 0.],  # optimistic, mean delay 2.1 days
+                    ]
+                )
+
+            )
     }
 
 
