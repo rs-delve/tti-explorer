@@ -758,7 +758,7 @@ _global_defaults = {
 
         trace_adherence=1.0,                    # Probability of a traced contact isolating correctly
 
-        do_schools_open=True,                   # If schools are open
+        go_to_school_prob=1.0,                  # Fraction of school children attending school
 
         met_before_h=1.0,                       # Probability of having met a home contact before to be able to manually trace
         met_before_w=1.0,                       # Probability of having met a work contact before to be able to manually trace

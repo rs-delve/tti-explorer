@@ -182,7 +182,7 @@ def CMMID_strategy_better(
     do_pop_testing,
     do_symptom_testing,
 
-    do_schools_open,
+    go_to_school_prob,
 
     manual_home_trace_prob,
     manual_work_trace_prob,
@@ -201,7 +201,7 @@ def CMMID_strategy_better(
 ):
 
     if case.under18:
-        wfh = not do_schools_open
+        wfh = rng.uniform() < go_to_school_prob
         met_before_w = met_before_s
     else:
         wfh = rng.uniform() < wfh_prob
