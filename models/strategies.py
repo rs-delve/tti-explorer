@@ -391,7 +391,7 @@ def temporal_anne_flowchart(
 
     trace_adherence,                # Probability of a traced contact isolating correctly
 
-    do_schools_open,                # If schools are open
+    go_to_school_prob,                # If schools are open
 
     met_before_h,                   # Probability of having met a home contact before to be able to manually trace
     met_before_w,                   # Probability of having met a work contact before to be able to manually trace
@@ -420,7 +420,7 @@ def temporal_anne_flowchart(
 
     # If under 18, change wfh and likelihood of knowing contacts
     if case.under18:
-        wfh = not do_schools_open
+        wfh = rng.uniform() < go_to_school_prob
         met_before_w = met_before_s
     else:
         wfh = rng.uniform() < wfh_prob
