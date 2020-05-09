@@ -97,10 +97,10 @@ if __name__ == "__main__":
             nargs="*"
         )
     parser.add_argument(
-            "--ablation",
-            help=("Ablation method for sensitivity analysis "
-                "over parameters designated for ablation in config.py. "
-                "Empty string does no ablation. Default '%(default)s'."),
+            "--sensitivity",
+            help=("Method for sensitivity analysis "
+                "over parameters designated for sensitivity analysis in config.py. "
+                "Empty string does no sensitivity analysis. Default '%(default)s'."),
             default="",
             type=str
         )
@@ -117,12 +117,13 @@ if __name__ == "__main__":
             args.strategy,
             args.scenarios
         )
-    ablator = sensitivity.registry[args.ablation] if args.ablation else None
+    config_generator = sensitivity.registry[args.sensitivity] if args.sensitivity else None
 
     case_files = find_case_files(args.population)
     pbar = tqdm(
-            desc="Running configurations/ablations",
-            total=len(case_files) * len(strategy_configs),
+            desc="Running configurations/sensitivities:",
+            # this value of 35 only valid for axis method and specific configs!
+            total=len(case_files) * len(strategy_configs) * 35, 
             smoothing=None
         )
     scenario_results = defaultdict(lambda: defaultdict(dict))
@@ -131,8 +132,12 @@ if __name__ == "__main__":
         case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
 
         for scenario, cfg_dct in strategy_configs.items():
-            cfgs = ablator(cfg_dct, config.get_policy_ablations(args.strategy)) if args.ablation else [cfg_dct]
+            cfgs = config_generator(
+                    cfg_dct,
+                    config.get_policy_sensitivities(args.strategy)
+                ) if args.sensitivity else [cfg_dct]
 
+            pbar.desc = pbar.desc.format(case_file, scenario)
             for i, cfg in enumerate(cfgs):
                 # this is so uglY!
                 scenario_results[scenario][i][tidy_fname(case_file)] = run_scenario(
@@ -142,7 +147,7 @@ if __name__ == "__main__":
                         cfg
                     ).mean(0)
                 configs_dct[scenario][i] = cfg
-            pbar.update(1)
+                pbar.update(1)
 
     os.makedirs(args.output_folder, exist_ok=True)
     for scenario, res_dict in scenario_results.items():

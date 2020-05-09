@@ -21,8 +21,7 @@ Case = namedtuple(
     )
 
 
-def simulate_case(rng, p_under18, p_symptomatic_covid_neg,
-        p_symptomatic_covid_pos, p_asymptomatic_covid_pos, p_has_app,
+def simulate_case(rng, p_under18, infection_proportions, p_has_app,
         p_report_app, p_report_nhs_g_app, p_report_nhs_g_no_app,
         p_day_noticed_symptoms, inf_profile):
     """simulate_case
@@ -30,9 +29,7 @@ def simulate_case(rng, p_under18, p_symptomatic_covid_neg,
     Args:
         rng (np.random.RandomState): random number generator.
         p_under18 (float): Probability of case being under 18
-        p_symptomatic_covid_neg (float): Probability of being symptomatic and covid negative
-        p_symptomatic_covid_pos (float): Probability of being symptomatic and covid positive
-        p_asymptomatic_covid_pos (float): Probability of being asymptomatic and covid positive
+        infection_proportions (list[float]): Probs of being symp covid neg, symp covid pos, asymp covid pos
         p_has_app (float): Probability of having app given symptomatic
         p_report_app (float): Probability of reporting through app conditional on having app
         p_report_nhs_g_app (float): Probability reporting with app given have app
@@ -45,6 +42,9 @@ def simulate_case(rng, p_under18, p_symptomatic_covid_neg,
 
     Returns (Case): case with attributes populated.
     """
+
+    p_symptomatic_covid_neg, p_symptomatic_covid_pos, p_asymptomatic_covid_pos = infection_proportions
+
     under18 = bool_bernoulli(p_under18, rng)
 
     illness_pvals = [
