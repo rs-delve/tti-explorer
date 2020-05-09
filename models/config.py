@@ -406,7 +406,7 @@ _policy_configs = {
                     "do_schools_open": False,
 
                 },
-            "L3_current_situation_c_1_wfh_0.60":
+            "L3_current_situation_c_1_wfh_0.65":
                 {
                     "isolate_individual_on_symptoms": True, 
                     "isolate_individual_on_positive": True, 
@@ -420,25 +420,6 @@ _policy_configs = {
                     "do_app_tracing": False, 
                     
                     "wfh_prob": 0.6,
-                    "max_contacts": 1,
-
-                    "do_schools_open": False,
-
-                },
-                "L3_current_situation_c_1_wfh_0.75":
-                {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": False,
-
-                    "do_symptom_testing": True, 
-                    "do_manual_tracing": False,
-                    "do_app_tracing": False, 
-                    
-                    "wfh_prob": 0.75,
                     "max_contacts": 1,
 
                     "do_schools_open": False,
@@ -463,7 +444,7 @@ _policy_configs = {
                     "do_schools_open": False,
 
                 },
-                "L3_current_situation_c_4_wfh_0.60":
+                "L3_current_situation_c_4_wfh_0.65":
                 {
                     "isolate_individual_on_symptoms": True, 
                     "isolate_individual_on_positive": True, 
@@ -482,25 +463,6 @@ _policy_configs = {
                     "do_schools_open": False,
 
                 },
-                "L3_current_situation_c_4_wfh_0.75":
-                {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": False,
-
-                    "do_symptom_testing": True, 
-                    "do_manual_tracing": False,
-                    "do_app_tracing": False, 
-                    
-                    "wfh_prob": 0.75,
-                    "max_contacts": 4,
-
-                    "do_schools_open": False,
-
-                },
             "L0_no_measures":
                 {
                     "isolate_individual_on_symptoms": False,
@@ -513,190 +475,6 @@ _policy_configs = {
                     "do_symptom_testing": False,
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
-                },
-            "isolate_individual_on_symptoms":
-                {
-                    "isolate_individual_on_symptoms": True,
-                    "isolate_individual_on_positive": True,
-                    "isolate_household_on_symptoms": False,
-                    "isolate_household_on_positive": True,
-                    "isolate_contacts_on_symptoms": False,
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True,
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True,
-                },
-            "isolate_household_on_symptoms":
-                {
-                    "isolate_individual_on_symptoms": True,
-                    "isolate_individual_on_positive": True,
-                    "isolate_household_on_symptoms": True,
-                    "isolate_household_on_positive": True,
-                    "isolate_contacts_on_symptoms": False,
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True,
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True,
-                },
-            "isolate_household_on_symptoms_reduced_tracing_effectiveness":
-                {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True, 
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True, 
-
-                    "manual_home_trace_prob": 1., 
-                    "manual_work_trace_prob": 0.95,
-                    "manual_othr_trace_prob": 0.95,
-                    
-                    "met_before_w": 0.79,
-                    "met_before_s": 0.9, 
-                    "met_before_h": 1,    
-                    "met_before_o": 0.52,
-                },
-            "isolate_household_on_symptoms_45_wfh":
-                {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True, 
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True, 
-
-                    "wfh_prob": 0.45
-                },
-            "isolate_household_on_symptoms_45_wfh_reduced_tracing_effectiveness":
-                {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True, 
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True, 
-
-                    "wfh_prob": 0.45,
-
-                    "manual_home_trace_prob": 1., 
-                    "manual_work_trace_prob": 0.95,
-                    "manual_othr_trace_prob": 0.95,
-                    
-                    "met_before_w": 0.79,
-                    "met_before_s": 0.9, 
-                    "met_before_h": 1,    
-                    "met_before_o": 0.52,
-                },
-            "isolate_household_on_symptoms_45_wfh_reduced_tracing_effectiveness_contact_limiting":
-                {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True, 
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True, 
-
-                    "wfh_prob": 0.45,
-
-                    "manual_home_trace_prob": 1., 
-                    "manual_work_trace_prob": 0.95,
-                    "manual_othr_trace_prob": 0.95,
-                    
-                    "met_before_w": 0.79,
-                    "met_before_s": 0.9, 
-                    "met_before_h": 1,    
-                    "met_before_o": 0.52,
-
-                    "max_contacts": 4,
-                },
-            "isolate_household_on_symptoms_45_wfh_reduced_tracing_effectiveness_contact_limiting_schools_close":
-                {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True, 
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True, 
-
-                    "wfh_prob": 0.45,
-
-                    "manual_home_trace_prob": 1., 
-                    "manual_work_trace_prob": 0.95,
-                    "manual_othr_trace_prob": 0.95,
-                    
-                    "met_before_w": 0.79,
-                    "met_before_s": 0.9, 
-                    "met_before_h": 1,    
-                    "met_before_o": 0.52,
-
-                    "max_contacts": 4,
-
-                    "do_schools_open": False,
-                }, 
-            "isolate_household_on_symptoms_45_wfh_reduced_tracing_effectiveness_contact_limiting_schools_close_app_cov_up":
-                {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True, 
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True, 
-
-                    "wfh_prob": 0.45,
-
-                    "manual_home_trace_prob": 1., 
-                    "manual_work_trace_prob": 0.95,
-                    "manual_othr_trace_prob": 0.95,
-                    
-                    "met_before_w": 0.79,
-                    "met_before_s": 0.9, 
-                    "met_before_h": 1,    
-                    "met_before_o": 0.52,
-
-                    "max_contacts": 4,
-
-                    "do_schools_open": False,
-
-                    "app_cov": 0.5,
-                }, 
-            "isolate_contacts_on_symptoms":
-                {
-                    "isolate_individual_on_symptoms": True,
-                    "isolate_individual_on_positive": True,
-                    "isolate_household_on_symptoms": True,
-                    "isolate_household_on_positive": True,
-                    "isolate_contacts_on_symptoms": True,
-                    "isolate_contacts_on_positive": True,
-
-                    "do_symptom_testing": True,
-                    "do_manual_tracing": True,
-                    "do_app_tracing": True,
                 },
         }
     }
