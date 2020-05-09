@@ -47,10 +47,7 @@ _case_configs = {
             p_under18=0.21,
             # following Kucharski.
             # This is currently independent from everything else.
-
-            p_symptomatic_covid_neg=0,
-            p_symptomatic_covid_pos=0.6,
-            p_asymptomatic_covid_pos=0.4,
+            infection_proportions=[0, 0.6, 0.4],  # symp covid neg, symp covid pos, asymp covid pos
 
             #Conditional on symptomatic
             p_has_app=0.35,
@@ -73,9 +70,8 @@ _case_configs = {
             # following Kucharski.
             # This is currently independent from everything else.
 
-            p_symptomatic_covid_neg=200 / 260,
-            p_symptomatic_covid_pos=60 * 0.6 / 260,
-            p_asymptomatic_covid_pos=60 * 0.4 / 260,
+            # symp covid neg, symp covid pos, asymp covid pos
+            infection_proportions=[200/260, 0.6 * 60/260, 0.4 * 60/260],
 
             #Conditional on symptomatic
             p_has_app=0.35,
@@ -101,6 +97,12 @@ _case_configs = {
             ).tolist()
         )
     }
+
+
+for i, name in enumerate(['oxteam-symp-covneg', 'oxteam-symp-covpos', 'oxteam-asymp-covpos']):
+    _contacts_configs[name] = _contacts_configs['oxteam']
+    _case_configs[name] = _case_configs['oxteam']
+    _case_configs[name]['infection_proportions'] = [int(k==i) for k in range(3)]
 
 
 get_case_config = partial(get_contacts_config, _cfg_dct=_case_configs)
@@ -389,16 +391,16 @@ _policy_configs = {
         {
             "L3_current_situation_c_1_wfh_0.45":
                 {
-                    "isolate_individual_on_symptoms": True, 
-                    "isolate_individual_on_positive": True, 
-                    "isolate_household_on_symptoms": True, 
-                    "isolate_household_on_positive": True,  
-                    "isolate_contacts_on_symptoms": False,  
+                    "isolate_individual_on_symptoms": True,
+                    "isolate_individual_on_positive": True,
+                    "isolate_household_on_symptoms": True,
+                    "isolate_household_on_positive": True,
+                    "isolate_contacts_on_symptoms": False,
                     "isolate_contacts_on_positive": False,
 
-                    "do_symptom_testing": True, 
+                    "do_symptom_testing": True,
                     "do_manual_tracing": False,
-                    "do_app_tracing": False, 
+                    "do_app_tracing": False,
                     
                     "wfh_prob": 0.45,
                     "max_contacts": 1,
@@ -795,6 +797,7 @@ _global_defaults = {
         quarantine_length=14,                   # Length of quarantine imposed on COVID cases (and household)
 
         latent_period=3,                    # Length of a cases incubation period (from infection to start of infectious period)
+        manual_trace_time=2  # time taken to trace contact
     ),
 }
 
@@ -824,55 +827,67 @@ def get_strategy_config(strat, cfg_names, _cfg_dct=_policy_configs):
             return output
 
 
-Ablation = namedtuple(
-        'Ablation',
+Sensitivity = namedtuple(
+        'Sensitivity',
         ['bounds', 'values']
     )
 
 
-_policy_ablations = {
+_policy_sensitivities = {
         "temporal_anne_flowchart": dict(
-            app_cov=Ablation(
+            app_cov=Sensitivity(
                 bounds=(0, 1),
-                values=np.linspace(0.35, 0.75, num=4)
+                values=np.linspace(0.1, 1., num=9)
             ),
-            app_report_prob=Ablation(
+            app_report_prob=Sensitivity(
                 bounds=(0, 1),
                 values=np.linspace(0.5, 1, num=4)
             ),
-            manual_report_prob=Ablation(
+            manual_report_prob=Sensitivity(
                 bounds=(0, 1),
                 values=np.linspace(0.25, 0.75, num=4)
             ),
-            testing_delay=Ablation(
+            testing_delay=Sensitivity(
                 bounds=None,
-                values=[2, 3, 4]
+                values=[1, 2, 3]
             ),
-            latent_period=Ablation(
+            latent_period=Sensitivity(
                 bounds=None,
                 values=[2, 3]
             ),
             # what are sensible values for this???
-            met_before_o=Ablation(
+            met_before_o=Sensitivity(
                 bounds=(0.5, 1.),
                 values=np.linspace(0.5, 1, num=4)
             ),
-            max_contacts=Ablation(
+            max_contacts=Sensitivity(
                 bounds=None,  # what on earth to put for this?!!?
                 values=[4, 2e3]  # what to put for these???
             ),
-            wfh_prob=Ablation(
+            wfh_prob=Sensitivity(
                 bounds=(0, .65),
                 values=np.linspace(0, 0.65, num=4)
+            ),
+            manual_trace_time=Sensitivity(
+                bounds=None,
+                values=[1, 2, 3]
             )
         )
     }
 
-_case_ablations = {
+_case_sensitivities = {
         # to be decided!
         "oxteam": dict(
-            infection_proportions=Ablation(None, None),
-            p_day_noticed_symptoms=Ablation(
+            infection_proportions=Sensitivity(
+                bounds=None,
+                values=[
+                    # symp covid neg, symp covid pos, asymp covid pos
+                    [200/260, 0.6 * 60/260, 0.4 * 60/260],  # anne
+                    [150/(180+30), 0.6 * 60/(180+30), 0.4 * 60/(180+30)],  # Bugwatch May
+                    [150/(100+30), 0.6 * 60/(100+30), 0.4 * 60/(100+30)],  # Bugwatch June
+                ],
+            ),
+            p_day_noticed_symptoms=Sensitivity(
                     bounds=None,
                     values=[
                         [0., 0., 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05],  # pessimistic, mean delay 4.05 days
@@ -885,13 +900,13 @@ _case_ablations = {
     }
 
 
-get_policy_ablations = partial(get_contacts_config, _cfg_dct=_policy_ablations)
-get_case_ablations = partial(get_contacts_config, _cfg_dct=_case_ablations)
+get_policy_sensitivities = partial(get_contacts_config, _cfg_dct=_policy_sensitivities)
+get_case_sensitivities = partial(get_contacts_config, _cfg_dct=_case_sensitivities)
 
 
 if __name__ == "__main__":
-    for k, v in _policy_ablations.items():
+    for k, v in _policy_sensitivities.items():
         assert k in _policy_configs
 
-    for k, v in _case_ablations.items():
+    for k, v in _case_sensitivities.items():
         assert k in _case_configs
