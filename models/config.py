@@ -702,13 +702,13 @@ _global_defaults = {
         app_report_prob=0.75,                   # Likelihood of reporting symptoms through app
         manual_report_prob=0.5,                 # Likelihood of manually reporting symptoms (will also do if has app but didn't report through it. See flowchart)
 
-        testing_delay=3,                        # Days delay between test and results
+        testing_delay=2,                        # Days delay between test and results
 
         do_manual_tracing=True,                 # Perform manual tracing of contacts
         do_app_tracing=True,                    # Perform app tracing of contacts
 
         app_trace_delay=0,                # Delay associated with tracing through the app
-        manual_trace_delay=2,             # Delay associated with tracing manually
+        manual_trace_delay=1,             # Delay associated with tracing manually
 
         manual_home_trace_prob=1.0,             # Probability of manually tracing a home contact
         manual_work_trace_prob=1.0,             # Probability of manually tracing a work contact
