@@ -1,7 +1,8 @@
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.stats import gamma
-
+from itertools import product, starmap
+from collections import namedtuple
 
 def bool_bernoulli(p, rng):
     return bool(rng.binomial(1, p))
@@ -26,6 +27,9 @@ def home_daily_infectivity(base_mass):
     skewed_mass = fail_prod * base_mass
     return skewed_mass / np.sum(skewed_mass)
 
+def named_product(**items):
+    Product = namedtuple('Product', items.keys())
+    return starmap(Product, product(*items.values()))
 
 class Registry:
     "Case insensitive registry"
@@ -41,21 +45,20 @@ class Registry:
             return thing
         return add
 
-
 class PdfDeck:
     def __init__(self, figs=None):
         self.figs = figs or []
-    
+
     @classmethod
     def save_as_pdf(cls, figs, fpath):
         return cls(figs).make(fpath)
-            
+
     def add_figure(self, fig, position=None):
         if position is None:
             self.figs.append(fig)
         else:
             self.figs.insert(position, fig)
-    
+
     def make(self, fpath):
         with PdfPages(fpath) as pdf:
             for fig in self.figs:
