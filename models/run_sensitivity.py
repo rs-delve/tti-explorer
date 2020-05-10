@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     case_files = find_case_files(args.population)
     pbar = tqdm(
-            desc="Running configurations/sensitivities:",
+            desc="Running configurations/sensitivities",
             total=len(case_files) * len(strategy_configs) * 38,  # this is just number of entries in temporal anne sensitivities generator
             smoothing=None
         )
@@ -153,8 +153,8 @@ if __name__ == "__main__":
                         cfg_dct,
                         policy_sensitivities
                         ) if args.sensitivity else [{sensitivity.CONFIG_KEY: cfg_dct, sensitivity.TARGET_KEY: ""}]
-
-                pbar.desc = pbar.desc.format(case_file, scenario)
+                
+                futures = list()
                 for i, cfg in enumerate(cfgs):
                     future = executor.submit(
                             run_scenario,
@@ -163,10 +163,12 @@ if __name__ == "__main__":
                             np.random.RandomState(seed=args.seed),
                             cfg[sensitivity.CONFIG_KEY]
                         )
+                    futures.append(future)
+                    configs_dct[scenario][i] = cfg
 
+                for i, future in enumerate(futures):
                     # this is so uglY!
                     scenario_results[scenario][i][tidy_fname(case_file)] = scale_results(future.result(), nppl)
-                    configs_dct[scenario][i] = cfg
                     pbar.update(1)
 
     os.makedirs(args.output_folder, exist_ok=True)
