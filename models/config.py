@@ -5,6 +5,7 @@ import numpy as np
 
 import utils
 
+PROP_COVID_SYMPTOMATIC = 0.6
 
 ALL_CFG_FLAG = "all"
 
@@ -47,7 +48,7 @@ _case_configs = {
             p_under18=0.21,
             # following Kucharski.
             # This is currently independent from everything else.
-            infection_proportions=[0, 0.6, 0.4],  # symp covid neg, symp covid pos, asymp covid pos
+            infection_proportions=[0, PROP_COVID_SYMPTOMATIC, 1 - PROP_COVID_SYMPTOMATIC],  # symp covid neg, symp covid pos, asymp covid pos
 
             #Conditional on symptomatic
             p_has_app=0.35,
@@ -71,7 +72,7 @@ _case_configs = {
             # This is currently independent from everything else.
 
             # symp covid neg, symp covid pos, asymp covid pos
-            infection_proportions=[100/120, 0.6 * 20/120, 0.4 * 20/120],
+            infection_proportions=[100/120, PROP_COVID_SYMPTOMATIC * 20/120, (1 - PROP_COVID_SYMPTOMATIC) * 20/120],
 
             #Conditional on symptomatic
             p_has_app=0.35,
@@ -817,11 +818,11 @@ _policy_sensitivities = {
 # flu-like symptoms (non-covid): 50k, 100k [default], 200k, 300k
 # How to make the proportions 
 _vary_flu = [
-        [k / (k + 20), 0.6 * 20 / (k + 20), 0.4 * 20 / (k + 20)]
+        [k / (k + 20), PROP_COVID_SYMPTOMATIC * 20 / (k + 20),  (1 - PROP_COVID_SYMPTOMATIC) * 20 / (k + 20)]
         for k in [50, 100, 200, 300]
     ]
 _vary_covid = [
-        [100 / (100 + k), 0.6 * k / (100 + k), 0.4 * k / (100 + k)]
+        [100 / (100 + k), PROP_COVID_SYMPTOMATIC * k / (100 + k), (1 - PROP_COVID_SYMPTOMATIC) * k / (100 + k)]
         for k in (10, 20, 30)
     ]
 

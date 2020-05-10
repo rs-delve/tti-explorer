@@ -91,7 +91,7 @@ if __name__ == "__main__":
             "--scenarios",
             help=("Which scenarios to run from config.py. If 'all' then all are run. "
             "Default %(default)s."),
-            default=config.ALL_CFG_FLAG,
+            default=[config.ALL_CFG_FLAG],
             type=str,
             nargs="*"
         )
