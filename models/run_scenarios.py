@@ -5,6 +5,7 @@ import pandas as pd
 
 from contacts import Contacts, NCOLS
 from generate_cases import Case
+from strategies import RETURN_KEYS
 
 
 def results_table(results_dct, index_name="scenario"):
@@ -55,6 +56,12 @@ def find_case_files(folder, ending=".json"):
 
 def tidy_fname(fname, ending=".json"):
     return fname.rstrip(ending)
+
+
+def scale_results(mean, nppl):
+    rvals = [RETURN_KEYS.base_r, RETURN_KEYS.reduced_r]
+    scale = pd.Series([1 if k in rvals else nppl for k in mean.index], index=mean.index)
+    return mean * scale
 
 
 if __name__ == "__main__":
@@ -118,6 +125,7 @@ if __name__ == "__main__":
         )
     for i, case_file in enumerate(case_files):
         case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
+        nppl = metadata['case_config']['infection_proportions']['nppl']
         rng = np.random.RandomState(seed=args.seed)
 
         for scenario, cfg_dct in strategy_configs.items():
@@ -128,7 +136,11 @@ if __name__ == "__main__":
                     cfg_dct
                 )
 
-            scenario_results[scenario][tidy_fname(case_file)] = r.mean(0)
+            scenario_results[scenario][tidy_fname(case_file)] = scale_results(
+                    r.mean(0),
+                    nppl 
+                )
+
                 
             pbar.update(1)
     

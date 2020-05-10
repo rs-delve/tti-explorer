@@ -1,3 +1,8 @@
+"""
+Notes:
+    - the nppl entry in infection_proportions is measured in thousands
+
+"""
 from collections import namedtuple
 from functools import partial
 
@@ -635,6 +640,7 @@ _global_defaults = {
 
         app_trace_delay=0,                # Delay associated with tracing through the app
         manual_trace_delay=1,             # Delay associated with tracing manually
+        manual_trace_time=2,  # time taken to trace contact
 
         manual_home_trace_prob=1.0,             # Probability of manually tracing a home contact
         manual_work_trace_prob=1.0,             # Probability of manually tracing a work contact

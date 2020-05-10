@@ -71,6 +71,7 @@ if __name__ == "__main__":
     import sensitivity
     import strategies
 
+    from run_scenarios import scale_results
     
     parser = ArgumentParser("Run sensitivity analysis on strategy")
     parser.add_argument(
@@ -128,6 +129,7 @@ if __name__ == "__main__":
     configs_dct = defaultdict(dict)
     for case_file in case_files:
         case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
+        nppl = metadata['case_config']['infection_proportions']['nppl']
 
         for scenario, cfg_dct in strategy_configs.items():
             cfgs = config_generator(
@@ -137,13 +139,15 @@ if __name__ == "__main__":
 
             pbar.desc = pbar.desc.format(case_file, scenario)
             for i, cfg in enumerate(cfgs):
-                # this is so uglY!
-                scenario_results[scenario][i][tidy_fname(case_file)] = run_scenario(
+                mean = run_scenario(
                         case_contacts,
                         strategy,
                         np.random.RandomState(seed=args.seed),
                         cfg[sensitivity.CONFIG_KEY]
                     ).mean(0)
+
+                # this is so uglY!
+                scenario_results[scenario][i][tidy_fname(case_file)] = scale_results(mean, nppl)
                 configs_dct[scenario][i] = cfg
                 pbar.update(1)
 
