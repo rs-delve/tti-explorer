@@ -373,7 +373,7 @@ def temporal_anne_flowchart(
     isolate_contacts_on_symptoms,   # Isolate the contacts after individual present with symptoms
     isolate_contacts_on_positive,   # Isolate the contacts after individual test positive
 
-    # test_contacts_on_positive,    # TODO: this option will require more work  # Do we test contacts of a positive case immediately, or wait for them to develop symptoms
+    test_contacts_on_positive,      # Do we test contacts of a positive case immediately, or wait for them to develop symptoms
 
     do_symptom_testing,             # Test symptomatic individuals
     app_cov,                        # % Coverage of the app
@@ -591,6 +591,23 @@ def temporal_anne_flowchart(
         # work_contacts_quarantined = work_contacts_isolated 
         # othr_contacts_quarantined = othr_contacts_isolated 
 
+        # Do tests on the positive contacts if we want to, and find out which are asymptomatic 
+        if test_contacts_on_positive:
+            # Cases that would be symptomatic
+            work_symptomatic = rng.binomial(n=1, p=config.PROP_COVID_SYMPTOMATIC, size=n_work).astype(bool) & work_infections
+            othr_symptomatic = rng.binomial(n=1, p=config.PROP_COVID_SYMPTOMATIC, size=n_othr).astype(bool) & othr_infections
+
+            # work cases that are covid positive in either way
+            work_tested_symptomatic = work_contacts_isolated & work_infections & work_symptomatic
+            work_tested_asymptomatic = work_contacts_isolated & work_infections & ~work_symptomatic
+            work_tested_positive = work_tested_symptomatic & work_tested_asymptomatic
+
+            # other contacts that are positive in either way
+            othr_tested_symptomatic = othr_contacts_isolated & othr_infections & othr_symptomatic
+            othr_tested_asymptomatic = othr_contacts_isolated & othr_infections & ~work_symptomatic
+            othr_tested_positive = othr_tested_symptomatic & othr_tested_asymptomatic
+
+
         # count own test
         total_tests_performed = 1
         # If house isolated on symptoms, or on positive
@@ -605,6 +622,11 @@ def temporal_anne_flowchart(
         # We do not count cases that would become positive and symptomatic against the primary case, but do count others. 
         if case.covid: # and test_contacts_on_positive:
             total_tests_performed += 0 # work_contacts_isolated.sum() + othr_contacts_isolated.sum()
+        
+        # Test contacts on positive test of the primary case. Only count the test excluding the symptomatic cases
+        if test_contacts_on_positive:
+            total_tests_performed += (work_contacts_isolated & ~work_tested_symptomatic).sum()
+            total_tests_performed += (othr_contacts_isolated & ~othr_tested_symptomatic).sum()
 
         ## Compute the quarantine days
 
@@ -642,14 +664,20 @@ def temporal_anne_flowchart(
             # NOTE: for now assume that people are tested on the same day as isolated. So for contacts, same day as
             # the primary case if isolating on the day of symptoms, 3 days later if delaying. Will be the same number of days regardless.
             #  Probably would be an additional lag here.
-                       
-            # All quarantined for 3 days at least to get test
-            person_days_quarantine += testing_delay * (work_contacts_isolated.sum() + othr_contacts_isolated.sum())
-            # Those testing positive will be fully quarantined (minus the test lag days counted)
-            person_days_quarantine += (quarantine_length - testing_delay) * ((work_contacts_isolated & work_infections).sum() + (othr_contacts_isolated & othr_infections).sum())
-            # Those who test negative will have "wasted" the 3 days
-            person_days_wasted_quarantine += (testing_delay) * ((work_contacts_isolated & ~work_infections).sum() + (othr_contacts_isolated & ~othr_infections).sum())
 
+            # If we are testing contacts on positive, then we will only need to quarantine those who are positive after the test
+            if test_contacts_on_positive:
+                # Those testing negative will spend 3 days in quarantine 
+                person_days_quarantine += testing_delay * (work_contacts_isolated & ~work_tested_positive).sum()
+                person_days_quarantine += testing_delay * (othr_contacts_isolated & ~othr_tested_positive).sum()
+                # Those who test positive will go into quarantine
+                person_days_quarantine += quarantine_length * (work_contacts_isolated & work_tested_positive).sum()
+                person_days_quarantine += quarantine_length * (othr_contacts_isolated & othr_tested_positive).sum()
+            else:
+                # Full quarantine for all contacts if not testing them
+                person_days_quarantine += quarantine_length * (work_contacts_isolated.sum() + othr_contacts_isolated.sum())
+                       
+            
     else:
         # No tracing took place if they didn't get tested positive.
         home_contacts_isolated = np.zeros(shape=n_home, dtype=bool)
@@ -718,7 +746,7 @@ def temporal_anne_flowchart(
         if isolate_household_on_symptoms:
             home_infections_days_not_quarantined = (test_perform_day + home_trace_delay) - home_infectious_start
         elif isolate_household_on_positive:
-            home_infections_days_not_quarantined = (test_perform_day + home_trace_delay) - home_infectious_start
+            home_infections_days_not_quarantined = (test_results_day + home_trace_delay) - home_infectious_start
         else:
             # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
             home_infections_days_not_quarantined = (len(home_infectious_start)) * np.ones(n_home, dtype=int)

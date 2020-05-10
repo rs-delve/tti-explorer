@@ -694,6 +694,8 @@ _global_defaults = {
         isolate_contacts_on_symptoms=False,     # Isolate the contacts after individual present with symptoms
         isolate_contacts_on_positive=True,      # Isolate the contacts after individual test positive
 
+        test_contacts_on_positive=False,      # Do we test contacts of a positive case immediately, or wait for them to develop symptoms
+
         do_symptom_testing=True,                # Test symptomatic individuals
         app_cov=0.35,                           # % Coverage of the app
         app_report_prob=0.75,                   # Likelihood of reporting symptoms through app
