@@ -92,8 +92,7 @@ if __name__ == "__main__":
     parser.add_argument(
             "--scenarios",
             help="Which scenarios to run from config.py. If not given then all are run.",
-            default=config.ALL_CFG_FLAG,
-            type=str,
+            default=[config.ALL_CFG_FLAG],
             nargs="*"
         )
     parser.add_argument(
