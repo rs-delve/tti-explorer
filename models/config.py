@@ -6,7 +6,7 @@ import numpy as np
 import utils
 
 
-ALL_CFG_FLAG = "all"
+ALL_CFG_FLAG = ["all"]
 
 
 _contacts_configs = {
