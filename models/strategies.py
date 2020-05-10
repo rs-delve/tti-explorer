@@ -2,6 +2,8 @@ from types import SimpleNamespace
 
 import numpy as np
 
+import config
+
 from utils import Registry
 
 registry = Registry()
