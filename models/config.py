@@ -71,7 +71,7 @@ _case_configs = {
             # This is currently independent from everything else.
 
             # symp covid neg, symp covid pos, asymp covid pos
-            infection_proportions=[200/260, 0.6 * 60/260, 0.4 * 60/260],
+            infection_proportions=[100/120, 0.6 * 20/120, 0.4 * 20/120],
 
             #Conditional on symptomatic
             p_has_app=0.35,
@@ -659,7 +659,7 @@ _global_defaults = {
         manual_work_trace_prob=1.0,             # Probability of manually tracing a work contact
         manual_othr_trace_prob=1.0,             # Probability of manually tracing an other contact
 
-        trace_adherence=1.0,                    # Probability of a traced contact isolating correctly
+        trace_adherence=0.9,                    # Probability of a traced contact isolating correctly
 
         go_to_school_prob=1.0,                  # Fraction of school children attending school
 
@@ -680,7 +680,6 @@ _global_defaults = {
         manual_trace_time=2  # time taken to trace contact
     ),
 }
-
 
 _policy_configs = {
         name: {k: dict(_global_defaults[name], **params) for k, params in strat.items()}
@@ -751,21 +750,41 @@ _policy_sensitivities = {
             manual_trace_time=Sensitivity(
                 bounds=None,
                 values=[1, 2, 3]
+            ),
+            trace_adherence=Sensitivity(
+                bounds=None,
+                values=[.5, .7, .9]
             )
         )
     }
+
+# symp covid neg, symp covid pos, asymp covid pos
+# Covid+ individuals: 10k, 20k [default], 30k
+# flu-like symptoms (non-covid): 50k, 100k [default], 200k, 300k
+# How to make the proportions 
+_vary_flu = [
+        [k / (k + 20), 0.6 * 20 / (k + 20), 0.4 * 20 / (k + 20)]
+        for k in [50, 100, 200, 300]
+    ]
+_vary_covid = [
+        [100 / (100 + k), 0.6 * k / (100 + k), 0.4 * k / (100 + k)]
+        for k in (10, 20, 30)
+    ]
+
+_inf_prop_to_try = _vary_flu
+_inf_prop_to_try.extend(_vary_covid)
 
 _case_sensitivities = {
         # to be decided!
         "oxteam": dict(
             infection_proportions=Sensitivity(
                 bounds=None,
-                values=[
-                    # symp covid neg, symp covid pos, asymp covid pos
-                    [200/260, 0.6 * 60/260, 0.4 * 60/260],  # anne
-                    [150/(180+30), 0.6 * 60/(180+30), 0.4 * 60/(180+30)],  # Bugwatch May
-                    [150/(100+30), 0.6 * 60/(100+30), 0.4 * 60/(100+30)],  # Bugwatch June
-                ],
+                values=_inf_prop_to_try
+                    # # symp covid neg, symp covid pos, asymp covid pos
+                    # [200/260, 0.6 * 60/260, 0.4 * 60/260],  # anne
+                    # [150/(180+30), 0.6 * 60/(180+30), 0.4 * 60/(180+30)],  # Bugwatch May
+                    # [150/(100+30), 0.6 * 60/(100+30), 0.4 * 60/(100+30)],  # Bugwatch June
+                # ],
             ),
             p_day_noticed_symptoms=Sensitivity(
                     bounds=None,
