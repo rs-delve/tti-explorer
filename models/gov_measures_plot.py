@@ -15,13 +15,11 @@ def find_case_file(folder, start):
 def tidy_fname(fname, ending=".json"):
     return fname.rstrip(ending)
 
-def load_results(fpath, scale = 1000):
+def load_results(fpath):
     # only return reduced_r, manual_traces, tests_needed and persondays_quarantined
     results = pd.read_csv(fpath, usecols = ['Reduced R', 'Manual Traces', 'Tests Needed'])
     if results.ndim > 1:
         results = results.mean(axis = 0)
-    scales = np.array([1., scale, scale])
-    results /= scales
     return results
 
 def max_calculator(folder, tti_strat_list, gov_measure_list):
