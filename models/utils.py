@@ -1,8 +1,10 @@
+from collections import namedtuple
+from itertools import product, starmap
+import json
+
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.stats import gamma
-from itertools import product, starmap
-from collections import namedtuple
 
 def bool_bernoulli(p, rng):
     return bool(rng.binomial(1, p))
@@ -68,5 +70,10 @@ class PdfDeck:
 def swaplevel(dct_of_dct):
     keys = next(iter(dct_of_dct.values())).keys()
     return {in_k: {out_k: v[in_k] for out_k, v in dct_of_dct.items()} for in_k in keys}
+
+
+def read_json(fpath):
+    with open(fpath, "r") as f:
+        return json.loads(f.read())
 
 
