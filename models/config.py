@@ -638,9 +638,8 @@ _global_defaults = {
         do_manual_tracing=True,                 # Perform manual tracing of contacts
         do_app_tracing=True,                    # Perform app tracing of contacts
 
-        app_trace_delay=0,                # Delay associated with tracing through the app
-        manual_trace_delay=1,             # Delay associated with tracing manually
-        manual_trace_time=2,  # time taken to trace contact
+        app_trace_delay=0,                      # Delay associated with tracing through the app
+        manual_trace_delay=1,                   # Delay associated with tracing manually
 
         manual_home_trace_prob=1.0,             # Probability of manually tracing a home contact
         manual_work_trace_prob=1.0,             # Probability of manually tracing a work contact
@@ -733,7 +732,7 @@ _policy_sensitivities = {
                 bounds=(0, .65),
                 values=np.linspace(0, 0.65, num=4)
             ),
-            manual_trace_time=Sensitivity(
+            manual_trace_delay=Sensitivity(
                 bounds=None,
                 values=[1, 2, 3]
             ),

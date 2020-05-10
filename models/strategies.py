@@ -412,7 +412,6 @@ def temporal_anne_flowchart(
     quarantine_length,              # Length of quarantine imposed on COVID cases (and household)
 
     latent_period,              # Length of a cases incubation period (from infection to start of infectious period) 
-    manual_trace_time  # Bryn: this doesn nothing until we implement it! just changed signature
 
     ## Returns: 
     #   - base_rr : number of infections caused without any measures. NaN if doesn't have COVID.
