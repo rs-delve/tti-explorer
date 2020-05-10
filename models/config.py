@@ -92,7 +92,7 @@ _case_configs = {
             inf_profile=(
                 utils.he_infection_profile(
                     period=10,
-                    gamma_params={'a': 2.11, 'scale': 1/0.69}
+                    gamma_params={'a': 2.80, 'scale': 1/0.69}
                     )
             ).tolist()
         )
@@ -402,10 +402,10 @@ _policy_configs = {
 
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
-                    
+
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
-                    "met_before_h": 1, 
+                    "met_before_h": 1,
                     "met_before_o": 0.9,
 
                     "wfh_prob": 0.65,
@@ -423,13 +423,13 @@ _policy_configs = {
                     "isolate_contacts_on_positive": True,
 
                     "do_symptom_testing": True,
-                
+
                     "do_manual_tracing": True,
                     "do_app_tracing": True,
-                    
+
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
-                    "met_before_h": 1, 
+                    "met_before_h": 1,
                     "met_before_o": 0.9,
 
                     "wfh_prob": 0.65,
@@ -447,13 +447,13 @@ _policy_configs = {
                     "isolate_contacts_on_positive": False,
 
                     "do_symptom_testing": True,
-                
+
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
-                    
+
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
-                    "met_before_h": 1, 
+                    "met_before_h": 1,
                     "met_before_o": 0.9,
 
                     "wfh_prob": 0.45,
@@ -471,13 +471,13 @@ _policy_configs = {
                     "isolate_contacts_on_positive": True,
 
                     "do_symptom_testing": True,
-                
+
                     "do_manual_tracing": True,
                     "do_app_tracing": True,
-                    
+
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
-                    "met_before_h": 1, 
+                    "met_before_h": 1,
                     "met_before_o": 0.9,
 
                     "wfh_prob": 0.45,
@@ -495,13 +495,13 @@ _policy_configs = {
                     "isolate_contacts_on_positive": False,
 
                     "do_symptom_testing": True,
-                
+
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
-                    
+
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
-                    "met_before_h": 1, 
+                    "met_before_h": 1,
                     "met_before_o": 0.75,
 
                     "wfh_prob": 0.25,
@@ -517,13 +517,13 @@ _policy_configs = {
                     "isolate_contacts_on_positive": True,
 
                     "do_symptom_testing": True,
-                
+
                     "do_manual_tracing": True,
                     "do_app_tracing": True,
-                    
+
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
-                    "met_before_h": 1, 
+                    "met_before_h": 1,
                     "met_before_o": 0.75,
 
                     "wfh_prob": 0.25,
@@ -539,13 +539,13 @@ _policy_configs = {
                     "isolate_contacts_on_positive": False,
 
                     "do_symptom_testing": True,
-                
+
                     "do_manual_tracing": False,
                     "do_app_tracing": False,
-                    
+
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
-                    "met_before_h": 1, 
+                    "met_before_h": 1,
                     "met_before_o": 0.52,
                 },
             "L1_contact_trace":
@@ -558,13 +558,13 @@ _policy_configs = {
                     "isolate_contacts_on_positive": True,
 
                     "do_symptom_testing": True,
-                
+
                     "do_manual_tracing": True,
                     "do_app_tracing": True,
-                    
+
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
-                    "met_before_h": 1, 
+                    "met_before_h": 1,
                     "met_before_o": 0.52,
                 },
             "L0_no_measures":
@@ -797,9 +797,9 @@ _case_sensitivities = {
             inf_profile=Sensitivity(
                 bounds=None,
                 values=[
-                    [],
-                    [],
-                    [],  # @ bobby he
+                    [2.11, 1/0.69], # pessimistic from He et al.
+                    [2.80, 1/0.69],
+                    [3.49, 1/0.69],  
                     ]
             )
         )

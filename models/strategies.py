@@ -201,7 +201,7 @@ def CMMID_strategy_better(
 ):
 
     if case.under18:
-        wfh = rng.uniform() < go_to_school_prob
+        wfh = rng.uniform() < 1 - go_to_school_prob
         met_before_w = met_before_s
     else:
         wfh = rng.uniform() < wfh_prob
@@ -421,7 +421,7 @@ def temporal_anne_flowchart(
 
     # If under 18, change wfh and likelihood of knowing contacts
     if case.under18:
-        wfh = rng.uniform() < go_to_school_prob
+        wfh = rng.uniform() < 1 - go_to_school_prob
         met_before_w = met_before_s
     else:
         wfh = rng.uniform() < wfh_prob
