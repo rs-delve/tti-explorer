@@ -1,4 +1,5 @@
 import numpy as np
+from matplotlib import PdfPages
 from scipy.stats import gamma
 
 
@@ -39,3 +40,23 @@ class Registry:
             self._register[name.lower()] = thing
             return thing
         return add
+
+
+class PdfDeck:
+    def __init__(self, figs=None):
+        self.figs = figs or []
+    
+    @classmethod
+    def save_as_pdf(cls, figs, fpath):
+        return cls(figs).make(fpath)
+            
+    def add_figure(self, fig, position=None):
+        if position is None:
+            self.figs.append(fig)
+        else:
+            self.figs.insert(position, fig)
+    
+    def make(self, fpath):
+        with PdfPages(fpath) as pdf:
+            for fig in self.figs:
+                pdf.savefig(fig)
