@@ -134,7 +134,7 @@ if __name__ == "__main__":
     case_files = find_case_files(args.population)
     pbar = tqdm(
             desc="Running configurations/sensitivities",
-            total=len(case_files) * len(strategy_configs) * 38,  # this is just number of entries in temporal anne sensitivities generator
+            total=len(case_files) * len(strategy_configs) * 20,  # this is just number of entries in temporal anne sensitivities generator
             smoothing=None
         )
     scenario_results = defaultdict(lambda: defaultdict(dict))
