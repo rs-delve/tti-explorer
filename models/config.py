@@ -390,6 +390,54 @@ _policy_configs = {
         },
         "temporal_anne_flowchart":
         {
+            "L5":
+                {
+                    "isolate_individual_on_symptoms": True,
+                    "isolate_individual_on_positive": True,
+                    "isolate_household_on_symptoms": True,
+                    "isolate_household_on_positive": True,
+                    "isolate_contacts_on_symptoms": False,
+                    "isolate_contacts_on_positive": False,
+
+                    "do_symptom_testing": True,
+
+                    "do_manual_tracing": False,
+                    "do_app_tracing": False,
+
+                    "met_before_w": 0.79,
+                    "met_before_s": 0.9,
+                    "met_before_h": 1,
+                    "met_before_o": 1,
+
+                    "wfh_prob": 0.65,
+                    "max_contacts": 1,
+
+                    "go_to_school_prob": 0.0
+                },
+            "L5_contact_trace":
+                {
+                    "isolate_individual_on_symptoms": True,
+                    "isolate_individual_on_positive": True,
+                    "isolate_household_on_symptoms": True,
+                    "isolate_household_on_positive": True,
+                    "isolate_contacts_on_symptoms": False,
+                    "isolate_contacts_on_positive": True,
+
+                    "do_symptom_testing": True,
+
+                    "do_manual_tracing": True,
+                    "do_app_tracing": True,
+
+                    "met_before_w": 0.79,
+                    "met_before_s": 0.9,
+                    "met_before_h": 1,
+                    "met_before_o": 1,
+
+                    "wfh_prob": 0.65,
+                    "max_contacts": 1,
+
+                    "go_to_school_prob": 0.0
+                },
             "L4":
                 {
                     "isolate_individual_on_symptoms": True,
@@ -407,10 +455,10 @@ _policy_configs = {
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
                     "met_before_h": 1,
-                    "met_before_o": 0.9,
+                    "met_before_o": 1,
 
-                    "wfh_prob": 0.65,
-                    "max_contacts": 1,
+                    "wfh_prob": 0.55,
+                    "max_contacts": 4,
 
                     "go_to_school_prob": 0.0
                 },
@@ -431,10 +479,10 @@ _policy_configs = {
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
                     "met_before_h": 1,
-                    "met_before_o": 0.9,
+                    "met_before_o": 1,
 
-                    "wfh_prob": 0.65,
-                    "max_contacts": 1,
+                    "wfh_prob": 0.55,
+                    "max_contacts": 4,
 
                     "go_to_school_prob": 0.0
                 },
@@ -455,10 +503,10 @@ _policy_configs = {
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
                     "met_before_h": 1,
-                    "met_before_o": 1.,
+                    "met_before_o": 0.9,
 
                     "wfh_prob": 0.45,
-                    "max_contacts": 4,
+                    "max_contacts": 10,
 
                     "go_to_school_prob": 0.5
                 },
@@ -479,10 +527,10 @@ _policy_configs = {
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
                     "met_before_h": 1,
-                    "met_before_o": 1.0,
+                    "met_before_o": 0.9,
 
                     "wfh_prob": 0.45,
-                    "max_contacts": 4,
+                    "max_contacts": 10,
 
                     "go_to_school_prob": 0.5
                 },
@@ -506,7 +554,7 @@ _policy_configs = {
                     "met_before_o": 0.75,
 
                     "wfh_prob": 0.25,
-                    "max_contacts": 10,
+                    "max_contacts": 20,
                 },
             "L2_contact_trace":
                 {
@@ -528,7 +576,7 @@ _policy_configs = {
                     "met_before_o": 0.75,
 
                     "wfh_prob": 0.25,
-                    "max_contacts": 10,
+                    "max_contacts": 20,
                 },
             "L1":
                 {
