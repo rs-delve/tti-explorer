@@ -111,6 +111,11 @@ if __name__ == "__main__":
             default=0,
             type=int
         )
+    parser.add_argument(
+            "--parameters",
+            help="Specific parameters to ablate over. Optional, if not present runs over all parameters defined for a strategy.",
+            nargs="*"
+        )
     args = parser.parse_args()
     strategy = strategies.registry[args.strategy]
     strategy_configs = config.get_strategy_config(
@@ -132,9 +137,13 @@ if __name__ == "__main__":
         nppl = metadata['case_config']['infection_proportions']['nppl']
 
         for scenario, cfg_dct in strategy_configs.items():
+            policy_sensitivities = config.get_policy_sensitivities(args.strategy)
+            if args.parameters is not None:
+                policy_sensitivities = dict((k, policy_sensitivities[k]) for k in args.parameters)
+
             cfgs = config_generator(
                     cfg_dct,
-                    config.get_policy_sensitivities(args.strategy)
+                    policy_sensitivities
                     ) if args.sensitivity else [{sensitivity.CONFIG_KEY: cfg_dct, sensitivity.TARGET_KEY: ""}]
 
             pbar.desc = pbar.desc.format(case_file, scenario)
