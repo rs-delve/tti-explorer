@@ -750,7 +750,7 @@ def temporal_anne_flowchart(
             home_infections_days_not_quarantined = (test_results_day + home_trace_delay) - home_infectious_start
         else:
             # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
-            home_infections_days_not_quarantined = (len(home_infectious_start)) * np.ones(n_home, dtype=int)
+            home_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(n_home, dtype=int)
 
         # Compute the days a work/othr case is left out in the world infectious
         if isolate_contacts_on_symptoms:
@@ -762,6 +762,11 @@ def temporal_anne_flowchart(
         else:
             work_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(work_infectious_start), dtype=int)
             othr_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(othr_infectious_start), dtype=int)
+
+        # clip the infectious period to max out at 1
+        home_infections_days_not_quarantined[home_infections_days_not_quarantined > len(cumulative_infectiousness)] = len(cumulative_infectiousness)
+        work_infections_days_not_quarantined[work_infections_days_not_quarantined > len(cumulative_infectiousness)] = len(cumulative_infectiousness)
+        othr_infections_days_not_quarantined[othr_infections_days_not_quarantined > len(cumulative_infectiousness)] = len(cumulative_infectiousness)
 
         # Only care about ones where there is more than zero days spent unisolated
         home_infections_days_not_quarantined = home_infections_days_not_quarantined[home_infections_days_not_quarantined > 0]
