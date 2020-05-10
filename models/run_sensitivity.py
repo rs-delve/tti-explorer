@@ -92,7 +92,7 @@ if __name__ == "__main__":
     parser.add_argument(
             "--scenarios",
             help="Which scenarios to run from config.py. If not given then all are run.",
-            default=config.ALL_CFG_FLAG,
+            default=[config.ALL_CFG_FLAG],
             type=str,
             nargs="*"
         )
@@ -111,7 +111,6 @@ if __name__ == "__main__":
             type=int
         )
     args = parser.parse_args()
-
     strategy = strategies.registry[args.strategy]
     strategy_configs = config.get_strategy_config(
             args.strategy,
@@ -122,8 +121,7 @@ if __name__ == "__main__":
     case_files = find_case_files(args.population)
     pbar = tqdm(
             desc="Running configurations/sensitivities:",
-            # this value of 35 only valid for axis method and specific configs!
-            total=len(case_files) * len(strategy_configs) * 35, 
+            total=len(case_files) * len(strategy_configs) * 38,  # this is just number of entries in temporal anne sensitivities generator
             smoothing=None
         )
     scenario_results = defaultdict(lambda: defaultdict(dict))
