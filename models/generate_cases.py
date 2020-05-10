@@ -12,7 +12,7 @@ Case = namedtuple(
             "under18",
             "covid",
             "symptomatic",
-            "has_app",
+            "has_app",  # These should probably be removed since not used
             "report_nhs",
             "report_app",
             "day_noticed_symptoms",
@@ -42,7 +42,6 @@ def simulate_case(rng, p_under18, infection_proportions, p_has_app,
 
     Returns (Case): case with attributes populated.
     """
-
     p_symptomatic_covid_neg, p_symptomatic_covid_pos, p_asymptomatic_covid_pos = infection_proportions
 
     under18 = bool_bernoulli(p_under18, rng)
@@ -53,6 +52,8 @@ def simulate_case(rng, p_under18, infection_proportions, p_has_app,
                 p_symptomatic_covid_pos,
             ]
     illness = categorical(illness_pvals, rng)
+    print(infection_proportions)
+    print(illness)
 
     if illness == 0:
         return Case(
@@ -136,6 +137,7 @@ if __name__ == "__main__":
 
     import config
     from contacts import EmpiricalContactsSimulator
+    import sensitivity
 
     parser = ArgumentParser(description="Generate JSON files of cases and contacts")
     parser.add_argument(
@@ -147,7 +149,16 @@ if __name__ == "__main__":
     parser.add_argument('output_folder', help="Folder in which to store json files of cases and contacts", type=str)
     parser.add_argument(
             '--seeds',
-            help="random seeds for each population, comma separated",
+            help="random seeds for each population",
+            default=-1,
+            type=int,
+            nargs="*"
+        )
+    parser.add_argument(
+            "--sensitivity",
+            help=("Method for sensitivity analysis "
+                "over parameters designated for sensitivity analysis in config.py. "
+                "Empty string does no sensitivity analysis. Default '%(default)s'."),
             default="",
             type=str
         )
@@ -159,43 +170,55 @@ if __name__ == "__main__":
             help="Folder containing empirical tables of contact numbers"
         )
     args = parser.parse_args()
-    seeds = [int(s) for s in args.seeds.split(",")] if args.seeds else range(args.n_pops)
+    seeds = range(args.n_pops) if args.seeds == -1 else args.seeds
     
     os.makedirs(args.output_folder, exist_ok=True)
     
     start = time.time()
 
-    case_config = config.get_case_config(args.config_name)
+    base_case_config = config.get_case_config(args.config_name)
     contacts_config = config.get_contacts_config(args.config_name)
+
+    if args.sensitivity:
+        config_generator = sensitivity.registry[args.sensitivity]
+        cfgs = config_generator(base_case_config, config.get_case_sensitivities(args.config_name))
+    else:
+        cfgs = [{sensitivity.CONFIG_KEY: base_case_config, sensitivity.TARGET_KEY: None}]
     
     over18 = load_csv(os.path.join(args.data_dir, "contact_distributions_o18.csv"))
     under18 = load_csv(os.path.join(args.data_dir, "contact_distributions_u18.csv"))
     
-    for seed in seeds:
-        rng = np.random.RandomState(seed=seed)
-        contacts_simulator = EmpiricalContactsSimulator(over18, under18, rng)
+    for i, dct in enumerate(cfgs):
+        case_config = dct[sensitivity.CONFIG_KEY]
+        for seed in seeds:
+            rng = np.random.RandomState(seed=seed)
+            contacts_simulator = EmpiricalContactsSimulator(over18, under18, rng)
 
-        cases_and_contacts = list()
-        for i in trange(args.ncases, smoothing=0, desc=f"Generating case set with seed {seed}."):
-            case = simulate_case(rng, **case_config)
-            contacts = contacts_simulator(
-                    case,
-                    **contacts_config
+            cases_and_contacts = list()
+            for _ in trange(args.ncases, smoothing=0, desc=f"Generating case set with seed {seed}."):
+                case = simulate_case(rng, **case_config)
+                contacts = contacts_simulator(
+                        case,
+                        **contacts_config
+                    )
+                output = dict()
+                output['case'] = case_as_dict(case)
+                output['contacts'] = contacts_as_dict(contacts)
+                cases_and_contacts.append(output)
+            
+            full_output = dict(
+                    timestamp=datetime.now().strftime('%c'),
+                    case_config=case_config,
+                    contacts_config=contacts_config,
+                    args=dict(args.__dict__, seed=seed),
+                    cases=cases_and_contacts
                 )
-            output = dict()
-            output['case'] = case_as_dict(case)
-            output['contacts'] = contacts_as_dict(contacts)
-            cases_and_contacts.append(output)
-        
-        full_output = dict(
-                timestamp=datetime.now().strftime('%c'),
-                case_config=case_config,
-                contacts_config=contacts_config,
-                args=dict(args.__dict__, seed=seed),
-                cases=cases_and_contacts
+
+            target = dct.get(sensitivity.TARGET_KEY)
+            fname = (
+                f"{args.config_name}_{target}{i}_seed{seed}.json"
+                if target is not None else f"{args.config_name}_seed{seed}.json"
             )
+            with open(os.path.join(args.output_folder, fname), "w") as f:
+                json.dump(full_output, f)
 
-        with open(os.path.join(args.output_folder, f"{args.config_name}_seed{seed}.json"), "w") as f:
-            json.dump(full_output, f)
-
-    print(f"Case and contact generation for {len(seeds)} populations of size {args.ncases} took {time.time() - start:.2f} seconds\n")
