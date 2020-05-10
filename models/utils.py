@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import PdfPages
+from matplotlib.backends.backend_pdf import PdfPages
 from scipy.stats import gamma
 
 
