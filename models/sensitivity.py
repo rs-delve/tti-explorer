@@ -21,7 +21,7 @@ def grid_ablation(cfg, ablations):
     """
     vals = (a.values for a in ablations.values() if a.values is not None)
     for comb in product(*vals):
-        yield {CONFIG_KEY: dict(cfg, **dict(zip(ablations.keys(), comb)))}
+        yield {CONFIG_KEY: dict(cfg, **dict(zip(ablations.keys(), comb))), TARGET_KEY: list(ablations.keys())}
 
 
 @registry('axis')
