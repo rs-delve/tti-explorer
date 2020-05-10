@@ -687,9 +687,9 @@ def temporal_anne_flowchart(
         infectious_period = len(infectiousness_by_day)
 
         # Get the days on which infections that were quarantined happened
-        home_infection_days = home_infected_day[home_infections & ~home_infections_post_policy]
-        work_infection_days = work_contacts[work_infections & ~work_infections_post_policy]
-        othr_infection_days = othr_contacts[othr_infections & ~othr_infections_post_policy]
+        home_infection_days = home_infected_day[home_infections & home_contacts_isolated]
+        work_infection_days = work_contacts[work_infections & work_contacts_isolated]
+        othr_infection_days = othr_contacts[othr_infections & othr_contacts_isolated]
 
         # Compute day of contact becoming infectious after case started being infectious
         home_infectious_start = home_infection_days + latent_period
