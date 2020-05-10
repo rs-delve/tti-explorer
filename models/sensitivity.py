@@ -7,6 +7,7 @@ registry = Registry()
 CONFIG_KEY = 'config'
 TARGET_KEY = 'sensitivity_target'
 
+
 @registry('grid')
 def grid_ablation(cfg, ablations):
     """grid_ablation

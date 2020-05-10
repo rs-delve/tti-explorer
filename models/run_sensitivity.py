@@ -133,7 +133,7 @@ if __name__ == "__main__":
             cfgs = config_generator(
                     cfg_dct,
                     config.get_policy_sensitivities(args.strategy)
-                ) if args.sensitivity else [cfg_dct]
+                    ) if args.sensitivity else [{sensitivity.CONFIG_KEY: cfg_dct, sensitivity.TARGET_KEY: ""}]
 
             pbar.desc = pbar.desc.format(case_file, scenario)
             for i, cfg in enumerate(cfgs):
