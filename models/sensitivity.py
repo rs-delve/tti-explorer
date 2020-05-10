@@ -4,6 +4,8 @@ from utils import Registry
 
 registry = Registry()
 
+CONFIG_KEY = 'config'
+TARGET_KEY = 'sensitivity_target'
 
 @registry('grid')
 def grid_ablation(cfg, ablations):
@@ -18,7 +20,7 @@ def grid_ablation(cfg, ablations):
     """
     vals = (a.values for a in ablations.values() if a.values is not None)
     for comb in product(*vals):
-        yield dict(cfg, **dict(zip(ablations.keys(), comb)))
+        yield {CONFIG_KEY: dict(cfg, **dict(zip(ablations.keys(), comb)))}
 
 
 @registry('axis')
@@ -34,7 +36,7 @@ def axis_ablation(cfg, ablations):
     """
     for k, ablation in ablations.items():
         for value in ablation.values:
-            yield dict(cfg, **{k: value})
+            yield {CONFIG_KEY: dict(cfg, **{k: value}), TARGET_KEY: k}
 
 
 if __name__ == "__main__":

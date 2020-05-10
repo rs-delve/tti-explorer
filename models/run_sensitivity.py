@@ -143,7 +143,7 @@ if __name__ == "__main__":
                         case_contacts,
                         strategy,
                         np.random.RandomState(seed=args.seed),
-                        cfg
+                        cfg[sensitivity.CONFIG_KEY]
                     ).mean(0)
                 configs_dct[scenario][i] = cfg
                 pbar.update(1)
