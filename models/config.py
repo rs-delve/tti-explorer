@@ -7,7 +7,7 @@ import utils
 
 PROP_COVID_SYMPTOMATIC = 0.6
 
-ALL_CFG_FLAG = ["all"]
+ALL_CFG_FLAG = "all"
 
 
 _contacts_configs = {
