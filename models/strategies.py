@@ -385,6 +385,9 @@ def temporal_anne_flowchart(
     do_manual_tracing,              # Perform manual tracing of contacts
     do_app_tracing,                 # Perform app tracing of contacts
 
+    app_trace_delay,                # Delay associated with tracing through the app
+    manual_trace_delay,             # Delay associated with tracing manually
+
     manual_home_trace_prob,         # Probability of manually tracing a home contact
     manual_work_trace_prob,         # Probability of manually tracing a work contact
     manual_othr_trace_prob,         # Probability of manually tracing an other contact
@@ -691,6 +694,21 @@ def temporal_anne_flowchart(
         work_infection_days = work_contacts[work_infections & work_contacts_isolated]
         othr_infection_days = othr_contacts[othr_infections & othr_contacts_isolated]
 
+        # Get the people who were traced by the app
+        work_contacts_trace_app_isolated = work_contacts_trace_app[work_infections & work_contacts_isolated]
+        othr_contacts_trace_app_isolated = othr_contacts_trace_app[othr_infections & othr_contacts_isolated]
+
+        # Trace delay is at max the manual trace delay
+        work_trace_delay = manual_trace_delay * np.ones_like(work_infection_days)
+        othr_trace_delay = manual_trace_delay * np.ones_like(othr_infection_days)
+
+        # Contacts go tto via the app are traced with app_delay - assumed to be faster. (0)
+        work_trace_delay[work_contacts_trace_app_isolated] = app_trace_delay
+        othr_trace_delay[othr_contacts_trace_app_isolated] = app_trace_delay
+
+        # Home contacts traced immediately
+        home_trace_delay = np.zeros_like(home_infection_days)
+
         # Compute day of contact becoming infectious after case started being infectious
         home_infectious_start = home_infection_days + latent_period
         work_infectious_start = work_infection_days + latent_period
@@ -698,20 +716,20 @@ def temporal_anne_flowchart(
 
         # Compute the days home cases are left out in the world infectious
         if isolate_household_on_symptoms:
-            home_infections_days_not_quarantined = test_perform_day - home_infectious_start
+            home_infections_days_not_quarantined = (test_perform_day + home_trace_delay) - home_infectious_start
         elif isolate_household_on_positive:
-            home_infections_days_not_quarantined = test_results_day - home_infectious_start
+            home_infections_days_not_quarantined = (test_perform_day + home_trace_delay) - home_infectious_start
         else:
             # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
             home_infections_days_not_quarantined = (len(home_infectious_start)) * np.ones(n_home, dtype=int)
 
         # Compute the days a work/othr case is left out in the world infectious
         if isolate_contacts_on_symptoms:
-            work_infections_days_not_quarantined = test_perform_day - work_infectious_start
-            othr_infections_days_not_quarantined = test_perform_day - othr_infectious_start
+            work_infections_days_not_quarantined = (test_perform_day + work_trace_delay) - work_infectious_start
+            othr_infections_days_not_quarantined = (test_perform_day + othr_trace_delay) - othr_infectious_start
         elif isolate_contacts_on_positive:
-            work_infections_days_not_quarantined = test_results_day - work_infectious_start
-            othr_infections_days_not_quarantined = test_results_day - othr_infectious_start
+            work_infections_days_not_quarantined = (test_results_day + work_trace_delay) - work_infectious_start
+            othr_infections_days_not_quarantined = (test_results_day + othr_trace_delay) - othr_infectious_start
         else:
             work_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(work_infectious_start), dtype=int)
             othr_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(othr_infectious_start), dtype=int)

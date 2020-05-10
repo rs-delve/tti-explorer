@@ -656,6 +656,9 @@ _global_defaults = {
         do_manual_tracing=True,                 # Perform manual tracing of contacts
         do_app_tracing=True,                    # Perform app tracing of contacts
 
+        app_trace_delay=0,                # Delay associated with tracing through the app
+        manual_trace_delay=2,             # Delay associated with tracing manually
+
         manual_home_trace_prob=1.0,             # Probability of manually tracing a home contact
         manual_work_trace_prob=1.0,             # Probability of manually tracing a work contact
         manual_othr_trace_prob=1.0,             # Probability of manually tracing an other contact
