@@ -63,3 +63,10 @@ class PdfDeck:
         with PdfPages(fpath) as pdf:
             for fig in self.figs:
                 pdf.savefig(fig)
+
+
+def swaplevel(dct_of_dct):
+    keys = next(iter(dct_of_dct.values())).keys()
+    return {in_k: {out_k: v[in_k] for out_k, v in dct_of_dct.items()} for in_k in keys}
+
+

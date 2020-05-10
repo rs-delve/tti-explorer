@@ -625,7 +625,7 @@ def temporal_anne_flowchart(
             total_tests_performed += 0 # work_contacts_isolated.sum() + othr_contacts_isolated.sum()
         
         # Test contacts on positive test of the primary case. Only count the test excluding the symptomatic cases
-        if test_contacts_on_positive:
+        if test_contacts_on_positive and case.covid:
             total_tests_performed += (work_contacts_isolated & ~work_tested_symptomatic).sum()
             total_tests_performed += (othr_contacts_isolated & ~othr_tested_symptomatic).sum()
 

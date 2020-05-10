@@ -45,7 +45,7 @@ def load_cases(fpath):
 
 
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
-    return pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
+    return pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts]).mean(0)
 
 
 def find_case_files(folder, ending=".json"):
@@ -59,6 +59,7 @@ def tidy_fname(fname, ending=".json"):
 if __name__ == "__main__":
     from argparse import ArgumentParser
     from collections import defaultdict
+    from concurrent.futures import ProcessPoolExecutor
     from datetime import datetime
     import json
     import time
@@ -116,6 +117,12 @@ if __name__ == "__main__":
             help="Specific parameters to ablate over. Optional, if not present runs over all parameters defined for a strategy.",
             nargs="*"
         )
+    parser.add_argument(
+            "--nprocs",
+            help="Number of cores on which to run this script. Default %(default)s",
+            default=1,
+            type=int
+        )
     args = parser.parse_args()
     strategy = strategies.registry[args.strategy]
     strategy_configs = config.get_strategy_config(
@@ -126,39 +133,43 @@ if __name__ == "__main__":
 
     case_files = find_case_files(args.population)
     pbar = tqdm(
-            desc="Running configurations/sensitivities:",
+            desc="Running configurations/sensitivities",
             total=len(case_files) * len(strategy_configs) * 38,  # this is just number of entries in temporal anne sensitivities generator
             smoothing=None
         )
     scenario_results = defaultdict(lambda: defaultdict(dict))
     configs_dct = defaultdict(dict)
-    for case_file in case_files:
-        case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
-        nppl = metadata['case_config']['infection_proportions']['nppl']
+    with ProcessPoolExecutor(max_workers=args.nprocs) as executor:
+        for case_file in case_files:
+            case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
+            nppl = metadata['case_config']['infection_proportions']['nppl']
 
-        for scenario, cfg_dct in strategy_configs.items():
-            policy_sensitivities = config.get_policy_sensitivities(args.strategy)
-            if args.parameters is not None:
-                policy_sensitivities = dict((k, policy_sensitivities[k]) for k in args.parameters)
+            for scenario, cfg_dct in strategy_configs.items():
+                policy_sensitivities = config.get_policy_sensitivities(args.strategy)
+                if args.parameters is not None:
+                    policy_sensitivities = dict((k, policy_sensitivities[k]) for k in args.parameters)
 
-            cfgs = config_generator(
-                    cfg_dct,
-                    policy_sensitivities
-                    ) if args.sensitivity else [{sensitivity.CONFIG_KEY: cfg_dct, sensitivity.TARGET_KEY: ""}]
+                cfgs = config_generator(
+                        cfg_dct,
+                        policy_sensitivities
+                        ) if args.sensitivity else [{sensitivity.CONFIG_KEY: cfg_dct, sensitivity.TARGET_KEY: ""}]
+                
+                futures = list()
+                for i, cfg in enumerate(cfgs):
+                    future = executor.submit(
+                            run_scenario,
+                            case_contacts,
+                            strategy,
+                            np.random.RandomState(seed=args.seed),
+                            cfg[sensitivity.CONFIG_KEY]
+                        )
+                    futures.append(future)
+                    configs_dct[scenario][i] = cfg
 
-            pbar.desc = pbar.desc.format(case_file, scenario)
-            for i, cfg in enumerate(cfgs):
-                mean = run_scenario(
-                        case_contacts,
-                        strategy,
-                        np.random.RandomState(seed=args.seed),
-                        cfg[sensitivity.CONFIG_KEY]
-                    ).mean(0)
-
-                # this is so uglY!
-                scenario_results[scenario][i][tidy_fname(case_file)] = scale_results(mean, nppl)
-                configs_dct[scenario][i] = cfg
-                pbar.update(1)
+                for i, future in enumerate(futures):
+                    # this is so uglY!
+                    scenario_results[scenario][i][tidy_fname(case_file)] = scale_results(future.result(), nppl)
+                    pbar.update(1)
 
     os.makedirs(args.output_folder, exist_ok=True)
     for scenario, res_dict in scenario_results.items():
