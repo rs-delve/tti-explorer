@@ -52,8 +52,6 @@ def simulate_case(rng, p_under18, infection_proportions, p_has_app,
                 p_symptomatic_covid_pos,
             ]
     illness = categorical(illness_pvals, rng)
-    print(infection_proportions)
-    print(illness)
 
     if illness == 0:
         return Case(
