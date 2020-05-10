@@ -604,7 +604,7 @@ def temporal_anne_flowchart(
 
             # other contacts that are positive in either way
             othr_tested_symptomatic = othr_contacts_isolated & othr_infections & othr_symptomatic
-            othr_tested_asymptomatic = othr_contacts_isolated & othr_infections & ~work_symptomatic
+            othr_tested_asymptomatic = othr_contacts_isolated & othr_infections & ~othr_symptomatic
             othr_tested_positive = othr_tested_symptomatic & othr_tested_asymptomatic
 
 
