@@ -455,7 +455,7 @@ _policy_configs = {
                     "met_before_w": 0.79,
                     "met_before_s": 0.9,
                     "met_before_h": 1,
-                    "met_before_o": 0.9,
+                    "met_before_o": 1.,
 
                     "wfh_prob": 0.45,
                     "max_contacts": 4,
