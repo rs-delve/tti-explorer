@@ -718,7 +718,7 @@ def temporal_anne_flowchart(
         if isolate_household_on_symptoms:
             home_infections_days_not_quarantined = (test_perform_day + home_trace_delay) - home_infectious_start
         elif isolate_household_on_positive:
-            home_infections_days_not_quarantined = (test_perform_day + home_trace_delay) - home_infectious_start
+            home_infections_days_not_quarantined = (test_results_day + home_trace_delay) - home_infectious_start
         else:
             # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
             home_infections_days_not_quarantined = (len(home_infectious_start)) * np.ones(n_home, dtype=int)
