@@ -99,9 +99,10 @@ _case_configs = {
     }
 
 
+# for generating separate populations
 for i, name in enumerate(['oxteam-symp-covneg', 'oxteam-symp-covpos', 'oxteam-asymp-covpos']):
-    _contacts_configs[name] = _contacts_configs['oxteam']
-    _case_configs[name] = _case_configs['oxteam']
+    _contacts_configs[name] = dict(**_contacts_configs['oxteam'])
+    _case_configs[name] = dict(**_case_configs['oxteam'])
     _case_configs[name]['infection_proportions'] = [int(k==i) for k in range(3)]
 
 
@@ -797,10 +798,22 @@ _case_sensitivities = {
             inf_profile=Sensitivity(
                 bounds=None,
                 values=[
-                    [2.11, 1/0.69], # pessimistic from He et al.
-                    [2.80, 1/0.69],
-                    [3.49, 1/0.69],  
-                    ]
+                    (utils.he_infection_profile( # pessimistic from He et al.
+                        period=10,
+                        gamma_params={'a': 2.11, 'scale': 1/0.69}
+                        )
+                    ).tolist(),
+                    (utils.he_infection_profile( # pessimistic from He et al.
+                        period=10,
+                        gamma_params={'a': 2.80, 'scale': 1/0.69}
+                        )
+                    ).tolist(),
+                    (utils.he_infection_profile( # pessimistic from He et al.
+                        period=10,
+                        gamma_params={'a': 3.49, 'scale': 1/0.69}
+                        )
+                    ).tolist(),
+                ]
             )
         )
     }
