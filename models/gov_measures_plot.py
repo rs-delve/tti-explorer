@@ -9,8 +9,8 @@ from generate_cases import Case
 
 from utils import named_product
 
-def find_case_file(folder, start):
-    return next(filter(lambda x: x.startswith(start), os.listdir(folder)))
+def find_case_file(folder, fname):
+    return next(filter(lambda x: x == fname, os.listdir(folder)))
 
 def tidy_fname(fname, ending=".json"):
     return fname.rstrip(ending)
@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    tti_strat_list = ['_symptom_tracing', '_positive_test_tracing', '_positive_test_tracing_test_contacts']
+    tti_strat_list = ['_symptom_tracing.csv', '_positive_test_tracing.csv', '_positive_test_tracing_test_contacts.csv']
     tti_strat_formal_list = ['Trace on symptoms', 'Trace on positive test', 'Test on positive test']
     tti_strat_combined_list = list(zip(tti_strat_list, tti_strat_formal_list))
 
@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     gov_measures = ['L5', 'L4', 'L3', 'L2', 'L1']
 
-    max = max_calculator(args.results_folder, tti_strat_list + ['_no_contact_tracing'], gov_measures)
+    max = max_calculator(args.results_folder, tti_strat_list + ['_no_contact_tracing.csv'], gov_measures)
     ylim_list = list(zip(np.zeros(3), max))
 
     plt_list = named_product(row = np.arange(3), col = np.arange(3))
@@ -89,7 +89,7 @@ if __name__ == "__main__":
             tti_results = load_results(os.path.join(args.results_folder, tti_file))
             tti.append(tti_results[metric])
 
-            no_tti_fname = gov_measure + '_no_contact_tracing'
+            no_tti_fname = gov_measure + '_no_contact_tracing.csv'
             no_tti_file = find_case_file(args.results_folder, no_tti_fname)
             no_tti_results = load_results(os.path.join(args.results_folder, no_tti_file))
             no_tti.append(no_tti_results[metric])
