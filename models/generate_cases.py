@@ -42,7 +42,7 @@ def simulate_case(rng, p_under18, infection_proportions, p_has_app,
 
     Returns (Case): case with attributes populated.
     """
-    p_symptomatic_covid_neg, p_symptomatic_covid_pos, p_asymptomatic_covid_pos = infection_proportions
+    p_symptomatic_covid_neg, p_symptomatic_covid_pos, p_asymptomatic_covid_pos = infection_proportions['dist']
 
     under18 = bool_bernoulli(p_under18, rng)
 

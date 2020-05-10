@@ -48,8 +48,10 @@ _case_configs = {
             p_under18=0.21,
             # following Kucharski.
             # This is currently independent from everything else.
-            infection_proportions=[0, PROP_COVID_SYMPTOMATIC, 1 - PROP_COVID_SYMPTOMATIC],  # symp covid neg, symp covid pos, asymp covid pos
-
+            infection_proportions={
+                'dist': [0, PROP_COVID_SYMPTOMATIC, 1 - PROP_COVID_SYMPTOMATIC],  # symp covid neg, symp covid pos, asymp covid pos
+                'nppl': 1  # shouldn't matter if everyone has covid
+            },
             #Conditional on symptomatic
             p_has_app=0.35,
             # Conditional on having app
@@ -66,13 +68,25 @@ _case_configs = {
             # length of this determines simulation length
             inf_profile=np.full(5, 1/5).tolist()
         ),
+
+
+# guy suggestion:
+# now: 20 symp+, 20 asymp+, 150 symp-
+# summer: 10 s+, 10 a+, 100 s-
+# change default to guy and then add it in to yw suggestions
+# then can go back to sensitivity charts and figure out how to run new sensitivity sims
+# does report need help?
+
         "oxteam": dict(
             p_under18=0.21,
             # following Kucharski.
             # This is currently independent from everything else.
 
             # symp covid neg, symp covid pos, asymp covid pos
-            infection_proportions=[100/120, PROP_COVID_SYMPTOMATIC * 20/120, (1 - PROP_COVID_SYMPTOMATIC) * 20/120],
+            infection_proportions={
+                'dist': [100/140, PROP_COVID_SYMPTOMATIC * 40/140, (1 - PROP_COVID_SYMPTOMATIC) * 40/140],
+                'nppl': 140
+                },
 
             #Conditional on symptomatic
             p_has_app=0.35,
@@ -700,13 +714,14 @@ _global_defaults = {
         app_report_prob=0.75,                   # Likelihood of reporting symptoms through app
         manual_report_prob=0.5,                 # Likelihood of manually reporting symptoms (will also do if has app but didn't report through it. See flowchart)
 
-        testing_delay=3,                        # Days delay between test and results
+        testing_delay=2,                        # Days delay between test and results
 
         do_manual_tracing=True,                 # Perform manual tracing of contacts
         do_app_tracing=True,                    # Perform app tracing of contacts
 
         app_trace_delay=0,                # Delay associated with tracing through the app
-        manual_trace_delay=2,             # Delay associated with tracing manually
+        manual_trace_delay=1,             # Delay associated with tracing manually
+        manual_trace_time=2,              # time taken to trace contact
 
         manual_home_trace_prob=1.0,             # Probability of manually tracing a home contact
         manual_work_trace_prob=1.0,             # Probability of manually tracing a work contact
@@ -729,8 +744,7 @@ _global_defaults = {
 
         quarantine_length=14,                   # Length of quarantine imposed on COVID cases (and household)
 
-        latent_period=3,                    # Length of a cases incubation period (from infection to start of infectious period)
-        manual_trace_time=2  # time taken to trace contact
+        latent_period=3                   # Length of a cases incubation period (from infection to start of infectious period)
     ),
 }
 
@@ -816,16 +830,29 @@ _policy_sensitivities = {
 # flu-like symptoms (non-covid): 50k, 100k [default], 200k, 300k
 # How to make the proportions 
 _vary_flu = [
-        [k / (k + 20), PROP_COVID_SYMPTOMATIC * 20 / (k + 20),  (1 - PROP_COVID_SYMPTOMATIC) * 20 / (k + 20)]
+        {
+            'dist': [k / (k + 20), PROP_COVID_SYMPTOMATIC * 20 / (k + 20),  (1 - PROP_COVID_SYMPTOMATIC) * 20 / (k + 20)],
+            'nppl': k + 20
+        }
         for k in [50, 100, 200, 300]
     ]
+
 _vary_covid = [
-        [100 / (100 + k), PROP_COVID_SYMPTOMATIC * k / (100 + k), (1 - PROP_COVID_SYMPTOMATIC) * k / (100 + k)]
-        for k in (10, 20, 30)
+        {
+            'dist': [100 / (100 + k), PROP_COVID_SYMPTOMATIC * k / (100 + k), (1 - PROP_COVID_SYMPTOMATIC) * k / (100 + k)],
+            'nppl': k + 100
+        }
+        for k in [10, 20, 30]
     ]
 
 _inf_prop_to_try = _vary_flu
 _inf_prop_to_try.extend(_vary_covid)
+_inf_prop_to_try.append(
+        {  # Guy summer suggestion  10 S+, 10 A+, 100 S-
+            'dist': [100 / (120), PROP_COVID_SYMPTOMATIC * 20 / (120), (1 - PROP_COVID_SYMPTOMATIC) * 20 / (120)],
+            'nppl': 120
+        }
+    )
 
 _case_sensitivities = {
         # to be decided!
@@ -881,3 +908,6 @@ if __name__ == "__main__":
 
     for k, v in _case_sensitivities.items():
         assert k in _case_configs
+
+    for prop in _inf_prop_to_try:
+        assert sum(prop['dist']) == 1, f"{prop['dist']}, sums to {sum(prop['dist'])}"
