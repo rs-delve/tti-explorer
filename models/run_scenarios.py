@@ -45,6 +45,10 @@ def load_cases(fpath):
     return pairs, meta
 
 
+# def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
+    # return pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
+
+
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
     df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
     return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
@@ -84,6 +88,7 @@ if __name__ == "__main__":
 
     import config
     from strategies import registry
+    import utils
     
     parser = ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument(
@@ -131,9 +136,11 @@ if __name__ == "__main__":
             total=len(case_files) * len(strategy_configs),
             smoothing=0
         )
-
+    
+    case_metadata = dict()
     for i, case_file in enumerate(case_files):
         case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
+        case_metadata[tidy_fname(case_file)] = metadata
         nppl = metadata['case_config']['infection_proportions']['nppl']
         rng = np.random.RandomState(seed=args.seed)
 
@@ -150,17 +157,18 @@ if __name__ == "__main__":
                     rng,
                     cfg_dct
                 )
-
             scenario_results[scenario][tidy_fname(case_file)] = scale_results(
                     r,
                     monte_carlo_factor,
                     r_monte_carlo_factor,
                     nppl 
                 )
-
                 
             pbar.update(1)
-    
+
+    # dct = {k: pd.concat(v, axis=1).T for k, v in scenario_results.items()}
+    # df = pd.concat(dct, axis=0) 
+
     tables = dict()
     os.makedirs(args.output_folder, exist_ok=True)
     for scenario, v in scenario_results.items():
@@ -172,6 +180,7 @@ if __name__ == "__main__":
                 )
             )
         tables[scenario] = table
+    utils.write_json(case_metadata, os.path.join(args.output_folder, "case_metadata.json"))
     # df = pd.DataFrame.from_dict(tables, orient="index")
     # df.groupby(level=0).agg(['mean', 'std']).to_csv(os.path.join(args.output_folder, 'all_results.csv'))
 

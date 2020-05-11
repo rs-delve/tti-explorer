@@ -136,3 +136,6 @@ dmypy.json
 sheh_draft/
 runs/
 data/cases
+
+*.aux
+*.log

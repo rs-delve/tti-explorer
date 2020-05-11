@@ -18,8 +18,9 @@ warnings.filterwarnings("error")
 #     df.index.name = index_name
 #     return df
 
+
 def results_table(results_dct, index_name="scenario"):
-    df = {k:v.T for k, v in results_dct.items()}
+    df = {k: v.T for k, v in results_dct.items()}
     df = pd.concat(df)
     # df.index = df.keys()
     df.index.names = [index_name, 'statistic']
@@ -56,6 +57,7 @@ def load_cases(fpath):
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
     df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
     return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
+
 
 def find_case_files(folder, ending=".json"):
     return list(filter(lambda x: x.endswith(ending), os.listdir(folder)))
@@ -152,6 +154,16 @@ if __name__ == "__main__":
         for case_file in case_files:
             case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
             nppl = metadata['case_config']['infection_proportions']['nppl']
+            
+            # Can we turn this into something like calculate_confidence_interval?
+            n_monte_carlo_samples = len(case_contacts)
+            n_r_monte_carlo_samples = len(case_contacts) * (
+                    metadata['case_config']['infection_proportions']['dist'][1]
+                    + metadata['case_config']['infection_proportions']['dist'][2]
+                )
+            
+            monte_carlo_factor = 1. / np.sqrt(n_monte_carlo_samples)
+            r_monte_carlo_factor = 1. / np.sqrt(n_r_monte_carlo_samples)
 
             n_monte_carlo_samples = len(case_contacts)
             n_r_monte_carlo_samples = len(case_contacts) * (metadata['case_config']['infection_proportions']['dist'][1] + metadata['case_config']['infection_proportions']['dist'][2])

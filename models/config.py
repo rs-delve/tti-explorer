@@ -717,7 +717,7 @@ _policy_sensitivities = {
             ),
             trace_adherence=Sensitivity(
                 bounds=None,
-                values=[.5, .7, .9]
+                values=np.linspace(0.5, 0.9, 5)
             )
             # These ones do not need to be used
 #             app_report_prob=Sensitivity(
