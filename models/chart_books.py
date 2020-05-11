@@ -30,7 +30,14 @@ sensitivity_params = [
 
 
 def nice_lockdown_name(name):
-    return name.replace("_", " ").title().replace("Tti", "TTI")
+    mapp = {
+
+            'test_based_TTI_test_contacts': "Test-based TTI, test contacts",
+            'no_TTI': 'No TTI',
+            'symptom_based_TTI': 'Symptom-based TTI',
+            'test_based_TTI': 'Test-based TTI'
+        }
+    return mapp[name]
 
 
 def take_key(res_list, key):
@@ -54,14 +61,18 @@ def rand_jitter(arr):
 
 def errorbar(ax, xaxis, means, stds, label):
     conf_intervals = 1.96 * stds
-    ax.errorbar(rand_jitter(xaxis), means, yerr=conf_intervals, fmt='o', label=label, lw=1)
+    ax.errorbar(xaxis, means, yerr=conf_intervals, fmt="o-", label=label, lw=1)
+    ax.set_xticks(xaxis)
+    ax.set_xticklabels(xaxis)
 
 
-def plot_sim_results(ax, sim_results, key, label):
+def plot_sim_results(ax, sim_results, key, label, jitter_x=False):
     xvals, reslist = zip(*sim_results)
     reslist = [k.set_index(STATISTIC_COLNAME, drop=True) for k in reslist]
     arg_order = np.argsort(xvals)
     xaxis = np.array(xvals)[arg_order]
+    if jitter_x:
+        xaxis = rand_jitter(xaxis)
     means, standard_errors = take_key(reslist, key)
     values = means[arg_order]
     return errorbar(ax, xaxis, values, standard_errors[arg_order], label)
@@ -83,14 +94,15 @@ def plot_lockdown(lockdown_dct, deck, keys_to_plot):
         for key, ax in zip(keys_to_plot, axarr.flat):
             for lockdown_name, res in sim_results.items():
                 plot_sim_results(ax, res, key, nice_lockdown_name(lockdown_name))
+                ax.legend()
             
             ax.set_ylabel(key)
             ax.set_xlabel(nice_param_name(param_name))
-        ax.yaxis.set_label_position("right")
-        ax.yaxis.tick_right()
-        legend(fig, ax)
+        # ax.yaxis.set_label_position("right")
+        # ax.yaxis.tick_right()
+        # legend(fig, ax)
         # fig.suptitle(nice_param_name(param_name), y=0.95)
-        plt.subplots_adjust(wspace=0.05)
+        # plt.subplots_adjust(wspace=0.05)
         
         deck.add_figure(fig, name=param_name)
     return fig
