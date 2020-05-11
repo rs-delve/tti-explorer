@@ -126,7 +126,8 @@ if __name__ == "__main__":
             yerr = 1.96 * np.array(no_tti_std_error),
             ls = 'None',
             label = 'No TTI',
-            marker = '.',
+            # marker = '.',
+            capsize=2,
             markersize = 10
         )
         ax.errorbar(
@@ -134,9 +135,12 @@ if __name__ == "__main__":
             y = tti, yerr = 1.96 * np.array(tti_std_error),
             ls = 'None', label = f'{tti_strat_formal}',
             color = f'C{col_idx + 1}',
-            marker = '.',
+            # marker = '.',
+            capsize=2,
             markersize = 10
         )
+
+        ax.grid(True)
         # ax.plot(xlabels, no_tti, alpha = 0.7, marker = 'x', label = 'No TTI')
         # ax.plot(xlabels, tti, alpha = 0.7, marker = 'x', label = f'{tti_strat_formal}', color = f'C{col_idx + 1}')
         #
