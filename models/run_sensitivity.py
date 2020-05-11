@@ -7,12 +7,23 @@ from contacts import Contacts, NCOLS
 from generate_cases import Case
 
 
+import warnings
+warnings.filterwarnings("error")
+
+# def results_table(results_dct, index_name="scenario"):
+#     df = pd.DataFrame.from_dict(
+#             results_dct,
+#             orient="index"
+#         ).sort_index()
+#     df.index.name = index_name
+#     return df
+
+
 def results_table(results_dct, index_name="scenario"):
-    df = pd.DataFrame.from_dict(
-            results_dct,
-            orient="index"
-        ).sort_index()
-    df.index.name = index_name
+    df = {k: v.T for k, v in results_dct.items()}
+    df = pd.concat(df)
+    # df.index = df.keys()
+    df.index.names = [index_name, 'statistic']
     return df
 
 
@@ -45,7 +56,8 @@ def load_cases(fpath):
 
 
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
-    return pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts]).mean(0)
+    df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
+    return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
 
 
 def find_case_files(folder, ending=".json"):
@@ -143,6 +155,16 @@ if __name__ == "__main__":
         for case_file in case_files:
             case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
             nppl = metadata['case_config']['infection_proportions']['nppl']
+            
+            # Can we turn this into something like calculate_confidence_interval?
+            n_monte_carlo_samples = len(case_contacts)
+            n_r_monte_carlo_samples = len(case_contacts) * (
+                    metadata['case_config']['infection_proportions']['dist'][1]
+                    + metadata['case_config']['infection_proportions']['dist'][2]
+                )
+            
+            monte_carlo_factor = 1. / np.sqrt(n_monte_carlo_samples)
+            r_monte_carlo_factor = 1. / np.sqrt(n_r_monte_carlo_samples)
 
             for scenario, cfg_dct in strategy_configs.items():
                 policy_sensitivities = config.get_policy_sensitivities(args.strategy)
@@ -168,7 +190,12 @@ if __name__ == "__main__":
 
                 for i, future in enumerate(futures):
                     # this is so uglY!
-                    scenario_results[scenario][i][tidy_fname(case_file)] = scale_results(future.result(), nppl)
+                    scenario_results[scenario][i][tidy_fname(case_file)] = scale_results(
+                        future.result(),
+                        monte_carlo_factor,
+                        r_monte_carlo_factor,
+                        nppl
+                    )
                     pbar.update(1)
 
     os.makedirs(args.output_folder, exist_ok=True)
@@ -196,7 +223,7 @@ if __name__ == "__main__":
                 )
             )
             res_tables[i] = table
-        pd.concat(res_tables).agg(
-                ['mean', 'std']
-            ).to_csv(os.path.join(odir, "over_all_seeds.csv"))
+        over_all_seeds = pd.concat(res_tables)
+        over_all_seeds.index.set_names('seed', level=0, inplace=True)
+        over_all_seeds.to_csv(os.path.join(odir, "over_all_seeds.csv"))
 

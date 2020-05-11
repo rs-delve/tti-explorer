@@ -1,8 +1,10 @@
+from collections import namedtuple
+from itertools import product, starmap
+import json
+
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.stats import gamma
-from itertools import product, starmap
-from collections import namedtuple
 
 def bool_bernoulli(p, rng):
     return bool(rng.binomial(1, p))
@@ -27,9 +29,11 @@ def home_daily_infectivity(base_mass):
     skewed_mass = fail_prod * base_mass
     return skewed_mass / np.sum(skewed_mass)
 
+
 def named_product(**items):
     Product = namedtuple('Product', items.keys())
     return starmap(Product, product(*items.values()))
+
 
 class Registry:
     "Case insensitive registry"
@@ -44,6 +48,7 @@ class Registry:
             self._register[name.lower()] = thing
             return thing
         return add
+
 
 class PdfDeck:
     def __init__(self, figs=None):
@@ -70,3 +75,60 @@ def swaplevel(dct_of_dct):
     return {in_k: {out_k: v[in_k] for out_k, v in dct_of_dct.items()} for in_k in keys}
 
 
+def read_json(fpath):
+    with open(fpath, "r") as f:
+        return json.loads(f.read())
+
+
+def sort_by(lst, by, return_idx=False):
+    idx, res = zip(*sorted(zip(by, lst)))
+    return (res, idx) if return_idx else res
+
+
+class LatexTableDeck:
+    table_template = r"""
+    \begin{table}[H]
+         %(table)s
+        \caption{%(caption)s}
+    \end{table}
+    """
+
+    header = r"""
+
+    \documentclass{article}
+
+    \usepackage{booktabs}
+    \usepackage{tabularx}
+    \usepackage{float}
+
+    \restylefloat{table}
+
+    \begin{document}
+
+    """
+    clearpage_str = "\clearpage"
+    footer = "\n\end{document}"
+    new_section = r"\section{%s}"
+    
+    def __init__(self, table_template=None, header=None, footer=None, new_section=None, clearpage_str=None):
+        self.table_template = table_template or self.table_template
+        self.header = header or self.header
+        self.footer = footer or self.footer
+        self.new_section = new_section or self.new_section
+        self.clearpage_str = clearpage_str or self.clearpage_str
+
+        self.strings = list()
+    
+    def add_section(self, section_name):
+        self.strings.append(self.new_section % section_name)
+        
+    def add_table(self, tex_table, caption):
+        self.strings.append(self.table_template % dict(table=tex_table, caption=caption))
+        
+    def clearpage(self):
+        self.strings.append(self.clearpage_str)
+    
+    def make(self, fpath, joiner="\n\n"):
+        output = joiner.join([self.header, *self.strings, self.footer])
+        with open(fpath, "w") as f:
+            f.write(output)

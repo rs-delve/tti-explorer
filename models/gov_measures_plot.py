@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from contacts import Contacts, NCOLS
 from generate_cases import Case
 
+from strategies import RETURN_KEYS
 from utils import named_product
 
 def find_case_file(folder, fname):
@@ -17,9 +18,9 @@ def tidy_fname(fname, ending=".json"):
 
 def load_results(fpath):
     # only return reduced_r, manual_traces, tests_needed and persondays_quarantined
-    results = pd.read_csv(fpath, usecols = ['Reduced R', 'Manual Traces', 'Tests Needed'])
-    if results.ndim > 1:
-        results = results.mean(axis = 0)
+    results = pd.read_csv(fpath, index_col=[0], usecols=['statistic', RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests])
+    # if results.ndim > 1:
+    #     results = results.mean(axis = 0)
     return results
 
 def max_calculator(folder, tti_strat_list, gov_measure_list):
@@ -29,7 +30,7 @@ def max_calculator(folder, tti_strat_list, gov_measure_list):
             tti_fname = gov_measure + tti_strat
             tti_file = find_case_file(folder, tti_fname)
             tti_results = load_results(os.path.join(folder, tti_file))
-            curr_max = np.maximum(curr_max, tti_results)
+            curr_max = np.maximum(curr_max, tti_results.loc['mean'].values)
     return curr_max * 1.2
 
 if __name__ == "__main__":
@@ -64,8 +65,8 @@ if __name__ == "__main__":
     tti_strat_formal_list = ['Trace on symptoms', 'Trace on positive test', 'Test on positive test']
     tti_strat_combined_list = list(zip(tti_strat_list, tti_strat_formal_list))
 
-    metric_list = ['Reduced R', 'Manual Traces', 'Tests Needed']
-    metric_formal_list = ['Reduced R', 'Manual Traces (K)', 'Tests Needed (K)']
+    metric_list = [RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests]
+    metric_formal_list = [RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace + " (K)", RETURN_KEYS.tests + " (K)"]
     metric_combined_list = list(zip(metric_list, metric_formal_list))
 
     gov_measures = ['L5', 'L4', 'L3', 'L2', 'L1']
@@ -83,16 +84,22 @@ if __name__ == "__main__":
 
         no_tti = []
         tti = []
+
+        no_tti_std_error = []
+        tti_std_error = []
+
         for L_idx, gov_measure in enumerate(gov_measures):
             tti_fname = gov_measure + tti_strat
             tti_file = find_case_file(args.results_folder, tti_fname)
             tti_results = load_results(os.path.join(args.results_folder, tti_file))
-            tti.append(tti_results[metric])
+            tti.append(tti_results[metric].loc['mean'])
+            tti_std_error.append(tti_results[metric].loc['std'])
 
             no_tti_fname = gov_measure + '_no_contact_tracing.csv'
             no_tti_file = find_case_file(args.results_folder, no_tti_fname)
             no_tti_results = load_results(os.path.join(args.results_folder, no_tti_file))
-            no_tti.append(no_tti_results[metric])
+            no_tti.append(no_tti_results[metric].loc['mean'])
+            no_tti_std_error.append(no_tti_results[metric].loc['std'])
 
         # sort y axis
         ax.set(ylabel =  metric_formal)
@@ -105,6 +112,21 @@ if __name__ == "__main__":
 
         ax.plot(xlabels, no_tti, alpha = 0.7, marker = 'x', label = 'No TTI')
         ax.plot(xlabels, tti, alpha = 0.7, marker = 'x', label = f'{tti_strat_formal}', color = f'C{col_idx + 1}')
+
+        ax.fill_between(
+            xlabels, 
+            np.array(no_tti) + (1.96*np.array(no_tti_std_error)),
+            np.array(no_tti) - (1.96*np.array(no_tti_std_error)),
+            alpha=0.5
+        )
+        ax.fill_between(
+            xlabels, 
+            np.array(tti) + (1.96*np.array(tti_std_error)),
+            np.array(tti) - (1.96*np.array(tti_std_error)),
+            alpha=0.5,
+            color = f'C{col_idx + 1}'
+        )
+
 
         if row_idx == 0:
             ax.set_title(tti_strat_formal, fontsize = 10)
