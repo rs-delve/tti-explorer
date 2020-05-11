@@ -54,11 +54,13 @@ def load_cases(fpath):
         pairs.append((case, contacts))
     return pairs, meta
 
-
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
     df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
     return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
+<<<<<<< HEAD
 
+=======
+>>>>>>> 31e17915aae0b6eb2eb3b8f3d8dac4c3b6177e80
 
 def find_case_files(folder, ending=".json"):
     return list(filter(lambda x: x.endswith(ending), os.listdir(folder)))
@@ -162,6 +164,12 @@ if __name__ == "__main__":
                     metadata['case_config']['infection_proportions']['dist'][1]
                     + metadata['case_config']['infection_proportions']['dist'][2]
                 )
+            
+            monte_carlo_factor = 1. / np.sqrt(n_monte_carlo_samples)
+            r_monte_carlo_factor = 1. / np.sqrt(n_r_monte_carlo_samples)
+
+            n_monte_carlo_samples = len(case_contacts)
+            n_r_monte_carlo_samples = len(case_contacts) * (metadata['case_config']['infection_proportions']['dist'][1] + metadata['case_config']['infection_proportions']['dist'][2])
             
             monte_carlo_factor = 1. / np.sqrt(n_monte_carlo_samples)
             r_monte_carlo_factor = 1. / np.sqrt(n_r_monte_carlo_samples)
