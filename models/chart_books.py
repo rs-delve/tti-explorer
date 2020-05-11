@@ -33,7 +33,9 @@ def nice_lockdown_name(name):
     return name.replace("_", " ").title()
 
 def take_key(res_list, key):
-    return np.array([res[key].item() for res in res_list])
+    means = np.array([res[key].iloc[0] for res in res_list])
+    standard_errors = np.array([res[key].iloc[1] for res in res_list])
+    return means, standard_errors
 
 def nice_param_name(name):
     return name.replace("_", " ").title()
@@ -47,8 +49,14 @@ def plot_sim_results(ax, sim_results, key, label):
     xvals, reslist = zip(*sim_results)
     arg_order = np.argsort(xvals)
     xaxis = np.array(xvals)[arg_order]
-    res = take_key(reslist, key)[arg_order]
-    ax.scatter(rand_jitter(xaxis), rand_jitter(res), label=label)
+    means, standard_errors = take_key(reslist, key)
+    values = means[arg_order]
+
+    # explanation of how to calculate
+    # conf interval from standard error
+    # see https://en.wikipedia.org/wiki/Confidence_interval#Basic_steps
+    conf_intervals = 1.96 * standard_errors[arg_order]
+    ax.errorbar(rand_jitter(xaxis), rand_jitter(means), yerr=conf_intervals, fmt='o', label=label)
 
 
 def plot_lockdown(lockdown_dct, deck, keys_to_plot):
