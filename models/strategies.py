@@ -423,6 +423,12 @@ def temporal_anne_flowchart(
     #   - person_days_wasted_quarantine : number of days individuals without COVID were locked down
 ):
 
+
+    # TODO: Janky - overriding manual_report_prob and app_report_prob
+    # NOT USING THESE AT ALL 
+    app_report_prob = trace_adherence
+    manual_report_prob = trace_adherence
+
     # If under 18, change wfh and likelihood of knowing contacts
     if case.under18:
         wfh = rng.uniform() < 1 - go_to_school_prob
@@ -434,30 +440,20 @@ def temporal_anne_flowchart(
     has_app = rng.uniform() < app_cov
 
     # If the case is symptomatic, test if case reports and through what channel. Assume reports on day noticed
+    # TODO: logic changed. Assume if have app, this is how they will report.
     if case.symptomatic:
-        if has_app:
-            # report through app probability
-            if rng.uniform() < app_report_prob:
+        does_report = rng.uniform() < trace_adherence
+
+        if does_report:
+            if has_app:
                 report_app = True
                 report_manual = False
-            # if doesn't report through app, may still report manually
-            elif rng.uniform() < manual_report_prob:
-                report_app = False
-                report_manual = True
-            # Will not report otherwise
             else:
                 report_app = False
-                report_manual = False
+                report_manual = True
         else:
-            # If doesn't have app, may report manually
-            if rng.uniform() < manual_report_prob:
-                report_app = False
-                report_manual = True
-            # Will not report otherwise
-            else:
-                report_app = False
-                report_manual = False
-    # Will not report is non symptomatic.
+            report_app = False
+            report_manual = False
     else:
         report_app = False
         report_manual = False
