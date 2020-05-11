@@ -12,6 +12,7 @@ from generate_cases import Case
 from strategies import RETURN_KEYS
 from utils import named_product
 
+
 def find_case_file(folder, fname):
     return next(filter(lambda x: x == fname, os.listdir(folder)))
 
@@ -20,14 +21,14 @@ def tidy_fname(fname, ending=".json"):
 
 def load_results(fpath):
     # only return reduced_r, manual_traces, tests_needed
-    results = pd.read_csv(fpath, index_col=[0], usecols=['statistic', RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests])
+    results = pd.read_csv(fpath, index_col=[0], usecols=['statistic', RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests, RETURN_KEYS.quarantine])
     # results = results.head(2)
     if len(results) > 2:
         raise ValueError(f"More than 1 population found in {fpath}")
     return results
 
 def max_calculator(folder, tti_strat_list, gov_measure_list):
-    curr_max = np.zeros(3)
+    curr_max = np.zeros(len(tti_strat_list))
     for gov_measure in gov_measure_list:
         for tti_strat in tti_strat_list:
             tti_fname = gov_measure + tti_strat
@@ -65,21 +66,21 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     tti_strat_list = ['_symptom_based_TTI.csv', '_test_based_TTI.csv', '_test_based_TTI_test_contacts.csv']
-    tti_strat_formal_list = ['Trace on symptoms', 'Trace on positive test', 'Test on positive test']
+    tti_strat_formal_list = ['Symptom-based TTI', 'Test-based TTI', 'Test-based TTI, test contacts']
     tti_strat_combined_list = list(zip(tti_strat_list, tti_strat_formal_list))
     no_tti_str = '_no_TTI.csv'
 
-    metric_list = [RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests]
-    metric_formal_list = [RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace + " (K)", RETURN_KEYS.tests + " (K)"]
+    metric_list = [RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests, RETURN_KEYS.quarantine]
+    metric_formal_list = [RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace + " (K)", RETURN_KEYS.tests + " (K)", "# Person-days in Quarantine (K)"]
     metric_combined_list = list(zip(metric_list, metric_formal_list))
 
     gov_measures = ['S5', 'S4', 'S3', 'S2', 'S1']
 
     max = max_calculator(args.results_folder, tti_strat_list + [no_tti_str], gov_measures)
-    ylim_list = list(zip(np.zeros(3), max))
+    ylim_list = list(zip(np.zeros(len(metric_list)), max))
 
-    plt_list = named_product(row = np.arange(3), col = np.arange(3))
-    fig, axs = plt.subplots(3, 3, figsize = (12, 12))
+    plt_list = named_product(row = np.arange(len(metric_list)), col = np.arange(len(tti_strat_list)))
+    fig, axs = plt.subplots(len(metric_list), len(tti_strat_list), figsize = (12, 12))
 
     for plt_idx, (row_idx, col_idx) in enumerate(plt_list):
         ax = axs[row_idx, col_idx]
@@ -115,34 +116,38 @@ if __name__ == "__main__":
         ax.set_xticks(xlabels)
         ax.set_xticklabels(gov_measures)
 
-        # sort titles, R = 1 line and xlabels
-        if row_idx == 0:
+        if metric == RETURN_KEYS.reduced_r:
             ax.set_title(tti_strat_formal, fontsize = 10)
             ax.hlines(1, 0, 4, 'k', ls = '--', alpha = 0.5)
-        elif row_idx == 2:
-            ax.set_xlabel('Levels of NPIs')
 
-        ax.errorbar(
-            x = xlabels,
-            y = no_tti,
-            yerr = 1.96 * np.array(no_tti_std_error),
-            ls = 'None',
-            label = 'No TTI',
-            # marker = '.',
-            capsize=2,
-            markersize = 10
-        )
+        if metric in (RETURN_KEYS.reduced_r, RETURN_KEYS.quarantine):
+            ax.errorbar(
+                x = xlabels,
+                y = no_tti,
+                yerr = 1.96 * np.array(no_tti_std_error),
+                #ls = 'None',
+                label = 'No TTI',
+                # marker = '.',
+                capsize=2,
+                markersize = 10
+            )
+
+        if metric == metric_list[-1]:
+            ax.set_xlabel('Level of NPIs')
+
+        #ax.plot(xlabels, tti, color=f'C{col_idx + 1}')
         ax.errorbar(
             x = xlabels,
             y = tti, yerr = 1.96 * np.array(tti_std_error),
-            ls = 'None', label = f'{tti_strat_formal}',
+            #ls = 'None',
+            label = tti_strat_formal,
             color = f'C{col_idx + 1}',
             # marker = '.',
             capsize=2,
             markersize = 10
         )
 
-        ax.grid(True)
+        ax.grid(False)
         # ax.plot(xlabels, no_tti, alpha = 0.7, marker = 'x', label = 'No TTI')
         # ax.plot(xlabels, tti, alpha = 0.7, marker = 'x', label = f'{tti_strat_formal}', color = f'C{col_idx + 1}')
         #
