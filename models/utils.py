@@ -1,6 +1,7 @@
 from collections import namedtuple
 from itertools import product, starmap
 import json
+import os
 
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
@@ -51,16 +52,21 @@ class Registry:
 
 
 class PdfDeck:
-    def __init__(self, figs=None):
+    def __init__(self, figs=None, names=None):
         self.figs = figs or []
+        self.fignames = names or []
 
     @classmethod
     def save_as_pdf(cls, figs, fpath):
         return cls(figs).make(fpath)
-
-    def add_figure(self, fig, position=None):
+    
+    def default_figname(self):
+        return f"{repr(self).replace(' ', '_')}_figure_{len(self.figs)}"
+    
+    def add_figure(self, fig, *, position=None, name=None):
         if position is None:
             self.figs.append(fig)
+            self.fignames.append(name or self.default_figname())
         else:
             self.figs.insert(position, fig)
 
@@ -68,6 +74,12 @@ class PdfDeck:
         with PdfPages(fpath) as pdf:
             for fig in self.figs:
                 pdf.savefig(fig)
+    
+    def make_individual(self, folder=None, **savefig_kwds):
+        folder = folder or os.cwd()
+        for fig, name in zip(self.figs, self.fignames):
+            fpath = os.path.join(folder, name+"."+savefig_kwds.get("format", "pdf"))
+            fig.savefig(fpath,**savefig_kwds)
 
 
 def swaplevel(dct_of_dct):
