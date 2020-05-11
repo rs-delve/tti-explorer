@@ -608,7 +608,7 @@ def temporal_anne_flowchart(
         total_tests_performed = 0
         # count own test
         # TODO: Janky - if no contact tracing is going on, do NOT test the person
-        if not (do_app_tracing or do_manual_tracing or isolate_contacts_on_positive or isolate_contacts_on_symptoms):
+        if (do_app_tracing or do_manual_tracing or isolate_contacts_on_positive or isolate_contacts_on_symptoms):
             total_tests_performed += 1
         
         # If house isolated on symptoms, or on positive
