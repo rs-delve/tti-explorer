@@ -7,6 +7,9 @@ from contacts import Contacts, NCOLS
 from generate_cases import Case
 
 
+import warnings
+warnings.filterwarnings("error")
+
 # def results_table(results_dct, index_name="scenario"):
 #     df = pd.DataFrame.from_dict(
 #             results_dct,

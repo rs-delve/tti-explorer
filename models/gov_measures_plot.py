@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from contacts import Contacts, NCOLS
 from generate_cases import Case
 
+from strategies import RETURN_KEYS
 from utils import named_product
 
 def find_case_file(folder, fname):
@@ -17,7 +18,7 @@ def tidy_fname(fname, ending=".json"):
 
 def load_results(fpath):
     # only return reduced_r, manual_traces, tests_needed and persondays_quarantined
-    results = pd.read_csv(fpath, index_col=[0], usecols=['statistic','Reduced R', 'Manual Traces', 'Tests Needed'])
+    results = pd.read_csv(fpath, index_col=[0], usecols=['statistic', RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests])
     # if results.ndim > 1:
     #     results = results.mean(axis = 0)
     return results
@@ -64,8 +65,8 @@ if __name__ == "__main__":
     tti_strat_formal_list = ['Trace on symptoms', 'Trace on positive test', 'Test on positive test']
     tti_strat_combined_list = list(zip(tti_strat_list, tti_strat_formal_list))
 
-    metric_list = ['Reduced R', 'Manual Traces', 'Tests Needed']
-    metric_formal_list = ['Reduced R', 'Manual Traces (K)', 'Tests Needed (K)']
+    metric_list = [RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests]
+    metric_formal_list = [RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace + " (K)", RETURN_KEYS.tests + " (K)"]
     metric_combined_list = list(zip(metric_list, metric_formal_list))
 
     gov_measures = ['L5', 'L4', 'L3', 'L2', 'L1']
