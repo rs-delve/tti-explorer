@@ -795,5 +795,4 @@ def temporal_anne_flowchart(
             RETURN_KEYS.tests: total_tests_performed,
             RETURN_KEYS.quarantine: person_days_quarantine,
             RETURN_KEYS.wasted_quarantine: person_days_wasted_quarantine,
-            'Fraction_R': fractional_R if case.covid else np.nan
         }
