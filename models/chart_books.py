@@ -39,12 +39,16 @@ def nice_param_name(name):
     return name
 
 
+def rand_jitter(arr):
+    stdev = .02*(max(arr)-min(arr))
+    return arr + np.random.randn(len(arr)) * stdev
+
 def plot_sim_results(ax, sim_results, key, label):
     xvals, reslist = zip(*sim_results)
     arg_order = np.argsort(xvals)
     xaxis = np.array(xvals)[arg_order]
     res = take_key(reslist, key)[arg_order]
-    ax.plot(xaxis, res, label=label)
+    ax.scatter(rand_jitter(xaxis), rand_jitter(res), label=label)
 
 
 def plot_lockdown(lockdown_dct, deck, keys_to_plot):
