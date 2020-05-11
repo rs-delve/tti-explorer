@@ -703,7 +703,7 @@ _policy_sensitivities = {
         "temporal_anne_flowchart": dict(
             app_cov=Sensitivity(
                 bounds=(0, 1),
-                values=np.linspace(0.1, 1., num=9)
+                values=np.linspace(0.1, 1., num=10)
             ),
 
             testing_delay=Sensitivity(
