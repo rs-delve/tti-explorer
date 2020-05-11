@@ -88,6 +88,7 @@ if __name__ == "__main__":
 
     import config
     from strategies import registry
+    import utils
     
     parser = ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument(
@@ -135,9 +136,11 @@ if __name__ == "__main__":
             total=len(case_files) * len(strategy_configs),
             smoothing=0
         )
-
+    
+    case_metadata = dict()
     for i, case_file in enumerate(case_files):
         case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
+        case_metadata[tidy_fname(case_file)] = metadata
         nppl = metadata['case_config']['infection_proportions']['nppl']
         rng = np.random.RandomState(seed=args.seed)
 
@@ -177,6 +180,7 @@ if __name__ == "__main__":
                 )
             )
         tables[scenario] = table
+    utils.write_json(case_metadata, os.path.join(args.output_folder, "case_metadata.json"))
     # df = pd.DataFrame.from_dict(tables, orient="index")
     # df.groupby(level=0).agg(['mean', 'std']).to_csv(os.path.join(args.output_folder, 'all_results.csv'))
 
