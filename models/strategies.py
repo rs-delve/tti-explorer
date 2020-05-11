@@ -12,12 +12,12 @@ registry = Registry()
 # in every strategy and will keep tables consistent
 RETURN_KEYS = SimpleNamespace(
         base_r="Base R",
-        reduced_r='Reduced R',
-        man_trace='Manual Traces',
-        app_trace='App Traces',
-        tests='Tests Needed',
-        quarantine='PersonDays Quarantined',
-        wasted_quarantine='Wasted PersonDays Quarantined'
+        reduced_r='Effective R',
+        man_trace='# Manual Traces',
+        app_trace='# App Traces',
+        tests='# Tests Needed',
+        quarantine='# PersonDays Quarantined',
+        wasted_quarantine='# Wasted PersonDays Quarantined'
     )
 
 # BE: this type of masking might be useful to limit contacts
@@ -505,7 +505,7 @@ def temporal_anne_flowchart(
             isolate_day = test_results_day
         else:
             # TODO: Should never get here. Nan > all numbers but will cause warning.
-            isolate_day = np.nan
+            isolate_day = 200
 
         # Prevent contact after isolation day
         home_contacts_prevented = (home_infected_day >= isolate_day).astype(bool)
@@ -524,7 +524,7 @@ def temporal_anne_flowchart(
         if do_app_tracing:
             # If has app and reported through it, we can trace contacts through the app. Assume home contacts not needed to trace this way
             # TODO: can we trace through the app those who have it, but didn't report through it?
-            if report_app:
+            if report_app and (isolate_contacts_on_symptoms or (isolate_contacts_on_positive and case.covid)):
                 # Trace contacts based on app coverage
                 work_contacts_trace_app = rng.binomial(n=1, p=app_cov, size=n_work).astype(bool)
                 othr_contacts_trace_app = rng.binomial(n=1, p=app_cov, size=n_othr).astype(bool)
@@ -537,7 +537,7 @@ def temporal_anne_flowchart(
             othr_contacts_trace_app = np.zeros(shape=n_othr, dtype=bool)
 
         # If policy of manual tracing
-        if do_manual_tracing:
+        if do_manual_tracing and (isolate_contacts_on_symptoms or (isolate_contacts_on_positive and case.covid)):
             # Prob of manual tracing is a base chance, modified by the chance the person knows who the contact is.
             work_contacts_trace_manual = rng.binomial(n=1, p=manual_work_trace_prob * met_before_w, size=n_work).astype(bool)
             othr_contacts_trace_manual = rng.binomial(n=1, p=manual_othr_trace_prob * met_before_o, size=n_othr).astype(bool)
@@ -546,8 +546,11 @@ def temporal_anne_flowchart(
             work_contacts_trace_manual = np.zeros(shape=n_work, dtype=bool)
             othr_contacts_trace_manual = np.zeros(shape=n_othr, dtype=bool)
 
-        # Assume all home contacts traced 
-        home_contacts_traced = np.ones_like(n_home, dtype=bool)
+        # Assume all home contacts traced
+        if isolate_household_on_symptoms or (isolate_contacts_on_positive and case.covid):
+            home_contacts_traced = np.ones_like(n_home, dtype=bool)
+        else:
+            home_contacts_traced = np.zeros(shape=n_home, dtype=bool)
 
         # Remove traces that didn't happen as case was isolated
         work_contacts_trace_app = work_contacts_trace_app & ~work_contacts_prevented
@@ -748,7 +751,7 @@ def temporal_anne_flowchart(
             home_infections_days_not_quarantined = (test_results_day + home_trace_delay) - home_infectious_start
         else:
             # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
-            home_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(n_home, dtype=int)
+            home_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(home_infectious_start), dtype=int)
 
         # Compute the days a work/othr case is left out in the world infectious
         if isolate_contacts_on_symptoms:
@@ -791,5 +794,5 @@ def temporal_anne_flowchart(
             RETURN_KEYS.app_trace: app_traces,
             RETURN_KEYS.tests: total_tests_performed,
             RETURN_KEYS.quarantine: person_days_quarantine,
-            RETURN_KEYS.wasted_quarantine: person_days_wasted_quarantine
+            RETURN_KEYS.wasted_quarantine: person_days_wasted_quarantine,
         }

@@ -62,7 +62,8 @@ if __name__ == "__main__":
             total = home + work + other
             outputs.append((home, work, other, total))
     outputs = np.array(outputs)
-    print("R values. home: {:.2f} work: {:.2f} other: {:.2f} total: {:.2f}".format(*outputs.mean(0)))
+    print("R values (mean). home: {:.2f} work: {:.2f} other: {:.2f} total: {:.2f}.".format(*outputs.mean(0)))
+    print("R values  (std). home: {:.2f} work: {:.2f} other: {:.2f} total: {:.2f}.".format(*outputs.std(0)))
     n_cases = len(case_contacts)
     print(f"{n_covid}/{n_cases} = {n_covid / n_cases} have covid")
 

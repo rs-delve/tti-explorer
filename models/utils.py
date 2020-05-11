@@ -49,6 +49,7 @@ class Registry:
             return thing
         return add
 
+
 class PdfDeck:
     def __init__(self, figs=None):
         self.figs = figs or []
@@ -78,4 +79,60 @@ def read_json(fpath):
     with open(fpath, "r") as f:
         return json.loads(f.read())
 
+def write_json(stuff, fpath):
+    with open(fpath, "w") as f:
+        return json.dump(stuff, f)
 
+
+def sort_by(lst, by, return_idx=False):
+    idx, res = zip(*sorted(zip(by, lst)))
+    return (res, idx) if return_idx else res
+
+
+class LatexTableDeck:
+    table_template = r"""
+    \begin{table}[H]
+         %(table)s
+        \caption{%(caption)s}
+    \end{table}
+    """
+
+    header = r"""
+
+    \documentclass{article}
+
+    \usepackage{booktabs}
+    \usepackage{tabularx}
+    \usepackage{float}
+
+    \restylefloat{table}
+
+    \begin{document}
+
+    """
+    clearpage_str = "\clearpage"
+    footer = "\n\end{document}"
+    new_section = r"\section{%s}"
+    
+    def __init__(self, table_template=None, header=None, footer=None, new_section=None, clearpage_str=None):
+        self.table_template = table_template or self.table_template
+        self.header = header or self.header
+        self.footer = footer or self.footer
+        self.new_section = new_section or self.new_section
+        self.clearpage_str = clearpage_str or self.clearpage_str
+
+        self.strings = list()
+    
+    def add_section(self, section_name):
+        self.strings.append(self.new_section % section_name)
+        
+    def add_table(self, tex_table, caption):
+        self.strings.append(self.table_template % dict(table=tex_table, caption=caption))
+        
+    def clearpage(self):
+        self.strings.append(self.clearpage_str)
+    
+    def make(self, fpath, joiner="\n\n"):
+        output = joiner.join([self.header, *self.strings, self.footer])
+        with open(fpath, "w") as f:
+            f.write(output)
