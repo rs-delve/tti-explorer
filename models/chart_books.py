@@ -75,18 +75,17 @@ def legend(fig, ax, ncol=4):
 
 def plot_lockdown(lockdown_dct, deck, keys_to_plot):
     for param_name, sim_results in lockdown_dct.items():
-        fig, axarr = plt.subplots(1, len(keys_to_plot), sharex=True)
+        fig, axarr = plt.subplots(1, len(keys_to_plot), sharex=True, squeeze=False)
         for key, ax in zip(keys_to_plot, axarr.flat):
             for lockdown_name, res in sim_results.items():
                 plot_sim_results(ax, res, key, nice_lockdown_name(lockdown_name))
             
             ax.set_ylabel(key)
             ax.set_xlabel(nice_param_name(param_name))
-
         ax.yaxis.set_label_position("right")
         ax.yaxis.tick_right()
         legend(fig, ax)
-        fig.suptitle(nice_param_name(param_name), y=0.95)
+        # fig.suptitle(nice_param_name(param_name), y=0.95)
         plt.subplots_adjust(wspace=0.05)
         
         deck.add_figure(fig, name=param_name)
