@@ -57,10 +57,7 @@ def load_cases(fpath):
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
     df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
     return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
-<<<<<<< HEAD
 
-=======
->>>>>>> 31e17915aae0b6eb2eb3b8f3d8dac4c3b6177e80
 
 def find_case_files(folder, ending=".json"):
     return list(filter(lambda x: x.endswith(ending), os.listdir(folder)))
