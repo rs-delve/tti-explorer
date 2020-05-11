@@ -119,23 +119,6 @@ if __name__ == "__main__":
         if metric == RETURN_KEYS.reduced_r:
             ax.set_title(tti_strat_formal, fontsize = 10)
             ax.hlines(1, 0, 4, 'k', ls = '--', alpha = 0.5)
-
-        if metric in (RETURN_KEYS.reduced_r, RETURN_KEYS.quarantine):
-            ax.errorbar(
-                x = xlabels,
-                y = no_tti,
-                yerr = 1.96 * np.array(no_tti_std_error),
-                #ls = 'None',
-                label = 'No TTI',
-                # marker = '.',
-                capsize=2,
-                markersize = 10
-            )
-
-        if metric == metric_list[-1]:
-            ax.set_xlabel('Level of NPIs')
-
-        #ax.plot(xlabels, tti, color=f'C{col_idx + 1}')
         ax.errorbar(
             x = xlabels,
             y = tti, yerr = 1.96 * np.array(tti_std_error),
@@ -146,6 +129,33 @@ if __name__ == "__main__":
             capsize=2,
             markersize = 10
         )
+
+        if metric in (RETURN_KEYS.reduced_r,):
+            ax.errorbar(
+                x = xlabels,
+                y = no_tti,
+                yerr = 1.96 * np.array(no_tti_std_error),
+                #ls = 'None',
+                label = 'No TTI',
+                # marker = '.',
+                capsize=2,
+                markersize = 10
+            )
+        if metric in (RETURN_KEYS.quarantine,):
+            ax.errorbar(
+                x = xlabels,
+                y = no_tti,
+                yerr = 1.96 * np.array(no_tti_std_error),
+                #ls = 'None',
+                # marker = '.',
+                capsize=2,
+                markersize = 10
+            )
+
+        if metric == metric_list[-1]:
+            ax.set_xlabel('Level of NPIs')
+
+
 
         ax.grid(False)
         # ax.plot(xlabels, no_tti, alpha = 0.7, marker = 'x', label = 'No TTI')
