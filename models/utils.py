@@ -27,9 +27,11 @@ def home_daily_infectivity(base_mass):
     skewed_mass = fail_prod * base_mass
     return skewed_mass / np.sum(skewed_mass)
 
+
 def named_product(**items):
     Product = namedtuple('Product', items.keys())
     return starmap(Product, product(*items.values()))
+
 
 class Registry:
     "Case insensitive registry"
