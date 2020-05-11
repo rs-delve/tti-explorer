@@ -36,7 +36,7 @@ def take_key(res_list, key):
     return np.array([res[key].item() for res in res_list])
 
 def nice_param_name(name):
-    return name
+    return name.split("_").title()
 
 
 def plot_sim_results(ax, sim_results, key, label):
@@ -46,6 +46,15 @@ def plot_sim_results(ax, sim_results, key, label):
     res = take_key(reslist, key)[arg_order]
     ax.plot(xaxis, res, label=label)
 
+
+def legend(fig, ax, ncol=4):
+    return fig.legend(
+        *ax.get_legend_handles_labels(),
+        ncol=ncol,
+        bbox_to_anchor=(0.45, -0.01),
+        loc="lower center",
+        fancybox=False,
+    )
 
 def plot_lockdown(lockdown_dct, deck, keys_to_plot):
     for param_name, sim_results in lockdown_dct.items():
@@ -59,13 +68,7 @@ def plot_lockdown(lockdown_dct, deck, keys_to_plot):
 
         ax.yaxis.set_label_position("right")
         ax.yaxis.tick_right()
-        fig.legend(
-            *ax.get_legend_handles_labels(),
-            ncol=4,
-            bbox_to_anchor=(0.45, -0.01),
-            loc="lower center",
-            fancybox=False,
-        )
+
         fig.suptitle(nice_param_name(param_name), y=0.95)
         plt.subplots_adjust(wspace=0.05)
         
