@@ -5,6 +5,7 @@ import pandas as pd
 
 from contacts import Contacts, NCOLS
 from generate_cases import Case
+from strategies import RETURN_KEYS
 
 
 def load_cases(fpath):
@@ -149,7 +150,7 @@ if __name__ == "__main__":
             print(scenario, np.nanmean(scenario_outputs, axis=0), f'took {time.time() - start:.1f}s')
 
 
-    results = pd.DataFrame.from_dict(results, orient='index', columns=['Base R', 'Reduced R', 'Manual Traces', 'App Traces', 'Tests Needed', 'PersonDays Quarantined', 'Wasted PersonDays Quarantined'])
+    results = pd.DataFrame.from_dict(results, orient='index', columns=[RETURN_KEYS.base_r, RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.app_trace, RETURN_KEYS.tests, RETURN_KEYS.quarantine, RETURN_KEYS.wasted_quarantine])
     results.reset_index(inplace=True)
 
     results[['scenario', 'case set']] = results['index'].str.split("-", expand=True)
@@ -172,6 +173,6 @@ if __name__ == "__main__":
     # summary_df = pd.DataFrame.from_dict(
             # {k: v.mean(0) for k, v in results.items()},
             # orient='index',
-            # columns=['Base R', 'Reduced R', 'Manual Tests']
+            # columns=[RETURN_KEYS.base_r, RETURN_KEYS.reduced_r, 'Manual Tests']
         # )
     # print(summary_df)
