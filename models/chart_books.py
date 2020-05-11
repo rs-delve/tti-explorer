@@ -40,6 +40,10 @@ def take_key(res_list, key):
 
 
 def nice_param_name(name):
+    if name.lower() == 'app_cov':
+        return "Application Uptake"
+    if name.lower() == 'trace_adherence':
+        return "Compliance"
     return name.replace("_", " ").title()
 
 
