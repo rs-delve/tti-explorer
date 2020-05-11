@@ -4,6 +4,8 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
+plt.style.use('seaborn-ticks')
+
 from contacts import Contacts, NCOLS
 from generate_cases import Case
 
@@ -118,7 +120,7 @@ if __name__ == "__main__":
             ax.set_title(tti_strat_formal, fontsize = 10)
             ax.hlines(1, 0, 4, 'k', ls = '--', alpha = 0.5)
         elif row_idx == 2:
-            ax.set_xlabel('Levels of physical distancing measures')
+            ax.set_xlabel('Levels of NPIs')
 
         ax.errorbar(
             x = xlabels,
