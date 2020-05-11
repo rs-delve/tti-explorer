@@ -463,7 +463,7 @@ def temporal_anne_flowchart(
         report_manual = False
 
     # Check if any test was performed
-    test_performed = (report_app or report_manual) and do_symptom_testing
+    test_performed = (report_app or report_manual)
     if test_performed:
         test_perform_day = case.day_noticed_symptoms
         test_results_day = test_perform_day + testing_delay
@@ -609,11 +609,13 @@ def temporal_anne_flowchart(
             othr_tested_positive = othr_tested_symptomatic & othr_tested_asymptomatic
 
 
+        total_tests_performed = 0
         # count own test
-        total_tests_performed = 1
+        # TODO: Janky - if no contact tracing is going on, do NOT test the person
+        if not (do_app_tracing or do_manual_tracing or isolate_contacts_on_positive or isolate_contacts_on_symptoms):
+            total_tests_performed += 1
+        
         # If house isolated on symptoms, or on positive
-        # TODO: Assume for now that we only TEST contacts AFTER the primary tests positive
-        # TODO: After discussion, we will not test home contacts until they develop symptoms. 
         # These tests will not count against the primary case, as these would have been tested regardless.
         if case.covid:
             total_tests_performed += 0. # home_contacts_isolated.sum()
