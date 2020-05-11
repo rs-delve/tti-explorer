@@ -36,7 +36,7 @@ def take_key(res_list, key):
     return np.array([res[key].item() for res in res_list])
 
 def nice_param_name(name):
-    return name
+    return name.replace("_", " ").title()
 
 
 def rand_jitter(arr):
