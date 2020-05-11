@@ -126,8 +126,8 @@ for i, name in enumerate(['oxteam-symp-covneg', 'oxteam-symp-covpos', 'oxteam-as
 get_case_config = partial(get_contacts_config, _cfg_dct=_case_configs)
 
 
-L_levels = {
-    "L5":{
+S_levels = {
+    "S5":{
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -145,7 +145,7 @@ L_levels = {
 
             "go_to_school_prob": 0.0
         },
-    "L4":{
+    "S4":{
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -163,7 +163,7 @@ L_levels = {
 
             "go_to_school_prob": 0.0
         },
-    "L3":{
+    "S3":{
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -181,7 +181,7 @@ L_levels = {
 
             "go_to_school_prob": 0.5
         },
-    "L2":{
+    "S2":{
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -197,7 +197,7 @@ L_levels = {
             "wfh_prob": 0.25,
             "max_contacts": 20,
         },
-    "L1":{
+    "S1":{
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -210,7 +210,7 @@ L_levels = {
             "met_before_h": 1,
             "met_before_o": 0.52,
         },
-    "L0": {
+    "S0": {
             "isolate_individual_on_symptoms": False,
             "isolate_individual_on_positive": False,
             "isolate_household_on_symptoms": False,
@@ -225,28 +225,28 @@ L_levels = {
 }
 
 contact_trace_options = {
-    "no_contact_tracing": {
+    "no_TTI": {
         "isolate_contacts_on_symptoms": False,
         "isolate_contacts_on_positive": False,
 
         "do_manual_tracing": False,
         "do_app_tracing": False,
     },
-    "symptom_tracing":{
+    "symptom_based_TTI":{
         "isolate_contacts_on_symptoms": True,
         "isolate_contacts_on_positive": True,
 
         "do_manual_tracing": True,
         "do_app_tracing": True,
     },
-    "positive_test_tracing":{
+    "test_based_TTI":{
         "isolate_contacts_on_symptoms": False,
         "isolate_contacts_on_positive": True,
 
         "do_manual_tracing": True,
         "do_app_tracing": True,
     },
-    "positive_test_tracing_test_contacts":{
+    "test_based_TTI_test_contacts":{
         "isolate_contacts_on_symptoms": False,
         "isolate_contacts_on_positive": True,
 
@@ -541,36 +541,29 @@ _policy_configs = {
         },
         "temporal_anne_flowchart":
         {
-            "L5_no_contact_tracing": {**L_levels["L5"], **contact_trace_options["no_contact_tracing"]},
-            "L5_symptom_tracing": {**L_levels["L5"], **contact_trace_options["symptom_tracing"]},
-            "L5_positive_test_tracing": {**L_levels["L5"], **contact_trace_options["positive_test_tracing"]},
-            "L5_positive_test_tracing_test_contacts": {**L_levels["L5"], **contact_trace_options["positive_test_tracing_test_contacts"]},
-            
-            "L4_no_contact_tracing": {**L_levels["L4"], **contact_trace_options["no_contact_tracing"]},
-            "L4_symptom_tracing": {**L_levels["L4"], **contact_trace_options["symptom_tracing"]},
-            "L4_positive_test_tracing": {**L_levels["L4"], **contact_trace_options["positive_test_tracing"]},
-            "L4_positive_test_tracing_test_contacts": {**L_levels["L4"], **contact_trace_options["positive_test_tracing_test_contacts"]},
-            
-            "L3_no_contact_tracing": {**L_levels["L3"], **contact_trace_options["no_contact_tracing"]},
-            "L3_symptom_tracing": {**L_levels["L3"], **contact_trace_options["symptom_tracing"]},
-            "L3_positive_test_tracing": {**L_levels["L3"], **contact_trace_options["positive_test_tracing"]},
-            "L3_positive_test_tracing_test_contacts": {**L_levels["L3"], **contact_trace_options["positive_test_tracing_test_contacts"]},
-            
-            "L2_no_contact_tracing": {**L_levels["L2"], **contact_trace_options["no_contact_tracing"]},
-            "L2_symptom_tracing": {**L_levels["L2"], **contact_trace_options["symptom_tracing"]},
-            "L2_positive_test_tracing": {**L_levels["L2"], **contact_trace_options["positive_test_tracing"]},
-            "L2_positive_test_tracing_test_contacts": {**L_levels["L2"], **contact_trace_options["positive_test_tracing_test_contacts"]},
-            
-            "L1_no_contact_tracing": {**L_levels["L1"], **contact_trace_options["no_contact_tracing"]},
-            "L1_symptom_tracing": {**L_levels["L1"], **contact_trace_options["symptom_tracing"]},
-            "L1_positive_test_tracing": {**L_levels["L1"], **contact_trace_options["positive_test_tracing"]},
-            "L1_positive_test_tracing_test_contacts": {**L_levels["L1"], **contact_trace_options["positive_test_tracing_test_contacts"]},
-
-            "L0": L_levels["L0"]
+            "S5_no_TTI": {**S_levels["S5"], **contact_trace_options["no_TTI"]},
+            "S5_symptom_based_TTI": {**S_levels["S5"], **contact_trace_options["symptom_based_TTI"]},
+            "S5_test_based_TTI": {**S_levels["S5"], **contact_trace_options["test_based_TTI"]},
+            "S5_test_based_TTI_test_contacts": {**S_levels["S5"], **contact_trace_options["test_based_TTI_test_contacts"]},
+            "S4_no_TTI": {**S_levels["S4"], **contact_trace_options["no_TTI"]},
+            "S4_symptom_based_TTI": {**S_levels["S4"], **contact_trace_options["symptom_based_TTI"]},
+            "S4_test_based_TTI": {**S_levels["S4"], **contact_trace_options["test_based_TTI"]},
+            "S4_test_based_TTI_test_contacts": {**S_levels["S4"], **contact_trace_options["test_based_TTI_test_contacts"]},
+            "S3_no_TTI": {**S_levels["S3"], **contact_trace_options["no_TTI"]},
+            "S3_symptom_based_TTI": {**S_levels["S3"], **contact_trace_options["symptom_based_TTI"]},
+            "S3_test_based_TTI": {**S_levels["S3"], **contact_trace_options["test_based_TTI"]},
+            "S3_test_based_TTI_test_contacts": {**S_levels["S3"], **contact_trace_options["test_based_TTI_test_contacts"]},
+            "S2_no_TTI": {**S_levels["S2"], **contact_trace_options["no_TTI"]},
+            "S2_symptom_based_TTI": {**S_levels["S2"], **contact_trace_options["symptom_based_TTI"]},
+            "S2_test_based_TTI": {**S_levels["S2"], **contact_trace_options["test_based_TTI"]},
+            "S2_test_based_TTI_test_contacts": {**S_levels["S2"], **contact_trace_options["test_based_TTI_test_contacts"]},
+            "S1_no_TTI": {**S_levels["S1"], **contact_trace_options["no_TTI"]},
+            "S1_symptom_based_TTI": {**S_levels["S1"], **contact_trace_options["symptom_based_TTI"]},
+            "S1_test_based_TTI": {**S_levels["S1"], **contact_trace_options["test_based_TTI"]},
+            "S1_test_based_TTI_test_contacts": {**S_levels["S1"], **contact_trace_options["test_based_TTI_test_contacts"]},
+            "S0": S_levels["S0"]
         }
 }
-
-
 
 _global_defaults = {
     'cmmid': dict(
