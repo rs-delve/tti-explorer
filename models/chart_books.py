@@ -32,19 +32,34 @@ sensitivity_params = [
 def nice_lockdown_name(name):
     return name.replace("_", " ").title()
 
+
 def take_key(res_list, key):
-    return np.array([res[key].item() for res in res_list])
+    means = np.array([res[key].iloc[0] for res in res_list])
+    standard_errors = np.array([res[key].iloc[1] for res in res_list])
+    return means, standard_errors
+
 
 def nice_param_name(name):
-    return name.split("_").title()
+    return name.replace("_", " ").title()
+
+
+def rand_jitter(arr):
+    stdev = .02*(max(arr)-min(arr))
+    return arr + np.random.randn(len(arr)) * stdev
 
 
 def plot_sim_results(ax, sim_results, key, label):
     xvals, reslist = zip(*sim_results)
     arg_order = np.argsort(xvals)
     xaxis = np.array(xvals)[arg_order]
-    res = take_key(reslist, key)[arg_order]
-    ax.plot(xaxis, res, label=label)
+    means, standard_errors = take_key(reslist, key)
+    values = means[arg_order]
+
+    # explanation of how to calculate
+    # conf interval from standard error
+    # see https://en.wikipedia.org/wiki/Confidence_interval#Basic_steps
+    conf_intervals = 1.96 * standard_errors[arg_order]
+    ax.errorbar(rand_jitter(xaxis), rand_jitter(means), yerr=conf_intervals, fmt='o', label=label)
 
 
 def legend(fig, ax, ncol=4):
@@ -55,6 +70,7 @@ def legend(fig, ax, ncol=4):
         loc="lower center",
         fancybox=False,
     )
+
 
 def plot_lockdown(lockdown_dct, deck, keys_to_plot):
     for param_name, sim_results in lockdown_dct.items():
@@ -72,7 +88,7 @@ def plot_lockdown(lockdown_dct, deck, keys_to_plot):
         fig.suptitle(nice_param_name(param_name), y=0.95)
         plt.subplots_adjust(wspace=0.05)
         
-        deck.add_figure(fig)
+        deck.add_figure(fig, name=param_name)
     return fig
 
 
@@ -103,7 +119,7 @@ if __name__ == "__main__":
     # group by lockdown level and then again by parameter
     lockdown_results = dict()
     for i in range(1, 6):
-        lockdown_results[f"L{i}"] = {k: v for k, v in pinch_points_results.items() if int(k[1]) == i}
+        lockdown_results[f"S{i}"] = {k: v for k, v in pinch_points_results.items() if int(k[1]) == i}
     lockdown_results = {k: utils.swaplevel(v) for k,v in lockdown_results.items()}
 
     with plt.rc_context(rc_dct):
@@ -111,3 +127,5 @@ if __name__ == "__main__":
             deck = utils.PdfDeck()
             plot_lockdown(results, deck, keys_to_plot)
             deck.make(os.path.join(output_folder, f"{level}_pinch_points.pdf"))
+            deck.make_individual(folder=os.path.join(f"{level}_individual", output_folder))
+
