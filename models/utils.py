@@ -79,6 +79,10 @@ def read_json(fpath):
     with open(fpath, "r") as f:
         return json.loads(f.read())
 
+def write_json(stuff, fpath):
+    with open(fpath, "w") as f:
+        return json.dump(stuff, f)
+
 
 def sort_by(lst, by, return_idx=False):
     idx, res = zip(*sorted(zip(by, lst)))
