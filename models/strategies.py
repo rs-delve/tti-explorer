@@ -751,7 +751,7 @@ def temporal_anne_flowchart(
             home_infections_days_not_quarantined = (test_results_day + home_trace_delay) - home_infectious_start
         else:
             # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
-            home_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(home_infectious_startn_home), dtype=int)
+            home_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(home_infectious_start), dtype=int)
 
         # Compute the days a work/othr case is left out in the world infectious
         if isolate_contacts_on_symptoms:
