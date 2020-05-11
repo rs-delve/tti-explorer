@@ -180,3 +180,4 @@ if __name__ == "__main__":
     all_results.index.set_names('scenario', level=0, inplace=True)
 
     all_results.to_csv(os.path.join(args.output_folder, 'all_results.csv'))
+    all_results.unstack(level=-1).to_csv(os.path.join(args.output_folder, 'all_results_pivot.csv'))
