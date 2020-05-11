@@ -12,6 +12,7 @@ from generate_cases import Case
 from strategies import RETURN_KEYS
 from utils import named_product
 
+
 def find_case_file(folder, fname):
     return next(filter(lambda x: x == fname, os.listdir(folder)))
 
@@ -65,7 +66,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     tti_strat_list = ['_symptom_based_TTI.csv', '_test_based_TTI.csv', '_test_based_TTI_test_contacts.csv']
-    tti_strat_formal_list = ['Trace on symptoms', 'Trace on positive test', 'Test on positive test']
+    tti_strat_formal_list = ['Symptom-based TTI', 'Test-based TTI', 'Test-based TTI, test contacts']
     tti_strat_combined_list = list(zip(tti_strat_list, tti_strat_formal_list))
     no_tti_str = '_no_TTI.csv'
 
@@ -115,34 +116,36 @@ if __name__ == "__main__":
         ax.set_xticks(xlabels)
         ax.set_xticklabels(gov_measures)
 
-        # sort titles, R = 1 line and xlabels
-        if row_idx == 0:
+        if metric == RETURN_KEYS.reduced_r:
             ax.set_title(tti_strat_formal, fontsize = 10)
             ax.hlines(1, 0, 4, 'k', ls = '--', alpha = 0.5)
-        elif row_idx == 2:
+
+            ax.errorbar(
+                x = xlabels,
+                y = no_tti,
+                yerr = 1.96 * np.array(no_tti_std_error),
+                #ls = 'None',
+                label = 'No TTI',
+                # marker = '.',
+                capsize=2,
+                markersize = 10
+            )
+        elif metric == RETURN_KEYS.tests:
             ax.set_xlabel('Levels of NPIs')
 
-        ax.errorbar(
-            x = xlabels,
-            y = no_tti,
-            yerr = 1.96 * np.array(no_tti_std_error),
-            ls = 'None',
-            label = 'No TTI',
-            # marker = '.',
-            capsize=2,
-            markersize = 10
-        )
+        #ax.plot(xlabels, tti, color=f'C{col_idx + 1}')
         ax.errorbar(
             x = xlabels,
             y = tti, yerr = 1.96 * np.array(tti_std_error),
-            ls = 'None', label = f'{tti_strat_formal}',
+            #ls = 'None',
+            label = tti_strat_formal,
             color = f'C{col_idx + 1}',
             # marker = '.',
             capsize=2,
             markersize = 10
         )
 
-        ax.grid(True)
+        ax.grid(False)
         # ax.plot(xlabels, no_tti, alpha = 0.7, marker = 'x', label = 'No TTI')
         # ax.plot(xlabels, tti, alpha = 0.7, marker = 'x', label = f'{tti_strat_formal}', color = f'C{col_idx + 1}')
         #
