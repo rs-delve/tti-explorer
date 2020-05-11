@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from config import get_case_config, get_case_sensitivities
+from config import get_case_config, get_case_sensitivities, STATISTIC_COLNAME
 import sensitivity, utils
 from strategies import RETURN_KEYS
 
@@ -30,7 +30,7 @@ sensitivity_params = [
 
 
 def nice_lockdown_name(name):
-    return name.replace("_", " ").title()
+    return name.replace("_", " ").title().replace("Tti", "TTI")
 
 
 def take_key(res_list, key):
@@ -48,18 +48,19 @@ def rand_jitter(arr):
     return arr + np.random.randn(len(arr)) * stdev
 
 
+def errorbar(ax, xaxis, means, stds, label):
+    conf_intervals = 1.96 * stds
+    ax.errorbar(rand_jitter(xaxis), means, yerr=conf_intervals, fmt='o', label=label, lw=1)
+
+
 def plot_sim_results(ax, sim_results, key, label):
     xvals, reslist = zip(*sim_results)
+    reslist = [k.set_index(STATISTIC_COLNAME, drop=True) for k in reslist]
     arg_order = np.argsort(xvals)
     xaxis = np.array(xvals)[arg_order]
     means, standard_errors = take_key(reslist, key)
     values = means[arg_order]
-
-    # explanation of how to calculate
-    # conf interval from standard error
-    # see https://en.wikipedia.org/wiki/Confidence_interval#Basic_steps
-    conf_intervals = 1.96 * standard_errors[arg_order]
-    ax.errorbar(rand_jitter(xaxis), rand_jitter(means), yerr=conf_intervals, fmt='o', label=label)
+    return errorbar(ax, xaxis, values, standard_errors[arg_order], label)
 
 
 def legend(fig, ax, ncol=4):
@@ -84,7 +85,7 @@ def plot_lockdown(lockdown_dct, deck, keys_to_plot):
 
         ax.yaxis.set_label_position("right")
         ax.yaxis.tick_right()
-
+        legend(fig, ax)
         fig.suptitle(nice_param_name(param_name), y=0.95)
         plt.subplots_adjust(wspace=0.05)
         
@@ -93,39 +94,44 @@ def plot_lockdown(lockdown_dct, deck, keys_to_plot):
 
 
 if __name__ == "__main__":
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument("input_dir", type=str)
+    parser.add_argument("output_dir", type=str)
+    args = parser.parse_args()
     import utils
 
-    data_dir = os.path.join(os.environ['DATA'], "tti-explorer", "pinch-points")
-    lockdowns = next(os.walk(data_dir))[1]
+    # data_dir = os.path.join(, "pinch-points")
+    # lockdowns = next(os.walk(data_dir))[1]
 
-    keys_to_plot = [RETURN_KEYS.reduced_r, RETURN_KEYS.tests]
-    rc_dct = {
-        'figure.figsize': (14, 6),
-        'figure.max_open_warning': 1000,
-    }
-    output_folder = os.path.join(os.environ['REPOS'], 'tti-explorer', 'charts')
+    # keys_to_plot = [RETURN_KEYS.reduced_r, RETURN_KEYS.tests]
+    # rc_dct = {
+        # 'figure.figsize': (14, 6),
+        # 'figure.max_open_warning': 1000,
+    # }
+    # output_folder = os.path.join(os.environ['REPOS'], 'tti-explorer', 'charts')
 
-    pinch_points_results = defaultdict(lambda: defaultdict(list))
+    # pinch_points_results = defaultdict(lambda: defaultdict(list))
 
-    for lockdown in lockdowns:
-        folder = os.path.join(data_dir, lockdown)
-        for cfg_file in filter(lambda x: x.startswith("config") and x.endswith('.json'), os.listdir(folder)):
-            i = int(cfg_file.replace("config_", '').replace(".json", ''))
-            cfg = utils.read_json(os.path.join(folder, cfg_file))
-            target = cfg[sensitivity.TARGET_KEY]
-            results = pd.read_csv(os.path.join(folder, f"run_{i}.csv"), index_col=0)
-            pinch_points_results[lockdown][target].append((cfg['config'][target], results))
+    # for lockdown in lockdowns:
+        # folder = os.path.join(data_dir, lockdown)
+        # for cfg_file in filter(lambda x: x.startswith("config") and x.endswith('.json'), os.listdir(folder)):
+            # i = int(cfg_file.replace("config_", '').replace(".json", ''))
+            # cfg = utils.read_json(os.path.join(folder, cfg_file))
+            # target = cfg[sensitivity.TARGET_KEY]
+            # results = pd.read_csv(os.path.join(folder, f"run_{i}.csv"), index_col=0)
+            # pinch_points_results[lockdown][target].append((cfg['config'][target], results))
 
-    # group by lockdown level and then again by parameter
-    lockdown_results = dict()
-    for i in range(1, 6):
-        lockdown_results[f"S{i}"] = {k: v for k, v in pinch_points_results.items() if int(k[1]) == i}
-    lockdown_results = {k: utils.swaplevel(v) for k,v in lockdown_results.items()}
+    # # group by lockdown level and then again by parameter
+    # lockdown_results = dict()
+    # for i in range(1, 6):
+        # lockdown_results[f"S{i}"] = {k: v for k, v in pinch_points_results.items() if int(k[1]) == i}
+    # lockdown_results = {k: utils.swaplevel(v) for k,v in lockdown_results.items()}
 
-    with plt.rc_context(rc_dct):
-        for level, results in lockdown_results.items():
-            deck = utils.PdfDeck()
-            plot_lockdown(results, deck, keys_to_plot)
-            deck.make(os.path.join(output_folder, f"{level}_pinch_points.pdf"))
-            deck.make_individual(folder=os.path.join(f"{level}_individual", output_folder))
+    # with plt.rc_context(rc_dct):
+        # for level, results in lockdown_results.items():
+            # deck = utils.PdfDeck()
+            # plot_lockdown(results, deck, keys_to_plot)
+            # deck.make(os.path.join(output_folder, f"{level}_pinch_points.pdf"))
+            # deck.make_individual(folder=os.path.join(f"{level}_individual", output_folder))
 

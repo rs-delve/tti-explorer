@@ -14,6 +14,9 @@ PROP_COVID_SYMPTOMATIC = 0.6
 
 ALL_CFG_FLAG = "all"
 
+# used in run sensitivity
+STATISTIC_COLNAME = 'statistic'
+
 
 _contacts_configs = {
         "kucharski": dict(

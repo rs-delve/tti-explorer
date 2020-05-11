@@ -18,12 +18,13 @@ warnings.filterwarnings("error")
 #     df.index.name = index_name
 #     return df
 
+STATISTIC_COLNAME = 'statistic'
 
 def results_table(results_dct, index_name="scenario"):
     df = {k: v.T for k, v in results_dct.items()}
     df = pd.concat(df)
     # df.index = df.keys()
-    df.index.names = [index_name, 'statistic']
+    df.index.names = [index_name, STATISTIC_COLNAME]
     return df
 
 
