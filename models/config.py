@@ -89,8 +89,8 @@ _case_configs = {
 
             # symp covid neg, symp covid pos, asymp covid pos
             infection_proportions={
-                'dist': [100/140, PROP_COVID_SYMPTOMATIC * 40/140, (1 - PROP_COVID_SYMPTOMATIC) * 40/140],
-                'nppl': 140
+                'dist': [100/120, PROP_COVID_SYMPTOMATIC * 20/120, (1 - PROP_COVID_SYMPTOMATIC) * 20/120],
+                'nppl': 120
                 },
 
             #Conditional on symptomatic
