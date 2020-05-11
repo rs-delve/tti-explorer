@@ -423,6 +423,12 @@ def temporal_anne_flowchart(
     #   - person_days_wasted_quarantine : number of days individuals without COVID were locked down
 ):
 
+
+    # TODO: Janky - overriding manual_report_prob and app_report_prob
+    # NOT USING THESE AT ALL 
+    app_report_prob = trace_adherence
+    manual_report_prob = trace_adherence
+
     # If under 18, change wfh and likelihood of knowing contacts
     if case.under18:
         wfh = rng.uniform() < 1 - go_to_school_prob
@@ -434,36 +440,26 @@ def temporal_anne_flowchart(
     has_app = rng.uniform() < app_cov
 
     # If the case is symptomatic, test if case reports and through what channel. Assume reports on day noticed
+    # TODO: logic changed. Assume if have app, this is how they will report.
     if case.symptomatic:
-        if has_app:
-            # report through app probability
-            if rng.uniform() < app_report_prob:
+        does_report = rng.uniform() < trace_adherence
+
+        if does_report:
+            if has_app:
                 report_app = True
                 report_manual = False
-            # if doesn't report through app, may still report manually
-            elif rng.uniform() < manual_report_prob:
-                report_app = False
-                report_manual = True
-            # Will not report otherwise
             else:
                 report_app = False
-                report_manual = False
+                report_manual = True
         else:
-            # If doesn't have app, may report manually
-            if rng.uniform() < manual_report_prob:
-                report_app = False
-                report_manual = True
-            # Will not report otherwise
-            else:
-                report_app = False
-                report_manual = False
-    # Will not report is non symptomatic.
+            report_app = False
+            report_manual = False
     else:
         report_app = False
         report_manual = False
 
     # Check if any test was performed
-    test_performed = (report_app or report_manual) and do_symptom_testing
+    test_performed = (report_app or report_manual)
     if test_performed:
         test_perform_day = case.day_noticed_symptoms
         test_results_day = test_perform_day + testing_delay
@@ -609,11 +605,13 @@ def temporal_anne_flowchart(
             othr_tested_positive = othr_tested_symptomatic & othr_tested_asymptomatic
 
 
+        total_tests_performed = 0
         # count own test
-        total_tests_performed = 1
+        # TODO: Janky - if no contact tracing is going on, do NOT test the person
+        if (do_app_tracing or do_manual_tracing or isolate_contacts_on_positive or isolate_contacts_on_symptoms):
+            total_tests_performed += 1
+        
         # If house isolated on symptoms, or on positive
-        # TODO: Assume for now that we only TEST contacts AFTER the primary tests positive
-        # TODO: After discussion, we will not test home contacts until they develop symptoms. 
         # These tests will not count against the primary case, as these would have been tested regardless.
         if case.covid:
             total_tests_performed += 0. # home_contacts_isolated.sum()

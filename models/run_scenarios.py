@@ -9,11 +9,10 @@ from strategies import RETURN_KEYS
 
 
 def results_table(results_dct, index_name="scenario"):
-    df = pd.DataFrame.from_dict(
-            results_dct,
-            orient="index"
-        ).sort_index()
-    df.index.name = index_name
+    df = {k:v.T for k, v in results_dct.items()}
+    df = pd.concat(df)
+    # df.index = df.keys()
+    df.index.names = [index_name, 'statistic']
     return df
 
 
@@ -47,7 +46,8 @@ def load_cases(fpath):
 
 
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
-    return pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
+    df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
+    return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
 
 
 def find_case_files(folder, ending=".json"):
@@ -58,10 +58,18 @@ def tidy_fname(fname, ending=".json"):
     return fname.rstrip(ending)
 
 
-def scale_results(mean, nppl):
+def scale_results(results, monte_carlo_factor, r_monte_carlo_factor, nppl):
     rvals = [RETURN_KEYS.base_r, RETURN_KEYS.reduced_r]
-    scale = pd.Series([1 if k in rvals else nppl for k in mean.index], index=mean.index)
-    return mean * scale
+    scale = pd.Series([1 if k in rvals else nppl for k in results.index], index=results.index)
+    
+    results['mean'] = results['mean'] * scale
+    results['std'] = results['std'] * scale
+
+    mc_std_error_factors = pd.Series([r_monte_carlo_factor if k in rvals else monte_carlo_factor for k in results.index], index=results.index)
+
+    results['std'] = results['std'] * mc_std_error_factors
+
+    return results
 
 
 if __name__ == "__main__":
@@ -123,10 +131,17 @@ if __name__ == "__main__":
             total=len(case_files) * len(strategy_configs),
             smoothing=0
         )
+
     for i, case_file in enumerate(case_files):
         case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
         nppl = metadata['case_config']['infection_proportions']['nppl']
         rng = np.random.RandomState(seed=args.seed)
+
+        n_monte_carlo_samples = len(case_contacts)
+        n_r_monte_carlo_samples = len(case_contacts) * (metadata['case_config']['infection_proportions']['dist'][1] + metadata['case_config']['infection_proportions']['dist'][2])
+        
+        monte_carlo_factor = 1. / np.sqrt(n_monte_carlo_samples)
+        r_monte_carlo_factor = 1. / np.sqrt(n_r_monte_carlo_samples)
 
         for scenario, cfg_dct in strategy_configs.items():
             r = run_scenario(
@@ -137,7 +152,9 @@ if __name__ == "__main__":
                 )
 
             scenario_results[scenario][tidy_fname(case_file)] = scale_results(
-                    r.mean(0),
+                    r,
+                    monte_carlo_factor,
+                    r_monte_carlo_factor,
                     nppl 
                 )
 
@@ -147,21 +164,20 @@ if __name__ == "__main__":
     tables = dict()
     os.makedirs(args.output_folder, exist_ok=True)
     for scenario, v in scenario_results.items():
-        table = results_table(v)
+        table = results_table(v, 'case_file')
         table.to_csv(
                 os.path.join(
                     args.output_folder,
                     f"{scenario}.csv"
                 )
             )
-        tables[scenario] = table.mean(0)
+        tables[scenario] = table
     # df = pd.DataFrame.from_dict(tables, orient="index")
     # df.groupby(level=0).agg(['mean', 'std']).to_csv(os.path.join(args.output_folder, 'all_results.csv'))
 
 
-    all_results = pd.DataFrame.from_dict({ (i,j): scenario_results[i][j] for i in scenario_results.keys() for j in scenario_results[i].keys()}, orient='index') 
-    all_results.reset_index(inplace=True)
-    all_results.columns = ['scenario', 'case_set'] + list(all_results.columns[2:])
-    all_results = all_results.groupby('scenario').agg(['mean', 'std'])
+    all_results = pd.concat(tables)
+    all_results.index.set_names('scenario', level=0, inplace=True)
 
     all_results.to_csv(os.path.join(args.output_folder, 'all_results.csv'))
+    all_results.unstack(level=-1).to_csv(os.path.join(args.output_folder, 'all_results_pivot.csv'))
