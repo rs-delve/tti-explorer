@@ -18,13 +18,12 @@ warnings.filterwarnings("error")
 #     df.index.name = index_name
 #     return df
 
-STATISTIC_COLNAME = 'statistic'
 
 def results_table(results_dct, index_name="scenario"):
     df = {k: v.T for k, v in results_dct.items()}
     df = pd.concat(df)
     # df.index = df.keys()
-    df.index.names = [index_name, STATISTIC_COLNAME]
+    df.index.names = [index_name, config.STATISTIC_COLNAME]
     return df
 
 
@@ -144,19 +143,15 @@ if __name__ == "__main__":
     config_generator = sensitivity.registry[args.sensitivity] if args.sensitivity else None
 
     case_files = find_case_files(args.population)
-    pbar = tqdm(
-            desc="Running configurations/sensitivities",
-            total=len(case_files) * len(strategy_configs) * 20,  # this is just number of entries in temporal anne sensitivities generator
-            smoothing=None
-        )
+
     scenario_results = defaultdict(lambda: defaultdict(dict))
     configs_dct = defaultdict(dict)
     with ProcessPoolExecutor(max_workers=args.nprocs) as executor:
         for case_file in case_files:
             case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
-            nppl = metadata['case_config']['infection_proportions']['nppl']
-            
+
             # Can we turn this into something like calculate_confidence_interval?
+            nppl = metadata['case_config']['infection_proportions']['nppl']
             n_monte_carlo_samples = len(case_contacts)
             n_r_monte_carlo_samples = len(case_contacts) * (
                     metadata['case_config']['infection_proportions']['dist'][1]
@@ -167,10 +162,14 @@ if __name__ == "__main__":
             r_monte_carlo_factor = 1. / np.sqrt(n_r_monte_carlo_samples)
 
             n_monte_carlo_samples = len(case_contacts)
-            n_r_monte_carlo_samples = len(case_contacts) * (metadata['case_config']['infection_proportions']['dist'][1] + metadata['case_config']['infection_proportions']['dist'][2])
+            n_r_monte_carlo_samples = len(case_contacts) * (
+                    metadata['case_config']['infection_proportions']['dist'][1]
+                    + metadata['case_config']['infection_proportions']['dist'][2]
+                    )
             
             monte_carlo_factor = 1. / np.sqrt(n_monte_carlo_samples)
             r_monte_carlo_factor = 1. / np.sqrt(n_r_monte_carlo_samples)
+            #
 
             for scenario, cfg_dct in strategy_configs.items():
                 policy_sensitivities = config.get_policy_sensitivities(args.strategy)
@@ -191,25 +190,31 @@ if __name__ == "__main__":
                             np.random.RandomState(seed=args.seed),
                             cfg[sensitivity.CONFIG_KEY]
                         )
-                    futures.append(future)
+                    futures.append(
+                            ((scenario, case_file), (future, monte_carlo_factor, r_monte_carlo_factor, nppl))
+                            )
                     configs_dct[scenario][i] = cfg
 
-                for i, future in enumerate(futures):
-                    # this is so uglY!
-                    scenario_results[scenario][i][tidy_fname(case_file)] = scale_results(
-                        future.result(),
-                        monte_carlo_factor,
-                        r_monte_carlo_factor,
-                        nppl
-                    )
-                    pbar.update(1)
+        pbar = tqdm(
+            desc="Running configurations/sensitivities",
+            total=len(case_files) * len(strategy_configs) * 20,  # this is just number of entries in temporal anne sensitivities generator
+            smoothing=None
+        )
+        for i, ((scenario, case_file), arguments) in enumerate(futures):
+            # this is so uglY!
+            future = arguments[0]
+            scenario_results[scenario][i][tidy_fname(case_file)] = scale_results(
+                future.result(),
+                *arguments[1:]
+            )
+            pbar.update(1)
 
     os.makedirs(args.output_folder, exist_ok=True)
     for scenario, res_dict in scenario_results.items():
         odir = os.path.join(args.output_folder, scenario)
         os.makedirs(odir, exist_ok=True)
         res_tables = dict()
-        for i, res_dct_over_seeds in res_dict.items():
+        for i, res_dct_over_cases in res_dict.items():
             with open(os.path.join(odir, f"config_{i}.json"), "w") as f:
                     json.dump(
                         dict(
@@ -221,7 +226,7 @@ if __name__ == "__main__":
                         f
                     )
 
-            table = results_table(res_dct_over_seeds)
+            table = results_table(res_dct_over_cases)
             table.to_csv(
                 os.path.join(
                     odir,
