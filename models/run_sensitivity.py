@@ -92,15 +92,15 @@ if __name__ == "__main__":
             type=str
         )
     parser.add_argument(
-        "population",
-        help=("Folder containing population files, "
-            "we will assume all .json files in folder are to be  used."),
-        type=str
+            "population",
+            help=("Folder containing population files, "
+                "we will assume all .json files in folder are to be used."),
+            type=str
         )
     parser.add_argument(
-        "output_folder",
-        help="Folder in which to save the outputs. Will be made for you if needed.",
-        type=str
+            "output_folder",
+            help="Folder in which to save the outputs. Will be made for you if needed.",
+            type=str
         )
     parser.add_argument(
             "--scenarios",
@@ -157,7 +157,7 @@ if __name__ == "__main__":
                     metadata['case_config']['infection_proportions']['dist'][1]
                     + metadata['case_config']['infection_proportions']['dist'][2]
                 )
-            
+
             monte_carlo_factor = 1. / np.sqrt(n_monte_carlo_samples)
             r_monte_carlo_factor = 1. / np.sqrt(n_r_monte_carlo_samples)
 
@@ -177,10 +177,10 @@ if __name__ == "__main__":
                     policy_sensitivities = dict((k, policy_sensitivities[k]) for k in args.parameters)
 
                 cfgs = config_generator(
-                        cfg_dct,
-                        policy_sensitivities
+                            cfg_dct,
+                            policy_sensitivities
                         ) if args.sensitivity else [{sensitivity.CONFIG_KEY: cfg_dct, sensitivity.TARGET_KEY: ""}]
-                
+
                 futures = list()
                 for i, cfg in enumerate(cfgs):
                     future = executor.submit(
@@ -216,15 +216,15 @@ if __name__ == "__main__":
         res_tables = dict()
         for i, res_dct_over_cases in res_dict.items():
             with open(os.path.join(odir, f"config_{i}.json"), "w") as f:
-                    json.dump(
-                        dict(
-                            configs_dct[scenario][i],
-                            seed=args.seed,
-                            population=args.population,
-                            strategy=args.strategy
-                        ),
-                        f
-                    )
+                json.dump(
+                    dict(
+                        configs_dct[scenario][i],
+                        seed=args.seed,
+                        population=args.population,
+                        strategy=args.strategy
+                    ),
+                    f
+                )
 
             table = results_table(res_dct_over_cases)
             table.to_csv(
@@ -237,4 +237,3 @@ if __name__ == "__main__":
         over_all_seeds = pd.concat(res_tables)
         over_all_seeds.index.set_names('seed', level=0, inplace=True)
         over_all_seeds.to_csv(os.path.join(odir, "over_all_seeds.csv"))
-

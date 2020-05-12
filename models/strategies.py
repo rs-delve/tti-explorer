@@ -504,7 +504,7 @@ def temporal_anne_flowchart(
         elif isolate_individual_on_positive and case.covid:
             isolate_day = test_results_day
         else:
-            # TODO: Should never get here. Nan > all numbers but will cause warning.
+            # Don't isolate, set to something beyond simulation horizon
             isolate_day = 200
 
         # Prevent contact after isolation day
@@ -635,10 +635,10 @@ def temporal_anne_flowchart(
         person_days_quarantine = 0
         person_days_wasted_quarantine = 0
 
-        # If person has covid, require full lockdown
+        # If person has covid, require full quarantine
         if case.covid and (isolate_individual_on_symptoms or isolate_individual_on_positive):
             person_days_quarantine += quarantine_length
-        # If not, only require the test delay of quarantine. These days are "wasted"
+        # If not, only require the test delay days of quarantine. These days are "wasted"
         elif isolate_individual_on_symptoms:      
             person_days_quarantine += testing_delay
             person_days_wasted_quarantine += testing_delay
@@ -657,7 +657,7 @@ def temporal_anne_flowchart(
             person_days_wasted_quarantine += quarantine_length * (home_contacts_isolated & ~home_infections).sum()
         ## Don't add any if: Not isolating at all, or if waiting for positive test to isolate and doesn't have coivd
 
-        # For traced contacts, if isolating on positive and doesn't have covid, waste test days
+        # For traced contacts, if isolating on positive and doesn't have covid, waste test delay days
         ## NOTE: working with "quarantined" as this represents those traced who were still contacted and complied
         if isolate_contacts_on_symptoms and not case.covid:
             person_days_quarantine += testing_delay * (work_contacts_isolated.sum() + othr_contacts_isolated.sum())
@@ -672,7 +672,7 @@ def temporal_anne_flowchart(
                 # Those testing negative will spend 3 days in quarantine 
                 person_days_quarantine += testing_delay * (work_contacts_isolated & ~work_tested_positive).sum()
                 person_days_quarantine += testing_delay * (othr_contacts_isolated & ~othr_tested_positive).sum()
-                # Those who test positive will go into quarantine
+                # Those who test positive will go into full quarantine
                 person_days_quarantine += quarantine_length * (work_contacts_isolated & work_tested_positive).sum()
                 person_days_quarantine += quarantine_length * (othr_contacts_isolated & othr_tested_positive).sum()
             else:
@@ -732,7 +732,7 @@ def temporal_anne_flowchart(
         work_trace_delay = manual_trace_delay * np.ones_like(work_infection_days)
         othr_trace_delay = manual_trace_delay * np.ones_like(othr_infection_days)
 
-        # Contacts go tto via the app are traced with app_delay - assumed to be faster. (0)
+        # Contacts found via the app are traced with app_delay - assumed to be faster. (0)
         work_trace_delay[work_contacts_trace_app_isolated] = app_trace_delay
         othr_trace_delay[othr_contacts_trace_app_isolated] = app_trace_delay
 
@@ -750,7 +750,7 @@ def temporal_anne_flowchart(
         elif isolate_household_on_positive:
             home_infections_days_not_quarantined = (test_results_day + home_trace_delay) - home_infectious_start
         else:
-            # If neither of these are true, then the case would not have made it to here as would have been in hom_infections_post_policy
+            # If neither of these are true, then the case would not have made it to here as would have been in home_infections_post_policy
             home_infections_days_not_quarantined = (len(cumulative_infectiousness)) * np.ones(len(home_infectious_start), dtype=int)
 
         # Compute the days a work/othr case is left out in the world infectious
