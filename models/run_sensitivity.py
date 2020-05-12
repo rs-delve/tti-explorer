@@ -143,11 +143,11 @@ if __name__ == "__main__":
     config_generator = sensitivity.registry[args.sensitivity] if args.sensitivity else None
 
     case_files = find_case_files(args.population)
-
     scenario_results = defaultdict(lambda: defaultdict(dict))
-    configs_dct = defaultdict(dict)
+    configs_dct = defaultdict(lambda: defaultdict(dict))
     with ProcessPoolExecutor(max_workers=args.nprocs) as executor:
-        for case_file in case_files:
+        futures = list()
+        for case_file in tqdm(case_files, desc="loading cases"):
             case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
 
             # Can we turn this into something like calculate_confidence_interval?
@@ -181,7 +181,6 @@ if __name__ == "__main__":
                             policy_sensitivities
                         ) if args.sensitivity else [{sensitivity.CONFIG_KEY: cfg_dct, sensitivity.TARGET_KEY: ""}]
 
-                futures = list()
                 for i, cfg in enumerate(cfgs):
                     future = executor.submit(
                             run_scenario,
@@ -191,22 +190,22 @@ if __name__ == "__main__":
                             cfg[sensitivity.CONFIG_KEY]
                         )
                     futures.append(
-                            ((scenario, case_file), (future, monte_carlo_factor, r_monte_carlo_factor, nppl))
+                            ((scenario, case_file, cfg), (future, monte_carlo_factor, r_monte_carlo_factor, nppl))
                             )
-                    configs_dct[scenario][i] = cfg
+                    # configs_dct[scenario][i][case_file] = cfg
 
         pbar = tqdm(
             desc="Running configurations/sensitivities",
             total=len(case_files) * len(strategy_configs) * 20,  # this is just number of entries in temporal anne sensitivities generator
             smoothing=None
         )
-        for i, ((scenario, case_file), arguments) in enumerate(futures):
+        for i, ((scenario, case_file, cfg), arguments) in enumerate(futures):
             # this is so uglY!
             future = arguments[0]
             scenario_results[scenario][i][tidy_fname(case_file)] = scale_results(
                 future.result(),
                 *arguments[1:]
-            )
+            ), cfg
             pbar.update(1)
 
     os.makedirs(args.output_folder, exist_ok=True)
@@ -214,11 +213,13 @@ if __name__ == "__main__":
         odir = os.path.join(args.output_folder, scenario)
         os.makedirs(odir, exist_ok=True)
         res_tables = dict()
-        for i, res_dct_over_cases in res_dict.items():
+        for i, dct in res_dict.items():
+            cfg = next(iter(dct.values()))[1]
+            res_dct_over_cases = {k: v[0] for k,v in dct.items()}
             with open(os.path.join(odir, f"config_{i}.json"), "w") as f:
                 json.dump(
                     dict(
-                        configs_dct[scenario][i],
+                        cfg,
                         seed=args.seed,
                         population=args.population,
                         strategy=args.strategy
