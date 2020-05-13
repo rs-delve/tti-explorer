@@ -21,7 +21,7 @@ def load_results(fpath):
             fpath,
             index_col=[0],
             usecols=[
-                'statistic', 
+                'statistic',
                 RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests, RETURN_KEYS.quarantine])
     # results = results.head(2)
     if len(results) > 2:
@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     gov_measures = ['S5', 'S4', 'S3', 'S2', 'S1']
 
-    x_axis_jitter = [-0.09, -0.03, 0.03, 0.09]
+    x_axis_jitter = [-0.03, -0.01, 0.01, 0.03]
 
     max = max_calculator(args.results_folder, tti_strat_list, gov_measures)
     ylim_list = list(zip(np.zeros(len(metric_list)), max))
