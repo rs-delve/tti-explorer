@@ -13,10 +13,10 @@ def he_infection_profile(period, gamma_params):
     """he_infection_profile
 
     Args:
-        period:
-        gamma_params:
+        period (int): length of infectious period
+        gamma_params (dict): shape and scale gamma parameters of infection profile
 
-    Returns:
+    Returns: discretised and truncated gamma cdf, modelling the infection profile
     """
     inf_days = np.arange(period)
     mass = gamma.cdf(inf_days + 1, **gamma_params) - gamma.cdf(inf_days, **gamma_params)
@@ -125,4 +125,3 @@ class EmpiricalContactsSimulator:
                 work=np.column_stack((work_day_inf, work_first_encounter)),
                 other=np.column_stack((other_day_inf, other_first_encounter))
             )
-

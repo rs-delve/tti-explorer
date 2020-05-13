@@ -88,7 +88,7 @@ _case_configs = {
             inf_profile=(
                 he_infection_profile(
                     period=10,
-                    gamma_params={'a': 2.80, 'scale': 1/0.69}
+                    gamma_params={'shape': 2.80, 'scale': 1/0.69}
                     )
             ).tolist()
         )
@@ -727,7 +727,7 @@ _policy_sensitivities = {
 # symp covid neg, symp covid pos, asymp covid pos
 # Covid+ individuals: 10k, 20k [default], 30k
 # flu-like symptoms (non-covid): 50k, 100k [default], 200k, 300k
-# How to make the proportions 
+# How to make the proportions
 _vary_flu = [
         {
             'dist': [k / (k + 20), PROP_COVID_SYMPTOMATIC * 20 / (k + 20),  (1 - PROP_COVID_SYMPTOMATIC) * 20 / (k + 20)],
