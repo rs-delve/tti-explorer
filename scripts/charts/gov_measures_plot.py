@@ -4,13 +4,12 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-plt.style.use('seaborn-ticks')
 
-from contacts import Contacts, NCOLS
-from generate_cases import Case
+from tti_explorer.contacts import Contacts, NCOLS
+from tti_explorer.generate_cases import Case
 
-from strategies import RETURN_KEYS
-from utils import named_product
+from tti_explorer.strategies import RETURN_KEYS
+from tti_explorer.utils import named_product
 
 
 def find_case_file(folder, fname):
@@ -21,7 +20,12 @@ def tidy_fname(fname, ending=".json"):
 
 def load_results(fpath):
     # only return reduced_r, manual_traces, tests_needed
-    results = pd.read_csv(fpath, index_col=[0], usecols=['statistic', RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests, RETURN_KEYS.quarantine])
+    results = pd.read_csv(
+            fpath,
+            index_col=[0],
+            usecols=[
+                'statistic', 
+                RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests, RETURN_KEYS.quarantine])
     # results = results.head(2)
     if len(results) > 2:
         raise ValueError(f"More than 1 population found in {fpath}")
@@ -47,8 +51,10 @@ if __name__ == "__main__":
 
     from tqdm import tqdm
 
-    import config
-    from strategies import registry
+    import tti_explorer.config
+    from tti_explorer.strategies import registry
+
+    plt.style.use('seaborn-ticks')
 
     parser = ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument(

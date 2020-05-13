@@ -1,12 +1,5 @@
 """Print basic statistics of cases in a case file"""
-import json
-
 import numpy as np
-import pandas as pd
-
-from tti_explorer.contacts import Contacts, NCOLS
-from tti_explorer.case import Case
-from tti_explorer import utils
 
 
 def n_infected(contacts):
@@ -15,15 +8,19 @@ def n_infected(contacts):
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
+    import json
+
+    from tti_explorer import utils
 
     parser = ArgumentParser()
-    parser.add_argument("cases_path", type=str)
+    parser.add_argument(
+            "cases_path",
+            type=str,
+            help="File from which to load cases, should be .json."
+        )
     args = parser.parse_args()
  
-    # loads cases
     case_contacts, metadata = utils.load_cases(args.cases_path)
-    # case_contacts : list of (Case, Contacts) pairs
-   
     n_covid = 0
     outputs = list()
     for case, contacts in case_contacts:

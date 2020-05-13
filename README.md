@@ -8,6 +8,7 @@ Explore different TTI strategies
 - matplotlib
 - pandas
 - tqdm
+- pytest
 
 
 ## Setup

@@ -3,9 +3,6 @@ import json
 import numpy as np
 import pandas as pd
 
-from tti_explorer.contacts import Contacts, NCOLS
-from tti_explorer.generate_cases import Caseo
-
 from run_scenarios import run_scenario
 
 
@@ -34,10 +31,8 @@ if __name__ == "__main__":
     import os
 
     from tqdm import tqdm
-
-    import config
-    import sensitivity
-    import strategies
+    
+    from tti_explorer import config, sensitivity, strategies, utils
 
     from run_scenarios import scale_results
     
@@ -104,7 +99,7 @@ if __name__ == "__main__":
     with ProcessPoolExecutor(max_workers=args.nprocs) as executor:
         futures = list()
         for case_file in tqdm(case_files, desc="loading cases"):
-            case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
+            case_contacts, metadata = utils.load_cases(os.path.join(args.population, case_file))
 
             # Can we turn this into something like calculate_confidence_interval?
             nppl = metadata['case_config']['infection_proportions']['nppl']
@@ -171,16 +166,15 @@ if __name__ == "__main__":
         res_tables = dict()
         for i, dct in res_dict.items():
             cfg = next(iter(dct.values()))[1]
-            res_dct_over_cases = {k: v[0] for k,v in dct.items()}
-            with open(os.path.join(odir, f"config_{i}.json"), "w") as f:
-                json.dump(
+            res_dct_over_cases = {k: v[0] for k, v in dct.items()}
+            utils.write_json(
                     dict(
                         cfg,
                         seed=args.seed,
                         population=args.population,
                         strategy=args.strategy
                     ),
-                    f
+                    os.path.join(odir, f"config_{i}.json")
                 )
 
             table = results_table(res_dct_over_cases)
