@@ -1,8 +1,10 @@
 import numpy as np
 
+from . import registry
 from .common import RETURN_KEYS
 
 
+@registry('CMMID')
 def CMMID_strategy(
     case, contacts, rng,
 

@@ -1,9 +1,11 @@
 import numpy as np
 
 from .. import config
+from . import registry
 from .common import _limit_contact, RETURN_KEYS
 
 
+@registry('temporal_anne_flowchart')
 def temporal_anne_flowchart(
     case, contacts, rng,
 
