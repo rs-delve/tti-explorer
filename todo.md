@@ -1,13 +1,12 @@
 
-- change imports in scripts etc
-- clean up scripts
-- sort requirements.txt
-- sort/delete setup.sh
-
-
-# Bryn
-- Put docstrings and docs in relevant places in contacts
--...
+## Still to do:
+- Combine run scenarios and run senstivity
+- Delete notebooks and scripts/charts before publishing
+- refactor strategies
 
 ## Done:
-- utils.py
+- config.py  # what do ppl think?
+- case.py
+- contacts.py
+- sensitivity.py
+
