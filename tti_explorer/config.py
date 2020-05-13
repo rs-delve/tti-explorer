@@ -8,7 +8,7 @@ from functools import partial
 
 import numpy as np
 
-from . import utils
+from .contacts import he_infection_profile
 
 PROP_COVID_SYMPTOMATIC = 0.6
 
@@ -86,7 +86,7 @@ _case_configs = {
             # length of this determines simulation length
             # should sum to 1
             inf_profile=(
-                utils.he_infection_profile(
+                he_infection_profile(
                     period=10,
                     gamma_params={'a': 2.80, 'scale': 1/0.69}
                     )
@@ -776,17 +776,17 @@ _case_sensitivities = {
             inf_profile=Sensitivity(
                 bounds=None,
                 values=[
-                    (utils.he_infection_profile( # pessimistic from He et al.
+                    (he_infection_profile( # pessimistic from He et al.
                         period=10,
                         gamma_params={'a': 2.11, 'scale': 1/0.69}
                         )
                     ).tolist(),
-                    (utils.he_infection_profile( # pessimistic from He et al.
+                    (he_infection_profile( # pessimistic from He et al.
                         period=10,
                         gamma_params={'a': 2.80, 'scale': 1/0.69}
                         )
                     ).tolist(),
-                    (utils.he_infection_profile( # pessimistic from He et al.
+                    (he_infection_profile( # pessimistic from He et al.
                         period=10,
                         gamma_params={'a': 3.49, 'scale': 1/0.69}
                         )
