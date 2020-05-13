@@ -7,6 +7,7 @@ from tti_explorer import config
 
 TEST_RANDOM_SEED = 42
 
+
 @pytest.mark.parametrize("has_covid", [True, False])
 @pytest.mark.parametrize("s_level", list(config.S_levels.keys()))
 @pytest.mark.parametrize("contact_trace_option", list(config.contact_trace_options.keys()))
