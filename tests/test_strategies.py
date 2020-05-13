@@ -23,7 +23,7 @@ def test_temporal_anne_flowchart_single_case_no_contacts(has_covid, s_level, con
     scenario = s_level + "_" + contact_trace_option
 
     try:
-        parameters = config.get_strategy_config("temporal_anne_flowchart", [scenario])[scenario]
+        parameters = config.get_strategy_configs("temporal_anne_flowchart", [scenario])[scenario]
     except ValueError:
         assert s_level == "S0"
         return
