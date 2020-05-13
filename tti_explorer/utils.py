@@ -7,6 +7,7 @@ import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
 from scipy.stats import gamma
 
+
 def bool_bernoulli(p, rng):
     return bool(rng.binomial(1, p))
 
@@ -22,6 +23,7 @@ def he_infection_profile(period, gamma_params):
     inf_days = np.arange(period)
     mass = gamma.cdf(inf_days + 1, **gamma_params) - gamma.cdf(inf_days, **gamma_params)
     return mass / np.sum(mass)
+
 
 def home_daily_infectivity(base_mass):
     fail_prod = np.cumprod(1 - base_mass)
@@ -90,6 +92,7 @@ def swaplevel(dct_of_dct):
 def read_json(fpath):
     with open(fpath, "r") as f:
         return json.loads(f.read())
+
 
 def write_json(stuff, fpath):
     with open(fpath, "w") as f:

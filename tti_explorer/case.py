@@ -2,9 +2,8 @@ from collections import namedtuple
 
 import numpy as np
 
-from tti_explorer.utils import bool_bernoulli, categorical
+from .utils import bool_bernoulli, categorical
 
-# TODO BE: remove the unwanted attributes of cases from teh codebase
 
 Case = namedtuple(
         'Case',
@@ -18,8 +17,7 @@ Case = namedtuple(
     )
 
 
-def simulate_case(rng, p_under18, infection_proportions,
-        p_day_noticed_symptoms, inf_profile):
+def simulate_case(rng, p_under18, infection_proportions, p_day_noticed_symptoms, inf_profile):
     """simulate_case
 
     Args:

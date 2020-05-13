@@ -39,18 +39,3 @@ def axis_ablation(cfg, ablations):
         for value in ablation.values:
             yield {CONFIG_KEY: dict(cfg, **{k: value}), TARGET_KEY: k}
 
-
-if __name__ == "__main__":
-    from config import Ablation
-
-    cfg = dict(a=0, b=1, c=2)
-    ablations = dict(b=Ablation(bounds=None, values=range(3)), c=Ablation(bounds=None, values=range(3)))
-    
-    print("grid ablation")
-    for dct in grid_ablation(cfg, ablations):
-        print(dct)
-    
-    print("axis ablation")
-    for dct in axis_ablation(cfg, ablations):
-        print(dct)
-

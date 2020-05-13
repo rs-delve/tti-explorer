@@ -85,30 +85,3 @@ class EmpiricalContactsSimulator:
                 other=np.column_stack((other_day_inf, other_first_encounter))
             )
 
-
-if __name__ == "__main__":
-    # Basic testing
-    import os
-    from types import SimpleNamespace
-
-    from generate_cases import simulate_case
-    from config import get_case_config
-
-    data_folder = "../data"
-
-    home_sar = work_sar = other_sar = 0.2
-    period = 5
-
-    rng = np.random.RandomState(0)
-
-    def load_csv(pth):
-        return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
-
-    over18 = load_csv(os.path.join(data_folder, "contact_distributions_o18.csv"))
-    under18 = load_csv(os.path.join(data_folder, "contact_distributions_u18.csv"))
-
-    contact_simluator = EmpiricalContactsSimulator(over18, under18, rng)
-
-    for _ in range(10):
-        case = simulate_case(rng, **get_case_config("oxteam"))
-        print(contact_simluator(case, 0.2, 0.03, 0.03, 0.5, 10))
