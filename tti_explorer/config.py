@@ -727,10 +727,13 @@ _policy_sensitivities = {
 # symp covid neg, symp covid pos, asymp covid pos
 # Covid+ individuals: 10k, 20k [default], 30k
 # flu-like symptoms (non-covid): 50k, 100k [default], 200k, 300k
-# How to make the proportions 
 _vary_flu = [
         {
-            'dist': [k / (k + 20), PROP_COVID_SYMPTOMATIC * 20 / (k + 20),  (1 - PROP_COVID_SYMPTOMATIC) * 20 / (k + 20)],
+            'dist': [
+                k / (k + 20),
+                PROP_COVID_SYMPTOMATIC * 20 / (k + 20),
+                (1 - PROP_COVID_SYMPTOMATIC) * 20 / (k + 20)
+                ],
             'nppl': k + 20
         }
         for k in [50, 100, 200, 300]
@@ -738,7 +741,11 @@ _vary_flu = [
 
 _vary_covid = [
         {
-            'dist': [100 / (100 + k), PROP_COVID_SYMPTOMATIC * k / (100 + k), (1 - PROP_COVID_SYMPTOMATIC) * k / (100 + k)],
+            'dist': [
+                100 / (100 + k),
+                PROP_COVID_SYMPTOMATIC * k / (100 + k),
+                (1 - PROP_COVID_SYMPTOMATIC) * k / (100 + k)
+                ],
             'nppl': k + 100
         }
         for k in [10, 20, 30]
@@ -747,8 +754,12 @@ _vary_covid = [
 _inf_prop_to_try = _vary_flu
 _inf_prop_to_try.extend(_vary_covid)
 _inf_prop_to_try.append(
-        {  # Guy summer suggestion  10 S+, 10 A+, 100 S-
-            'dist': [100 / (120), PROP_COVID_SYMPTOMATIC * 20 / (120), (1 - PROP_COVID_SYMPTOMATIC) * 20 / (120)],
+        {
+            'dist': [
+                100 / (120),
+                PROP_COVID_SYMPTOMATIC * 20 / (120),
+                (1 - PROP_COVID_SYMPTOMATIC) * 20 / (120)
+                ],
             'nppl': 120
         }
     )
@@ -810,3 +821,4 @@ if __name__ == "__main__":
 
     for prop in _inf_prop_to_try:
         assert sum(prop['dist']) == 1, f"{prop['dist']}, sums to {sum(prop['dist'])}"
+
