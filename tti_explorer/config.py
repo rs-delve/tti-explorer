@@ -60,14 +60,6 @@ _case_configs = {
                 'dist': [0, PROP_COVID_SYMPTOMATIC, 1 - PROP_COVID_SYMPTOMATIC],  # symp covid neg, symp covid pos, asymp covid pos
                 'nppl': 1  # shouldn't matter if everyone has covid
             },
-            #Conditional on symptomatic
-            p_has_app=0.35,
-            # Conditional on having app
-            p_report_app=0.75,
-            p_report_nhs_g_app=0.5,
-
-            # Conditional on not having app
-            p_report_nhs_g_no_app=0.5,
 
             # Distribution of day on which the case notices their symptoms
             # This is conditinal on them being symptomatic at all
@@ -86,16 +78,6 @@ _case_configs = {
                 'dist': [100/120, PROP_COVID_SYMPTOMATIC * 20/120, (1 - PROP_COVID_SYMPTOMATIC) * 20/120],
                 'nppl': 120
                 },
-
-            #Conditional on symptomatic
-            p_has_app=0.35,
-            # Conditional on having app
-            p_report_app=0.75,
-            p_report_nhs_g_app=0.5,
-
-            # Conditional on not having app
-            p_report_nhs_g_no_app=0.5,
-
             # Distribution of day on which the case notices their symptoms
             # This is conditinal on them being symptomatic at all
             p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05, 0.00], # mean delay 3.05 days
@@ -124,7 +106,7 @@ get_case_config = partial(get_contacts_config, _cfg_dct=_case_configs)
 
 
 S_levels = {
-    "S5":{
+    "S5": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -142,7 +124,7 @@ S_levels = {
 
             "go_to_school_prob": 0.0
         },
-    "S4":{
+    "S4": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -160,7 +142,7 @@ S_levels = {
 
             "go_to_school_prob": 0.0
         },
-    "S3":{
+    "S3": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -178,7 +160,7 @@ S_levels = {
 
             "go_to_school_prob": 0.5
         },
-    "S2":{
+    "S2": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -194,7 +176,7 @@ S_levels = {
             "wfh_prob": 0.25,
             "max_contacts": 20,
         },
-    "S1":{
+    "S1": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
