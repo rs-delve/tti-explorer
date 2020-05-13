@@ -1,52 +1,23 @@
 import json
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
 
-from .contacts import Contacts, NCOLS
-from .generate_cases import Case
-from .strategies import RETURN_KEYS
+from tti_explorer import config, utils
+from tti_explorer.case import Case
+from tti_explorer.contacts import Contacts, NCOLS
+from tti_explorer.strategies import RETURN_KEYS
+
+
+STATS_KEYS = SimpleNamespace(mean="mean", std="std")
 
 
 def results_table(results_dct, index_name="scenario"):
     df = {k:v.T for k, v in results_dct.items()}
     df = pd.concat(df)
-    # df.index = df.keys()
-    df.index.names = [index_name, 'statistic']
+    df.index.names = [index_name, config.STATISTIC_COLNAME]
     return df
-
-
-def load_cases(fpath):
-    """load_cases
-    Loads case and contact from .json file into Cases and Contacts.
-
-    Args:
-        fpath (str): path to file.
-
-    Returns (tuple[list[tuple[Case, Contact], dict]):
-        pairs: list of Case, Contact pairs
-        meta: dictionary of meta-data for case/contact generation
-        
-    """
-    with open(fpath, "r") as f:
-        raw = json.load(f)
-
-    cases = raw.pop("cases")
-    meta = raw
-    pairs = list()
-    for dct in cases:
-        case = Case(**dct['case'])
-
-        contacts_dct = dct['contacts']
-        n_daily = contacts_dct.pop('n_daily')
-        contacts_dct = {k: np.array(v, dtype=int).reshape(-1, NCOLS) for k, v in contacts_dct.items()}
-        contacts = Contacts(n_daily=n_daily, **contacts_dct)
-        pairs.append((case, contacts))
-    return pairs, meta
-
-
-# def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
-    # return pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
 
 
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
@@ -66,12 +37,12 @@ def scale_results(results, monte_carlo_factor, r_monte_carlo_factor, nppl):
     rvals = [RETURN_KEYS.base_r, RETURN_KEYS.reduced_r]
     scale = pd.Series([1 if k in rvals else nppl for k in results.index], index=results.index)
     
-    results['mean'] = results['mean'] * scale
-    results['std'] = results['std'] * scale
+    results[STATS_KEYS.mean] = results[STATS_KEYS.mean] * scale
+    results[STATS_KEYS.std] = results[STATS_KEYS.std] * scale
 
     mc_std_error_factors = pd.Series([r_monte_carlo_factor if k in rvals else monte_carlo_factor for k in results.index], index=results.index)
 
-    results['std'] = results['std'] * mc_std_error_factors
+    results[STATS_KEYS.std] = results[STATS_KEYS.std] * mc_std_error_factors
 
     return results
 
@@ -86,9 +57,7 @@ if __name__ == "__main__":
 
     from tqdm import tqdm
 
-    import config
-    from strategies import registry
-    import utils
+    from tti_explorer.strategies import registry
     
     parser = ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument(
@@ -139,8 +108,10 @@ if __name__ == "__main__":
     
     case_metadata = dict()
     for i, case_file in enumerate(case_files):
-        case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
+        case_contacts, metadata = utils.load_cases(os.path.join(args.population, case_file))
         case_metadata[tidy_fname(case_file)] = metadata
+
+        # This monte carlo stuff should be a function!
         nppl = metadata['case_config']['infection_proportions']['nppl']
         rng = np.random.RandomState(seed=args.seed)
 

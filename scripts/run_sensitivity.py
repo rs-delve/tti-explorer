@@ -3,60 +3,16 @@ import json
 import numpy as np
 import pandas as pd
 
-from .contacts import Contacts, NCOLS
-from .generate_cases import Case
+from tti_explorer.contacts import Contacts, NCOLS
+from tti_explorer.generate_cases import Caseo
 
-
-import warnings
-warnings.filterwarnings("error")
-
-# def results_table(results_dct, index_name="scenario"):
-#     df = pd.DataFrame.from_dict(
-#             results_dct,
-#             orient="index"
-#         ).sort_index()
-#     df.index.name = index_name
-#     return df
+from run_scenarios import run_scenario
 
 
 def results_table(results_dct, index_name="scenario"):
-    df = {k: v.T for k, v in results_dct.items()}
-    df = pd.concat(df)
-    # df.index = df.keys()
+    df = pd.concat({k: v.T for k, v in results_dct.items()})
     df.index.names = [index_name, config.STATISTIC_COLNAME]
     return df
-
-
-def load_cases(fpath):
-    """load_cases
-    Loads case and contact from .json file into Cases and Contacts.
-
-    Args:
-        fpath (str): path to file.
-
-    Returns (tuple[list[tuple[Case, Contact], dict]):
-        pairs: list of Case, Contact pairs
-        meta: dictionary of meta-data for case/contact generation
-    """
-    with open(fpath, "r") as f:
-        raw = json.load(f)
-
-    cases = raw.pop("cases")
-    meta = raw
-    pairs = list()
-    for dct in cases:
-        case = Case(**dct['case'])
-
-        contacts_dct = dct['contacts']
-        n_daily = contacts_dct.pop('n_daily')
-        contacts_dct = {k: np.array(v, dtype=int).reshape(-1, NCOLS) for k, v in contacts_dct.items()}
-        contacts = Contacts(n_daily=n_daily, **contacts_dct)
-        pairs.append((case, contacts))
-    return pairs, meta
-
-def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
-    df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
-    return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
 
 
 def find_case_files(folder, ending=".json"):
