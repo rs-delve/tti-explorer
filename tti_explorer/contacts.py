@@ -42,12 +42,15 @@ def day_infected_wo(rng, probs, first_encounter, not_infected=NOT_INFECTED):
     """day_infected_wo
 
     Args:
-        rng (np.random.RandomState):
-        probs:
-        first_encounter:
-        not_infected:
+        rng (np.random.RandomState): Random state.
+        probs (np.array[float]): Probability of infection of contact each.
+        first_encounter (np.array[float]): Day of first encounter of contact with
+        primary case.
+        not_infected (float): Flag to use if the contact was not infected.
 
     Returns:
+        day_infected (np.array[int]): The day on which the contacts were infected,
+        if not infected then the element for that contact will be NOT_INFECTED.
     """
     return np.where(
         rng.binomial(n=1, p=probs),
@@ -65,26 +68,56 @@ Contacts = namedtuple(
 class EmpiricalContactsSimulator:
     """Simulate social contact using BBC Pandemic data"""
     def __init__(self, over18, under18, rng):
+        """Simulate social contact using the BBC Pandemic dataset
+
+        Args:
+            over18 (np.array[int]): Contact data for over 18s.
+            under18 (np.array[int]): Contact data for under 18s.
+            rng (np.random.RandomState): Random state.
+
+        """
         self.over18 = over18
         self.under18 = under18
         self.rng = rng
 
     def sample_row(self, case):
+        """sample_row
+        Sample a row of the tables depending on the age of the case.
+
+        Args:
+            case (Case): Primary case.
+
+        Returns:
+            row (np.array[int]): Row sampled uniformly at random from table in
+            dataset depending on age of case (over/under18). Three columns,
+            expected contacts for categories home, work and other.
+            For under 18s, school contacts are interpreted as work contacts.
+        """
         table = self.under18 if case.under18 else self.over18
         return table[self.rng.randint(0, table.shape[0])]
 
     def __call__(self, case, home_sar, work_sar, other_sar, asymp_factor, period):
-        """__call__
+        """Generate a social contact for the given case.
+
+        A row from the table corresponding to the age of the `case` is sampled
+        uniformly at random. A contact is generated with daily contacts as
+        given by that row. These contacts are infected at random with attack rates
+        given by the SARs and whether or not the `case` is symptomatic. If the 
+        `case` is COVID negative, then no contacts are infected.
 
         Args:
-            case:
-            home_sar:
-            work_sar:
-            other_sar:
-            asymp_factor:
-            period:
+            case (Case): Primary case.
+            home_sar (float): Secondary attack rate for household contacts. (Marginal
+            probability of infection over the whole simulation).
+            work_sar (float): Secondary attack rate for contacts in the work category. 
+            other_sar (float): Secondary attack rate for contacts in the other category.
+            asymp_factor (float): Factor by which to multiply the probabilty of secondary
+            infection if `case` is asymptomatic COVID positive.
+            period (int): Duration of the simulation (days).
 
         Returns:
+            contacts (Contacts): Simulated social contacts and resulting infections
+            for primary case `case`.
         """
         row = self.sample_row(case)
         n_home, n_work, n_other = row
