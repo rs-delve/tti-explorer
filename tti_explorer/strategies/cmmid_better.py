@@ -35,7 +35,7 @@ def CMMID_strategy_better(
     policy_adherence
 ):
     """
-    This is the implementation of the Kucharski approach in CMMID above, with all typos fixed, and some other improvements
+    This is the implementation of the Kucharski approach (see cmmid.py), with all typos fixed and some other improvements
     """
 
     if case.under18:

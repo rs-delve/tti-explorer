@@ -64,15 +64,8 @@ def CMMID_strategy(
     n_work = work_infections.shape[0]
     n_othr = othr_infections.shape[0]
 
-    # home_contacts_prevented = np.zeros_like(n_home).astype(bool)
-    # work_contacts_prevented = np.zeros_like(n_work).astype(bool)
-    # othr_contacts_prevented = np.zeros_like(n_othr).astype(bool)
-
     if tested and symptomatic and do_isolation:
         # Home contacts not necessarily contacted and infected on the same day
-        # home_contacts_prevented = (contacts.home[:, 0] >= case.day_noticed_symptoms).astype(bool)
-        # work_contacts_prevented = (work_contacts >= case.day_noticed_symptoms).astype(bool)
-        # othr_contacts_prevented = (othr_contacts >= case.day_noticed_symptoms).astype(bool)
         inf_period = case.day_noticed_symptoms
     else:
         inf_period = 5.
@@ -80,11 +73,7 @@ def CMMID_strategy(
     pop_tested = rng.uniform() < p_pop_test
     if do_pop_testing and pop_tested:
         tested = True
-        # tested_day = rng.randint(6)
         inf_period = rng.randint(6)
-        # home_contacts_prevented = (contacts.home[:, 0] >= tested_day).astype(bool)
-        # work_contacts_prevented = (work_contacts >= tested_day).astype(bool)
-        # othr_contacts_prevented = (othr_contacts >= tested_day).astype(bool)
 
     if do_app_tracing:
         has_app = rng.uniform() < app_cov
@@ -138,4 +127,3 @@ def CMMID_strategy(
             RETURN_KEYS.reduced_r: rr_reduced,
             RETURN_KEYS.man_trace: 0
         }
-    # return home_infections.sum() / n_home, work_infections.sum() / n_work, othr_infections.sum() / n_othr, home_infections.sum() + work_infections.sum() + othr_infections.sum(), base_rr, reduced_rr, manual_traces
