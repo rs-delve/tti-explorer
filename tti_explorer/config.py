@@ -727,6 +727,10 @@ _policy_sensitivities = {
 # symp covid neg, symp covid pos, asymp covid pos
 # Covid+ individuals: 10k, 20k [default], 30k
 # flu-like symptoms (non-covid): 50k, 100k [default], 200k, 300k
+<<<<<<< HEAD
+# How to make the proportions
+=======
+>>>>>>> a72b4287137faedcd638922642e1409cccf5deb9
 _vary_flu = [
         {
             'dist': [
@@ -821,4 +825,3 @@ if __name__ == "__main__":
 
     for prop in _inf_prop_to_try:
         assert sum(prop['dist']) == 1, f"{prop['dist']}, sums to {sum(prop['dist'])}"
-

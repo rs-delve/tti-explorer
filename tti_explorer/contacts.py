@@ -13,10 +13,10 @@ def he_infection_profile(period, gamma_params):
     """he_infection_profile
 
     Args:
-        period:
-        gamma_params:
+        period (int): length of infectious period
+        gamma_params (dict): shape and scale gamma parameters of infection profile
 
-    Returns:
+    Returns: discretised and truncated gamma cdf, modelling the infection profile
     """
     inf_days = np.arange(period)
     mass = gamma.cdf(inf_days + 1, **gamma_params) - gamma.cdf(inf_days, **gamma_params)
@@ -27,9 +27,9 @@ def home_daily_infectivity(base_mass):
     """home_daily_infectivity
 
     Args:
-        base_mass:
+        base_mass: infection profile for non-repeat contacts
 
-    Returns:
+    Returns: infection profile for repeat contacts
     """
     fail_prod = np.cumprod(1 - base_mass)
     fail_prod = np.roll(fail_prod, 1)
@@ -102,14 +102,14 @@ class EmpiricalContactsSimulator:
         A row from the table corresponding to the age of the `case` is sampled
         uniformly at random. A contact is generated with daily contacts as
         given by that row. These contacts are infected at random with attack rates
-        given by the SARs and whether or not the `case` is symptomatic. If the 
+        given by the SARs and whether or not the `case` is symptomatic. If the
         `case` is COVID negative, then no contacts are infected.
 
         Args:
             case (Case): Primary case.
             home_sar (float): Secondary attack rate for household contacts. (Marginal
             probability of infection over the whole simulation).
-            work_sar (float): Secondary attack rate for contacts in the work category. 
+            work_sar (float): Secondary attack rate for contacts in the work category.
             other_sar (float): Secondary attack rate for contacts in the other category.
             asymp_factor (float): Factor by which to multiply the probabilty of secondary
             infection if `case` is asymptomatic COVID positive.
@@ -158,4 +158,3 @@ class EmpiricalContactsSimulator:
                 work=np.column_stack((work_day_inf, work_first_encounter)),
                 other=np.column_stack((other_day_inf, other_first_encounter))
             )
-
