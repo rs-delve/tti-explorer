@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import numpy as np
 
-import utils
+from . import utils
 
 NOT_INFECTED = -1
 NCOLS = 2

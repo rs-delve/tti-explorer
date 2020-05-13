@@ -3,8 +3,8 @@ import json
 import numpy as np
 import pandas as pd
 
-from contacts import Contacts, NCOLS
-from generate_cases import Case
+from .contacts import Contacts, NCOLS
+from .generate_cases import Case
 
 
 import warnings

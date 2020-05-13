@@ -8,7 +8,7 @@ from functools import partial
 
 import numpy as np
 
-import utils
+from . import utils
 
 PROP_COVID_SYMPTOMATIC = 0.6
 

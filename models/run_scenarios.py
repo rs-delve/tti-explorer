@@ -3,9 +3,9 @@ import json
 import numpy as np
 import pandas as pd
 
-from contacts import Contacts, NCOLS
-from generate_cases import Case
-from strategies import RETURN_KEYS
+from .contacts import Contacts, NCOLS
+from .generate_cases import Case
+from .strategies import RETURN_KEYS
 
 
 def results_table(results_dct, index_name="scenario"):

@@ -1,6 +1,6 @@
 from itertools import product
 
-from utils import Registry
+from .utils import Registry
 
 registry = Registry()
 
