@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 
 from tti_explorer import Case, Contacts
-from tti_explorer.strategies import temporal_anne_flowchart, RETURN_KEYS
+from tti_explorer.strategies import registry, RETURN_KEYS
 from tti_explorer import config
 
 TEST_RANDOM_SEED = 42
@@ -30,7 +30,8 @@ def test_temporal_anne_flowchart_single_case_no_contacts(has_covid, s_level, con
 
     rng = np.random.RandomState(seed=TEST_RANDOM_SEED)
 
-    result = temporal_anne_flowchart(case, contacts, rng, **parameters)
+    strategy = registry['temporal_anne_flowchart']
+    result = strategy(case, contacts, rng, **parameters)
 
     if has_covid:
         result[RETURN_KEYS.base_r] == 0
