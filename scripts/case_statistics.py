@@ -1,10 +1,11 @@
+"""Print basic statistics of cases in a case file"""
 import json
 
 import numpy as np
 import pandas as pd
 
 from tti_explorer.contacts import Contacts, NCOLS
-from tti_explorer.generate_cases import Case
+from tti_explorer.case import Case
 from tti_explorer import utils
 
 
@@ -18,7 +19,7 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("cases_path", type=str)
     args = parser.parse_args()
-   
+ 
     # loads cases
     case_contacts, metadata = utils.load_cases(args.cases_path)
     # case_contacts : list of (Case, Contacts) pairs

@@ -5,7 +5,6 @@ import os
 
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
-from scipy.stats import gamma
 
 
 def bool_bernoulli(p, rng):
@@ -13,29 +12,78 @@ def bool_bernoulli(p, rng):
 
 
 def categorical(pvals, rng, n=1):
+    """categorical
+
+    Args:
+        pvals (iterable[float]): probabilities
+        rng (np.random.RandomState): random state from which to draw
+        n (int): Number of iid samples
+
+    Returns:
+        result (int or np.array[int]): depending on whether `n`==1
+    """
     outputs = np.argmax(rng.multinomial(1, pvals, size=n), axis=-1)
     return outputs.item() if n == 1 else outputs
 # BE, weird to have different output types but also weird to return
 # a 1 item array
 
 
-def he_infection_profile(period, gamma_params):
-    inf_days = np.arange(period)
-    mass = gamma.cdf(inf_days + 1, **gamma_params) - gamma.cdf(inf_days, **gamma_params)
-    return mass / np.sum(mass)
+def load_cases(fpath):
+    """load_cases
+    Loads case and contact from .json file into Cases and Contacts.
 
+    Args:
+        fpath (str): path to file.
 
-def home_daily_infectivity(base_mass):
-    fail_prod = np.cumprod(1 - base_mass)
-    fail_prod = np.roll(fail_prod, 1)
-    np.put(fail_prod, 0, 1.)
-    skewed_mass = fail_prod * base_mass
-    return skewed_mass / np.sum(skewed_mass)
+    Returns (tuple[list[tuple[Case, Contact], dict]):
+        pairs: list of Case, Contact pairs
+        meta: dictionary of meta-data for case/contact generation
+    """
+    from tti_explorer.case import Case
+    from tti_explorer.contacts import Contacts, NCOLS
+
+    with open(fpath, "r") as f:
+        raw = json.load(f)
+
+    cases = raw.pop("cases")
+    meta = raw
+    pairs = list()
+    for dct in cases:
+        case = Case(**dct['case'])
+        contacts_dct = dct['contacts']
+        n_daily = contacts_dct.pop('n_daily')
+        contacts_dct = {
+                k: np.array(v, dtype=int).reshape(-1, NCOLS)
+                for k, v in contacts_dct.items()
+                }
+        contacts = Contacts(n_daily=n_daily, **contacts_dct)
+        pairs.append((case, contacts))
+    return pairs, meta
 
 
 def named_product(**items):
     Product = namedtuple('Product', items.keys())
     return starmap(Product, product(*items.values()))
+
+
+def swaplevel(dct_of_dct):
+    keys = next(iter(dct_of_dct.values())).keys()
+    return {in_k: {out_k: v[in_k] for out_k, v in dct_of_dct.items()} for in_k in keys}
+
+
+def read_json(fpath):
+    with open(fpath, "r") as f:
+        return json.loads(f.read())
+
+
+def write_json(stuff, fpath):
+    with open(fpath, "w") as f:
+        return json.dump(stuff, f)
+
+
+def sort_by(lst, by, return_idx=False):
+    idx, res = zip(*sorted(zip(by, lst)))
+    return (res, idx) if return_idx else res
 
 
 class Registry:
@@ -81,27 +129,7 @@ class PdfDeck:
         folder = folder or os.cwd()
         for fig, name in zip(self.figs, self.fignames):
             fpath = os.path.join(folder, name+"."+savefig_kwds.get("format", "pdf"))
-            fig.savefig(fpath,**savefig_kwds)
-
-
-def swaplevel(dct_of_dct):
-    keys = next(iter(dct_of_dct.values())).keys()
-    return {in_k: {out_k: v[in_k] for out_k, v in dct_of_dct.items()} for in_k in keys}
-
-
-def read_json(fpath):
-    with open(fpath, "r") as f:
-        return json.loads(f.read())
-
-
-def write_json(stuff, fpath):
-    with open(fpath, "w") as f:
-        return json.dump(stuff, f)
-
-
-def sort_by(lst, by, return_idx=False):
-    idx, res = zip(*sorted(zip(by, lst)))
-    return (res, idx) if return_idx else res
+            fig.savefig(fpath, **savefig_kwds)
 
 
 class LatexTableDeck:

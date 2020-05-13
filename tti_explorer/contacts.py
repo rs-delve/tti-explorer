@@ -1,14 +1,54 @@
 from collections import namedtuple
 
 import numpy as np
+from scipy.stats import gamma
 
-from . import utils
+from .utils import categorical
 
 NOT_INFECTED = -1
 NCOLS = 2
 
 
+def he_infection_profile(period, gamma_params):
+    """he_infection_profile
+
+    Args:
+        period:
+        gamma_params:
+
+    Returns:
+    """
+    inf_days = np.arange(period)
+    mass = gamma.cdf(inf_days + 1, **gamma_params) - gamma.cdf(inf_days, **gamma_params)
+    return mass / np.sum(mass)
+
+
+def home_daily_infectivity(base_mass):
+    """home_daily_infectivity
+
+    Args:
+        base_mass:
+
+    Returns:
+    """
+    fail_prod = np.cumprod(1 - base_mass)
+    fail_prod = np.roll(fail_prod, 1)
+    np.put(fail_prod, 0, 1.)
+    skewed_mass = fail_prod * base_mass
+    return skewed_mass / np.sum(skewed_mass)
+
+
 def day_infected_wo(rng, probs, first_encounter, not_infected=NOT_INFECTED):
+    """day_infected_wo
+
+    Args:
+        rng (np.random.RandomState):
+        probs:
+        first_encounter:
+        not_infected:
+
+    Returns:
+    """
     return np.where(
         rng.binomial(n=1, p=probs),
         first_encounter,
@@ -23,6 +63,7 @@ Contacts = namedtuple(
 
 
 class EmpiricalContactsSimulator:
+    """Simulate social contact using BBC Pandemic data"""
     def __init__(self, over18, under18, rng):
         self.over18 = over18
         self.under18 = under18
@@ -56,8 +97,8 @@ class EmpiricalContactsSimulator:
 
         if case.covid:
             home_is_infected = self.rng.binomial(1, scale * home_sar, n_home)
-            home_inf_profile = utils.home_daily_infectivity(case.inf_profile)
-            day_infected = utils.categorical(home_inf_profile, rng=self.rng, n=n_home)
+            home_inf_profile = home_daily_infectivity(case.inf_profile)
+            day_infected = categorical(home_inf_profile, rng=self.rng, n=n_home)
             home_day_inf = np.where(home_is_infected, day_infected, NOT_INFECTED)
 
             work_day_inf = day_infected_wo(
