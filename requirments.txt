@@ -1,5 +1,0 @@
-jax
-jaxlib
-pandas
-matplotlib
-pytest
