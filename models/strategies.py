@@ -71,6 +71,16 @@ def CMMID_strategy(
     p_pop_test,
     policy_adherence
 ):
+    """
+    This is the implementation of the original Kucharski paper.
+
+    It appears that the original code had a few typos which we replicate here to make sure we can reproduce original paper's results
+    The typos are marked with comments below.
+
+    The paper:
+    Effectiveness of isolation, testing, contact tracing and physical distancing on reducing transmission of SARS-CoV-2 in different settings
+    Kucharski AJ, Klepac P, Conlan AJK, Kissler S, Tang M et al. MedRxiv preprint, 2020.
+    """
 
     if case.under18:
         wfh = not do_schools_open
@@ -150,10 +160,12 @@ def CMMID_strategy(
 
     home_traced = rng.binomial(n=1, p=manual_home_trace_prob, size=n_home).astype(bool)
     work_traced = rng.binomial(n=1, p=manual_work_trace_prob * met_before_w, size=n_work).astype(bool)
+    # Typo from original paper: it should have been `manual_othr_trace_prob`
     othr_traced = rng.binomial(n=1, p=manual_work_trace_prob * met_before_o * scale_othr, size=n_othr).astype(bool)
     
     home_averted = home_infect & rng.binomial(n=1, p=manual_home_trace_prob * policy_adherence, size=n_home).astype(bool)
     work_averted = work_infect & rng.binomial(n=1, p=manual_work_trace_prob * met_before_w * policy_adherence, size=n_work).astype(bool)
+    # Typo from original paper: p here should be multiplied by `scale_othr`
     othr_averted = othr_infect & rng.binomial(n=1, p=met_before_o * manual_othr_trace_prob * policy_adherence, size=n_othr).astype(bool)
 
     if tested & symptomatic & (do_manual_tracing | do_app_tracing):
@@ -200,6 +212,9 @@ def CMMID_strategy_better(
     p_pop_test,
     policy_adherence
 ):
+    """
+    This is the implementation of the Kucharski approach in CMMID above, with all typos fixed, and some other improvements
+    """
 
     if case.under18:
         wfh = rng.uniform() < 1 - go_to_school_prob
@@ -421,7 +436,9 @@ def temporal_anne_flowchart(
     #   - person_days_quarantine : number of days all individuals affected spend in quarantine
     #   - person_days_wasted_quarantine : number of days individuals without COVID were locked down
 ):
-
+    """
+    This is an implementation of flowchart produced by Anne Johnson and Guy Harling
+    """
 
     # TODO: Janky - overriding manual_report_prob and app_report_prob
     # NOT USING THESE AT ALL 
