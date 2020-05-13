@@ -17,7 +17,25 @@ RETURN_KEYS = SimpleNamespace(
         app_trace='# App Traces',
         tests='# Tests Needed',
         quarantine='# PersonDays Quarantined',
-        wasted_quarantine='# Wasted PersonDays Quarantined'
+        wasted_quarantine='# Wasted PersonDays Quarantined',
+        num_primary_symptomatic='# Primary Symptomatic Cases',
+        num_primary_asymptomatic='# Primary Asymptomatic Cases',
+        num_primary='# Primary COVID Cases',
+        num_primary_symptomatic_missed='# Primary Symptomatic Cases Missed',
+        num_primary_asymptomatic_missed='# Primary Asymptomatic Cases Missed',
+        num_primary_missed='# Primary COVID Cases Missed',
+        percent_primary_symptomatic_missed='% Primary Symptomatic Cases Missed',
+        percent_primary_asymptomatic_missed='% Primary Asymptomatic Cases Missed',
+        percent_primary_missed='% Primary COVID Cases Missed',
+        num_secondary_from_symptomatic='# Secondary Cases From Symptomatic Primary',
+        num_secondary_from_asymptomatic='# Secondary Cases From Asymptomatic Primary',
+        num_secondary='# Secondary Cases From Primary Cases',
+        num_secondary_from_symptomatic_missed='# Secondary Cases Missed From Symptomatic Primary',
+        num_secondary_from_asymptomatic_missed='# Secondary Cases Missed From Asymptomatic Primary',
+        num_secondary_missed='# Secondary Cases Missed',
+        percent_secondary_from_symptomatic_missed='% Secondary From Symptomatic Cases Missed',
+        percent_secondary_from_asymptomatic_missed='% Secondary From Asymptomatic Cases Missed',
+        percent_secondary_missed='% Secondary COVID Cases Missed',
     )
 
 # BE: this type of masking might be useful to limit contacts
@@ -655,7 +673,7 @@ def temporal_anne_flowchart(
             person_days_quarantine += quarantine_length * home_contacts_isolated.sum()
             # TODO: Count as wasted the time that house members who do not have covid locked down as wasted
             person_days_wasted_quarantine += quarantine_length * (home_contacts_isolated & ~home_infections).sum()
-        ## Don't add any if: Not isolating at all, or if waiting for positive test to isolate and doesn't have coivd
+        ## Don't add any if: Not isolating at all, or if waiting for positive test to isolate and doesn't have covid
 
         # For traced contacts, if isolating on positive and doesn't have covid, waste test delay days
         ## NOTE: working with "quarantined" as this represents those traced who were still contacted and complied
@@ -704,14 +722,14 @@ def temporal_anne_flowchart(
 
     ## Compute the reproduction rate due to the policy
     # Remove infections due to case isolation
-    home_infections_post_policy = home_infections & ~home_contacts_prevented
-    work_infections_post_policy = work_infections & ~work_contacts_prevented
-    othr_infections_post_policy = othr_infections & ~othr_contacts_prevented
+    home_infections_post_isolation = home_infections & ~home_contacts_prevented
+    work_infections_post_isolation = work_infections & ~work_contacts_prevented
+    othr_infections_post_isolation = othr_infections & ~othr_contacts_prevented
 
     # Count traced contacts as not included in the R TODO: make a proportion
-    home_infections_post_policy = home_infections_post_policy & ~home_contacts_isolated
-    work_infections_post_policy = work_infections_post_policy & ~work_contacts_isolated
-    othr_infections_post_policy = othr_infections_post_policy & ~othr_contacts_isolated
+    home_infections_post_policy = home_infections_post_isolation & ~home_contacts_isolated
+    work_infections_post_policy = work_infections_post_isolation & ~work_contacts_isolated
+    othr_infections_post_policy = othr_infections_post_isolation & ~othr_contacts_isolated
         
     ## Count fractional cases - will only occur if got tested
     if test_performed and fractional_infections:
@@ -795,4 +813,16 @@ def temporal_anne_flowchart(
             RETURN_KEYS.tests: total_tests_performed,
             RETURN_KEYS.quarantine: person_days_quarantine,
             RETURN_KEYS.wasted_quarantine: person_days_wasted_quarantine,
+            RETURN_KEYS.num_primary_symptomatic: 1 if case.covid and case.symptomatic else np.nan,
+            RETURN_KEYS.num_primary_asymptomatic: 1 if case.covid and (not case.symptomatic) else np.nan,
+            RETURN_KEYS.num_primary: 1 if case.covid else np.nan,
+            RETURN_KEYS.num_primary_symptomatic_missed: 1 if case.covid and case.symptomatic and (not test_performed) else np.nan,
+            RETURN_KEYS.num_primary_asymptomatic_missed: 1 if case.covid and (not case.symptomatic) and (not test_performed) else np.nan,
+            RETURN_KEYS.num_primary_missed: 1 if case.covid and (not test_performed) else np.nan,
+            RETURN_KEYS.num_secondary_from_symptomatic: home_infections_post_isolation.sum() + work_infections_post_isolation.sum() + othr_infections_post_isolation.sum() if case.covid and case.symptomatic else np.nan,
+            RETURN_KEYS.num_secondary_from_asymptomatic: home_infections_post_isolation.sum() + work_infections_post_isolation.sum() + othr_infections_post_isolation.sum() if case.covid and (not case.symptomatic) else np.nan,
+            RETURN_KEYS.num_secondary: home_infections_post_isolation.sum() + work_infections_post_isolation.sum() + othr_infections_post_isolation.sum() if case.covid else np.nan,
+            RETURN_KEYS.num_secondary_from_symptomatic_missed: home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() if case.covid and case.symptomatic else np.nan,
+            RETURN_KEYS.num_secondary_from_asymptomatic_missed: home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() if case.covid and (not case.symptomatic) else np.nan,
+            RETURN_KEYS.num_secondary_missed: home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() if case.covid else np.nan,
         }

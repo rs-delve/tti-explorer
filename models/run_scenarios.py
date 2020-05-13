@@ -51,6 +51,31 @@ def load_cases(fpath):
 
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
     df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
+
+    df[RETURN_KEYS.percent_primary_symptomatic_missed] = df[RETURN_KEYS.num_primary_symptomatic_missed].sum() / df[RETURN_KEYS.num_primary_symptomatic].sum()
+    df[RETURN_KEYS.percent_primary_asymptomatic_missed] = df[RETURN_KEYS.num_primary_asymptomatic_missed].sum() / df[RETURN_KEYS.num_primary_asymptomatic].sum()
+    df[RETURN_KEYS.percent_primary_missed] = df[RETURN_KEYS.num_primary_missed].sum() / df[RETURN_KEYS.num_primary].sum()
+
+    df[RETURN_KEYS.percent_secondary_from_symptomatic_missed] = df[RETURN_KEYS.num_secondary_from_symptomatic_missed].sum() / df[RETURN_KEYS.num_secondary_from_symptomatic].sum()
+    df[RETURN_KEYS.percent_secondary_from_asymptomatic_missed] = df[RETURN_KEYS.num_secondary_from_asymptomatic_missed].sum() / df[RETURN_KEYS.num_secondary_from_asymptomatic].sum()
+    df[RETURN_KEYS.percent_secondary_missed] = df[RETURN_KEYS.num_secondary_missed].sum() / df[RETURN_KEYS.num_secondary].sum()
+
+    df.drop(columns=[
+        RETURN_KEYS.num_primary_symptomatic,
+        RETURN_KEYS.num_primary_asymptomatic,
+        RETURN_KEYS.num_primary,
+        RETURN_KEYS.num_primary_symptomatic_missed,
+        RETURN_KEYS.num_primary_asymptomatic_missed,
+        RETURN_KEYS.num_primary_missed,
+        RETURN_KEYS.num_secondary_from_symptomatic,
+        RETURN_KEYS.num_secondary_from_asymptomatic,
+        RETURN_KEYS.num_secondary,
+        RETURN_KEYS.num_secondary_from_symptomatic_missed,
+        RETURN_KEYS.num_secondary_from_asymptomatic_missed,
+        RETURN_KEYS.num_secondary_missed,
+        ], inplace=True
+    )
+
     return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
 
 
@@ -64,12 +89,39 @@ def tidy_fname(fname, ending=".json"):
 
 def scale_results(results, monte_carlo_factor, r_monte_carlo_factor, nppl):
     rvals = [RETURN_KEYS.base_r, RETURN_KEYS.reduced_r]
-    scale = pd.Series([1 if k in rvals else nppl for k in results.index], index=results.index)
+    percentages = [
+        RETURN_KEYS.percent_primary_symptomatic_missed,
+        RETURN_KEYS.percent_primary_asymptomatic_missed,
+        RETURN_KEYS.percent_primary_missed,
+        RETURN_KEYS.percent_secondary_from_symptomatic_missed,
+        RETURN_KEYS.percent_secondary_from_asymptomatic_missed,
+        RETURN_KEYS.percent_secondary_missed,
+    ]
+    
+    scale = []
+    for k in results.index:
+        if k in rvals:
+            scale.append(1)
+        elif k in percentages:
+            scale.append(100)
+        else:
+            scale.append(nppl)
+    
+    scale = pd.Series(scale, index=results.index)
     
     results['mean'] = results['mean'] * scale
     results['std'] = results['std'] * scale
 
-    mc_std_error_factors = pd.Series([r_monte_carlo_factor if k in rvals else monte_carlo_factor for k in results.index], index=results.index)
+    mc_scale = []
+    for k in results.index:
+        if k in rvals:
+            mc_scale.append(r_monte_carlo_factor)
+        elif k in percentages:
+            mc_scale.append(1)
+        else:
+            mc_scale.append(monte_carlo_factor)
+
+    mc_std_error_factors = pd.Series(mc_scale, index=results.index)
 
     results['std'] = results['std'] * mc_std_error_factors
 
