@@ -21,9 +21,6 @@ STATISTIC_COLNAME = 'statistic'
 _contacts_configs = {
         "kucharski": dict(
             # infectivity
-            # home_sar=0.2,
-            # work_sar=0.06,
-            # other_sar=0.06,
             home_sar=0.2,
             work_sar=0.06,
             other_sar=0.06,
@@ -34,9 +31,6 @@ _contacts_configs = {
             asymp_factor=0.5
             ),
         "oxteam": dict(
-            #  home_sar=0.2,
-            #  work_sar=0.03,
-            #  other_sar=0.03,
              home_sar=0.3,
              work_sar=0.045,
              other_sar=0.045,
