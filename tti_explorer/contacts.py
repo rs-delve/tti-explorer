@@ -14,9 +14,12 @@ def he_infection_profile(period, gamma_params):
 
     Args:
         period (int): length of infectious period
-        gamma_params (dict): shape and scale gamma parameters of infection profile
+        gamma_params (dict): shape and scale gamma parameters
+        of infection profile
 
-    Returns: discretised and truncated gamma cdf, modelling the infection profile
+    Returns:
+        infection_profile (np.array[float]): discretised and
+        truncated gamma cdf, modelling the infection profile
     """
     inf_days = np.arange(period)
     mass = gamma.cdf(inf_days + 1, **gamma_params) - gamma.cdf(inf_days, **gamma_params)
@@ -29,7 +32,9 @@ def home_daily_infectivity(base_mass):
     Args:
         base_mass: infection profile for non-repeat contacts
 
-    Returns: infection profile for repeat contacts
+    Returns: 
+        infection_profile (np.array[float]): 
+        infection profile for repeat contacts
     """
     fail_prod = np.cumprod(1 - base_mass)
     fail_prod = np.roll(fail_prod, 1)

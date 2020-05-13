@@ -140,3 +140,7 @@ data/populations
 
 *.aux
 *.log
+
+#vim
+*/**/.sw*
+*.swp

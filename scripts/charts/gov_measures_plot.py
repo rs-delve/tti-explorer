@@ -16,16 +16,16 @@ def find_results_file(folder, fname):
     return next(filter(lambda x: x == fname, os.listdir(folder)))
 
 def load_results(fpath):
-    # only return reduced_r, manual_traces, tests_needed
     results = pd.read_csv(
             fpath,
             index_col=[0],
             usecols=[
                 'statistic',
                 RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests, RETURN_KEYS.quarantine])
-    # results = results.head(2)
+
     if len(results) > 2:
         raise ValueError(f"More than 1 population found in {fpath}")
+
     return results
 
 def max_calculator(folder, tti_strat_list, gov_measure_list):
