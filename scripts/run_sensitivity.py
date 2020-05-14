@@ -146,7 +146,7 @@ if __name__ == "__main__":
 
         pbar = tqdm(
             desc="Running configurations/sensitivities",
-            total=len(case_files) * len(strategy_configs) * 20,  # this is just number of entries in temporal anne sensitivities generator
+            total=len(case_files) * len(strategy_configs) * 3 * 3 * 10,  # this is just number of entries in temporal anne sensitivities generator
             smoothing=None
         )
         for i, ((scenario, case_file, cfg), arguments) in enumerate(futures):
