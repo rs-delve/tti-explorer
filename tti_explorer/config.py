@@ -707,29 +707,6 @@ _policy_sensitivities = {
                 bounds=None,
                 values=np.linspace(0.5, 0.9, 5)
             )
-            # These ones do not need to be used
-#             app_report_prob=Sensitivity(
-                # bounds=(0, 1),
-                # values=np.linspace(0.5, 1, num=4)
-            # ),
-            # manual_report_prob=Sensitivity(
-                # bounds=(0, 1),
-                # values=np.linspace(0.25, 0.75, num=4)
-            # ),
-#             # what are sensible values for this???
-            # met_before_o=Sensitivity(
-                # bounds=(0.5, 1.),
-                # values=np.linspace(0.5, 1, num=4)
-            # ),
-            # max_contacts=Sensitivity(
-                # bounds=None,  # what on earth to put for this?!!?
-                # values=[4, 2e3]  # what to put for these???
-            # ),
-            # wfh_prob=Sensitivity(
-                # bounds=(0, .65),
-                # values=np.linspace(0, 0.65, num=4)
-            # ),
-
         )
     }
 
