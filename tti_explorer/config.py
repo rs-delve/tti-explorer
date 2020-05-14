@@ -37,6 +37,8 @@ _contacts_configs = {
              ),
          }
 
+_contacts_configs['oxteam-symptomatic'] = dict(**_contacts_configs['oxteam'])
+
 
 def get_contacts_config(name, _cfg_dct=_contacts_configs):
     try:
