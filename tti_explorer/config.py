@@ -37,6 +37,7 @@ _contacts_configs = {
              ),
          }
 
+_contacts_configs['oxteam-symptomatic'] = dict(**_contacts_configs['oxteam'])
 
 def get_contacts_config(name, _cfg_dct=_contacts_configs):
     try:
@@ -564,8 +565,18 @@ _policy_configs = {
             "S1_test_based_TTI": {**S_levels["S1"], **contact_trace_options["test_based_TTI"]},
             "S1_test_based_TTI_test_contacts": {**S_levels["S1"], **contact_trace_options["test_based_TTI_test_contacts"]},
             "S0": S_levels["S0"]
-        }
+        },
 }
+
+_policy_configs['temporal_anne_flowchart'].update(
+        {
+            "S5_test_based_TTI_full_compliance": {**S_levels["S5"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+            "S4_test_based_TTI_full_compliance": {**S_levels["S4"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+            "S3_test_based_TTI_full_compliance": {**S_levels["S3"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+            "S2_test_based_TTI_full_compliance": {**S_levels["S2"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+            "S1_test_based_TTI_full_compliance": {**S_levels["S1"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+        }
+    )
 
 _global_defaults = {
     'cmmid': dict(
