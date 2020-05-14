@@ -1,12 +1,12 @@
 import numpy as np
 import pytest
 
-from models.generate_cases import Case
-from models.strategies import temporal_anne_flowchart, RETURN_KEYS
-from models.contacts import Contacts
-from models import config
+from tti_explorer import Case, Contacts
+from tti_explorer.strategies import registry, RETURN_KEYS
+from tti_explorer import config
 
 TEST_RANDOM_SEED = 42
+
 
 @pytest.mark.parametrize("has_covid", [True, False])
 @pytest.mark.parametrize("s_level", list(config.S_levels.keys()))
@@ -16,9 +16,6 @@ def test_temporal_anne_flowchart_single_case_no_contacts(has_covid, s_level, con
         under18=False,
         covid=has_covid,
         symptomatic=False,
-        has_app=False,
-        report_nhs=False,
-        report_app=False,
         day_noticed_symptoms=0,
         inf_profile=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     )
@@ -26,14 +23,15 @@ def test_temporal_anne_flowchart_single_case_no_contacts(has_covid, s_level, con
     scenario = s_level + "_" + contact_trace_option
 
     try:
-        parameters = config.get_strategy_config("temporal_anne_flowchart", [scenario])[scenario]
+        parameters = config.get_strategy_configs("temporal_anne_flowchart", [scenario])[scenario]
     except ValueError:
         assert s_level == "S0"
         return
 
     rng = np.random.RandomState(seed=TEST_RANDOM_SEED)
 
-    result = temporal_anne_flowchart(case, contacts, rng, **parameters)
+    strategy = registry['temporal_anne_flowchart']
+    result = strategy(case, contacts, rng, **parameters)
 
     if has_covid:
         result[RETURN_KEYS.base_r] == 0

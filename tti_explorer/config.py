@@ -8,11 +8,9 @@ from functools import partial
 
 import numpy as np
 
-from . import utils
+from .contacts import he_infection_profile
 
 PROP_COVID_SYMPTOMATIC = 0.6
-
-ALL_CFG_FLAG = "all"
 
 # used in run sensitivity
 STATISTIC_COLNAME = 'statistic'
@@ -60,14 +58,6 @@ _case_configs = {
                 'dist': [0, PROP_COVID_SYMPTOMATIC, 1 - PROP_COVID_SYMPTOMATIC],  # symp covid neg, symp covid pos, asymp covid pos
                 'nppl': 1  # shouldn't matter if everyone has covid
             },
-            #Conditional on symptomatic
-            p_has_app=0.35,
-            # Conditional on having app
-            p_report_app=0.75,
-            p_report_nhs_g_app=0.5,
-
-            # Conditional on not having app
-            p_report_nhs_g_no_app=0.5,
 
             # Distribution of day on which the case notices their symptoms
             # This is conditinal on them being symptomatic at all
@@ -86,16 +76,6 @@ _case_configs = {
                 'dist': [100/120, PROP_COVID_SYMPTOMATIC * 20/120, (1 - PROP_COVID_SYMPTOMATIC) * 20/120],
                 'nppl': 120
                 },
-
-            #Conditional on symptomatic
-            p_has_app=0.35,
-            # Conditional on having app
-            p_report_app=0.75,
-            p_report_nhs_g_app=0.5,
-
-            # Conditional on not having app
-            p_report_nhs_g_no_app=0.5,
-
             # Distribution of day on which the case notices their symptoms
             # This is conditinal on them being symptomatic at all
             p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05, 0.00], # mean delay 3.05 days
@@ -104,7 +84,7 @@ _case_configs = {
             # length of this determines simulation length
             # should sum to 1
             inf_profile=(
-                utils.he_infection_profile(
+                he_infection_profile(
                     period=10,
                     gamma_params={'a': 2.80, 'scale': 1/0.69}
                     )
@@ -124,7 +104,7 @@ get_case_config = partial(get_contacts_config, _cfg_dct=_case_configs)
 
 
 S_levels = {
-    "S5":{
+    "S5": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -142,7 +122,7 @@ S_levels = {
 
             "go_to_school_prob": 0.0
         },
-    "S4":{
+    "S4": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -160,7 +140,7 @@ S_levels = {
 
             "go_to_school_prob": 0.0
         },
-    "S3":{
+    "S3": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -178,7 +158,7 @@ S_levels = {
 
             "go_to_school_prob": 0.5
         },
-    "S2":{
+    "S2": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -194,7 +174,7 @@ S_levels = {
             "wfh_prob": 0.25,
             "max_contacts": 20,
         },
-    "S1":{
+    "S1": {
             "isolate_individual_on_symptoms": True,
             "isolate_individual_on_positive": True,
             "isolate_household_on_symptoms": True,
@@ -668,23 +648,34 @@ _policy_configs = {
     }
 
 
-def get_strategy_config(strat, cfg_names, _cfg_dct=_policy_configs):
+def get_strategy_configs(strategy_name, config_names=None):
+    """
+    Returns configurations for specified strategy.
+
+    :param strategy_name: Name of the strategy
+    :param config_names: List of configurations. Each must be valid for a given strategy.
+                         If None, all configurations for a given strategy are returned.
+    """
     try:
-        strategy = _cfg_dct[strat.lower()]
+        strategy = _policy_configs[strategy_name.lower()]
     except KeyError:
-        raise ValueError(f"Cannot find strategy {strat} in config.py")
-    else:
-        if (len(cfg_names) == 1) and (cfg_names[0] == ALL_CFG_FLAG):
-            return dict(**strategy)
-        else:
-            output = dict()
-            for cfg_name in cfg_names:
-                try:
-                    output[cfg_name] = strategy[cfg_name]
-                except KeyError:
-                    raise ValueError(f"Cannot find configuration {cfg_name} under "
-                            f"strategy {strat} in config.py")
-            return output
+        raise ValueError(f"Cannot find strategy {strategy_name} in config.py")
+
+    if config_names is None:
+        return dict(**strategy)
+    
+    # to avoid confusing errors when string is passed
+    if isinstance(config_names, str):
+        config_names = [config_names]
+
+    output = dict()
+    for config_name in config_names:
+        try:
+            output[config_name] = strategy[config_name]
+        except KeyError:
+            raise ValueError(f"Cannot find configuration {config_name} under "
+                    f"strategy {strategy_name} in config.py")
+    return output
 
 
 Sensitivity = namedtuple(
@@ -745,10 +736,13 @@ _policy_sensitivities = {
 # symp covid neg, symp covid pos, asymp covid pos
 # Covid+ individuals: 10k, 20k [default], 30k
 # flu-like symptoms (non-covid): 50k, 100k [default], 200k, 300k
-# How to make the proportions 
 _vary_flu = [
         {
-            'dist': [k / (k + 20), PROP_COVID_SYMPTOMATIC * 20 / (k + 20),  (1 - PROP_COVID_SYMPTOMATIC) * 20 / (k + 20)],
+            'dist': [
+                k / (k + 20),
+                PROP_COVID_SYMPTOMATIC * 20 / (k + 20),
+                (1 - PROP_COVID_SYMPTOMATIC) * 20 / (k + 20)
+                ],
             'nppl': k + 20
         }
         for k in [50, 100, 200, 300]
@@ -756,7 +750,11 @@ _vary_flu = [
 
 _vary_covid = [
         {
-            'dist': [100 / (100 + k), PROP_COVID_SYMPTOMATIC * k / (100 + k), (1 - PROP_COVID_SYMPTOMATIC) * k / (100 + k)],
+            'dist': [
+                100 / (100 + k),
+                PROP_COVID_SYMPTOMATIC * k / (100 + k),
+                (1 - PROP_COVID_SYMPTOMATIC) * k / (100 + k)
+                ],
             'nppl': k + 100
         }
         for k in [10, 20, 30]
@@ -765,8 +763,12 @@ _vary_covid = [
 _inf_prop_to_try = _vary_flu
 _inf_prop_to_try.extend(_vary_covid)
 _inf_prop_to_try.append(
-        {  # Guy summer suggestion  10 S+, 10 A+, 100 S-
-            'dist': [100 / (120), PROP_COVID_SYMPTOMATIC * 20 / (120), (1 - PROP_COVID_SYMPTOMATIC) * 20 / (120)],
+        {
+            'dist': [
+                100 / (120),
+                PROP_COVID_SYMPTOMATIC * 20 / (120),
+                (1 - PROP_COVID_SYMPTOMATIC) * 20 / (120)
+                ],
             'nppl': 120
         }
     )
@@ -794,17 +796,17 @@ _case_sensitivities = {
             inf_profile=Sensitivity(
                 bounds=None,
                 values=[
-                    (utils.he_infection_profile( # pessimistic from He et al.
+                    (he_infection_profile( # pessimistic from He et al.
                         period=10,
                         gamma_params={'a': 2.11, 'scale': 1/0.69}
                         )
                     ).tolist(),
-                    (utils.he_infection_profile( # pessimistic from He et al.
+                    (he_infection_profile( # pessimistic from He et al.
                         period=10,
                         gamma_params={'a': 2.80, 'scale': 1/0.69}
                         )
                     ).tolist(),
-                    (utils.he_infection_profile( # pessimistic from He et al.
+                    (he_infection_profile( # pessimistic from He et al.
                         period=10,
                         gamma_params={'a': 3.49, 'scale': 1/0.69}
                         )

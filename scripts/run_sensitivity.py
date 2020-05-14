@@ -3,60 +3,13 @@ import json
 import numpy as np
 import pandas as pd
 
-from tti_explorer.contacts import Contacts, NCOLS
-from scripts.generate_cases import Case
-
-
-import warnings
-warnings.filterwarnings("error")
-
-# def results_table(results_dct, index_name="scenario"):
-#     df = pd.DataFrame.from_dict(
-#             results_dct,
-#             orient="index"
-#         ).sort_index()
-#     df.index.name = index_name
-#     return df
+from run_scenarios import run_scenario
 
 
 def results_table(results_dct, index_name="scenario"):
-    df = {k: v.T for k, v in results_dct.items()}
-    df = pd.concat(df)
-    # df.index = df.keys()
+    df = pd.concat({k: v.T for k, v in results_dct.items()})
     df.index.names = [index_name, config.STATISTIC_COLNAME]
     return df
-
-
-def load_cases(fpath):
-    """load_cases
-    Loads case and contact from .json file into Cases and Contacts.
-
-    Args:
-        fpath (str): path to file.
-
-    Returns (tuple[list[tuple[Case, Contact], dict]):
-        pairs: list of Case, Contact pairs
-        meta: dictionary of meta-data for case/contact generation
-    """
-    with open(fpath, "r") as f:
-        raw = json.load(f)
-
-    cases = raw.pop("cases")
-    meta = raw
-    pairs = list()
-    for dct in cases:
-        case = Case(**dct['case'])
-
-        contacts_dct = dct['contacts']
-        n_daily = contacts_dct.pop('n_daily')
-        contacts_dct = {k: np.array(v, dtype=int).reshape(-1, NCOLS) for k, v in contacts_dct.items()}
-        contacts = Contacts(n_daily=n_daily, **contacts_dct)
-        pairs.append((case, contacts))
-    return pairs, meta
-
-def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
-    df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
-    return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
 
 
 def find_case_files(folder, ending=".json"):
@@ -78,9 +31,10 @@ if __name__ == "__main__":
     import os
 
     from tqdm import tqdm
+    
+    from tti_explorer import config, sensitivity, strategies, utils
 
-    from tti_explorer import config, sensitivity, strategies
-    from scripts.run_scenarios import scale_results
+    from run_scenarios import scale_results
     
     parser = ArgumentParser("Run sensitivity analysis on strategy")
     parser.add_argument(
@@ -102,8 +56,6 @@ if __name__ == "__main__":
     parser.add_argument(
             "--scenarios",
             help="Which scenarios to run from config.py. If not given then all are run.",
-            default=[config.ALL_CFG_FLAG],
-            type=str,
             nargs="*"
         )
     parser.add_argument(
@@ -133,7 +85,7 @@ if __name__ == "__main__":
         )
     args = parser.parse_args()
     strategy = strategies.registry[args.strategy]
-    strategy_configs = config.get_strategy_config(
+    strategy_configs = config.get_strategy_configs(
             args.strategy,
             args.scenarios
         )
@@ -145,7 +97,7 @@ if __name__ == "__main__":
     with ProcessPoolExecutor(max_workers=args.nprocs) as executor:
         futures = list()
         for case_file in tqdm(case_files, desc="loading cases"):
-            case_contacts, metadata = load_cases(os.path.join(args.population, case_file))
+            case_contacts, metadata = utils.load_cases(os.path.join(args.population, case_file))
 
             # Can we turn this into something like calculate_confidence_interval?
             nppl = metadata['case_config']['infection_proportions']['nppl']
@@ -212,16 +164,15 @@ if __name__ == "__main__":
         res_tables = dict()
         for i, dct in res_dict.items():
             cfg = next(iter(dct.values()))[1]
-            res_dct_over_cases = {k: v[0] for k,v in dct.items()}
-            with open(os.path.join(odir, f"config_{i}.json"), "w") as f:
-                json.dump(
+            res_dct_over_cases = {k: v[0] for k, v in dct.items()}
+            utils.write_json(
                     dict(
                         cfg,
                         seed=args.seed,
                         population=args.population,
                         strategy=args.strategy
                     ),
-                    f
+                    os.path.join(odir, f"config_{i}.json")
                 )
 
             table = results_table(res_dct_over_cases)

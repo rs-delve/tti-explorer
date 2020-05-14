@@ -1,107 +1,8 @@
-from collections import namedtuple
+"""Generate case files"""
 
 import numpy as np
 
-from tti_explorer.utils import bool_bernoulli, categorical
-
-# TODO BE: remove the unwanted attributes of cases from teh codebase
-
-Case = namedtuple(
-        'Case',
-        [
-            "under18",
-            "covid",
-            "symptomatic",
-            "has_app",  # These should probably be removed since not used
-            "report_nhs",
-            "report_app",
-            "day_noticed_symptoms",
-            "inf_profile"
-        ]
-    )
-
-
-def simulate_case(rng, p_under18, infection_proportions, p_has_app,
-        p_report_app, p_report_nhs_g_app, p_report_nhs_g_no_app,
-        p_day_noticed_symptoms, inf_profile):
-    """simulate_case
-
-    Args:
-        rng (np.random.RandomState): random number generator.
-        p_under18 (float): Probability of case being under 18
-        infection_proportions (list[float]): Probs of being symp covid neg, symp covid pos, asymp covid pos
-        p_has_app (float): Probability of having app given symptomatic
-        p_report_app (float): Probability of reporting through app conditional on having app
-        p_report_nhs_g_app (float): Probability reporting with app given have app
-        p_report_nhs_g_no_app (float): Probability of reporting through nhs given not have app
-        p_day_noticed_symptoms (np.array[float]): Distribution of day on which case notices
-            their symptoms. (In our model this is same as reporting symptoms.)
-            Conditional on being symptomatic.
-        inf_profile (list[float]): Distribution of initial exposure of positive secondary cases
-            relative to start of primary case's infectious period.
-
-    Returns (Case): case with attributes populated.
-    """
-    p_symptomatic_covid_neg, p_symptomatic_covid_pos, p_asymptomatic_covid_pos = infection_proportions['dist']
-
-    under18 = bool_bernoulli(p_under18, rng)
-
-    illness_pvals = [
-                p_asymptomatic_covid_pos,
-                p_symptomatic_covid_neg,
-                p_symptomatic_covid_pos,
-            ]
-    illness = categorical(illness_pvals, rng)
-
-    if illness == 0:
-        return Case(
-                covid=True,
-                symptomatic=False,
-                has_app=False,
-                report_nhs=False,
-                report_app=False,
-                under18=under18,
-                day_noticed_symptoms=-1,
-                inf_profile=np.array(inf_profile)
-            )
-    else:
-        covid = illness == 2
-        profile = np.array(inf_profile) if covid else np.zeros(len(inf_profile))
-        case_factors = dict(
-                covid=covid,
-                symptomatic=True,
-                under18=under18,
-                day_noticed_symptoms=categorical(p_day_noticed_symptoms, rng),
-                inf_profile=profile
-            )
-
-        if bool_bernoulli(p_has_app, rng):
-            case_factors["has_app"] = True
-            if bool_bernoulli(p_report_app, rng):
-                return Case(
-                    report_app=True,
-                    report_nhs=False,
-                    **case_factors
-                )
-            else:
-                return Case(
-                        report_nhs=bool_bernoulli(
-                            p_report_nhs_g_app,
-                            rng
-                        ),
-                        report_app=False,
-                        **case_factors
-                    )
-        else:
-            case_factors["has_app"] = False
-            return Case(
-                    report_nhs=bool_bernoulli(
-                        p_report_nhs_g_no_app,
-                        rng
-                    ),
-                    report_app=False,
-                    **case_factors
-                )
+from tti_explorer.case import simulate_case
 
 
 def case_as_dict(case):
@@ -133,9 +34,8 @@ if __name__ == "__main__":
 
     from tqdm import trange
 
-    import config
-    from contacts import EmpiricalContactsSimulator
-    import sensitivity
+    from tti_explorer import config, sensitivity
+    from tti_explorer.contacts import EmpiricalContactsSimulator
 
     parser = ArgumentParser(description="Generate JSON files of cases and contacts")
     parser.add_argument(
@@ -163,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('--n-pops', help="Number of i.i.d. populations to draw. Ignored if seeds is given.", type=int, default=1)
     parser.add_argument(
             '--data-dir',
-            default="../data",
+            default=os.path.join(os.environ['REPOS'], "tti-explorer", "data", "bbc-pandemic"),
             type=str,
             help="Folder containing empirical tables of contact numbers"
         )
