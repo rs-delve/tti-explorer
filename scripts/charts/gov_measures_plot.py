@@ -84,7 +84,7 @@ if __name__ == "__main__":
 
     gov_measures = ['S5', 'S4', 'S3', 'S2', 'S1']
 
-    x_axis_jitter = [-0.03, -0.01, 0.01, 0.03]
+    x_axis_jitter = [-0.01, -0.005, 0.005, 0.01]
 
     max = max_calculator(args.results_folder, tti_strat_list, gov_measures)
     ylim_list = list(zip(np.zeros(len(metric_list)), max))
@@ -105,7 +105,7 @@ if __name__ == "__main__":
         xlabels = np.arange(5)
         ax.set_xticks(xlabels)
         ax.set_xticklabels(gov_measures)
-        ax.set_xlabel('Level of NPIs')
+        ax.set_xlabel('Stringency level of NPIs')
 
         ax.set_title(metric_formal, fontsize = 15)
 
@@ -115,8 +115,6 @@ if __name__ == "__main__":
 
 
         for tti_strat_idx, (tti_strat, tti_strat_formal) in enumerate(tti_strat_combined_list):
-            # tti_strat, tti_strat_formal = tti_strat_combined_list[col_idx]
-
             no_tti = []
             tti = []
 
@@ -130,22 +128,13 @@ if __name__ == "__main__":
                 tti.append(tti_results[metric].loc['mean'])
                 tti_std_error.append(tti_results[metric].loc['std'])
 
-                # no_tti_fname = gov_measure + no_tti_str
-                # no_tti_file = find_results_file(args.results_folder, no_tti_fname)
-                # no_tti_results = load_results(os.path.join(args.results_folder, no_tti_file))
-                # no_tti.append(no_tti_results[metric].loc['mean'])
-                # no_tti_std_error.append(no_tti_results[metric].loc['std'])
-
-
             if metric in (RETURN_KEYS.man_trace,):
                 if tti_strat_formal.startswith('Test-based TTI, test'):
                     ax.errorbar(
                         x = xlabels + x_axis_jitter[tti_strat_idx],
                         y = tti, yerr = 1.96 * np.array(tti_std_error),
-                        # ls = '-',
                         label = test_based_combined_formal_str,
                         color = f'C{test_based_combined_idx}',
-                        # marker = '.',
                         capsize=2,
                         markersize = 10,
                         alpha = 0.7
@@ -154,10 +143,8 @@ if __name__ == "__main__":
                     ax.errorbar(
                         x = xlabels + x_axis_jitter[tti_strat_idx],
                         y = tti, yerr = 1.96 * np.array(tti_std_error),
-                        # ls = '-',
                         label = tti_strat_formal,
                         color = f'C{tti_strat_idx}',
-                        # marker = '.',
                         capsize=2,
                         markersize = 10,
                         alpha = 0.7
@@ -167,10 +154,8 @@ if __name__ == "__main__":
                     ax.errorbar(
                         x = xlabels,
                         y = tti, yerr = 1.96 * np.array(tti_std_error),
-                        # ls = '-',
                         label = tti_strat_formal,
                         color = f'C{tti_strat_idx}',
-                        # marker = '.',
                         capsize=2,
                         markersize = 10,
                         alpha = 0.7
@@ -179,10 +164,8 @@ if __name__ == "__main__":
                     ax.errorbar(
                         x = xlabels,
                         y = tti, yerr = 1.96 * np.array(tti_std_error),
-                        # ls = '-',
                         label = not_test_based_test_contacts_formal_str,
                         color = f'C{not_test_based_test_contacts_idx}',
-                        # marker = '.',
                         capsize=2,
                         markersize = 10,
                         alpha = 0.7
@@ -192,62 +175,18 @@ if __name__ == "__main__":
                 ax.errorbar(
                     x = xlabels + jitter[tti_strat_idx],
                     y = tti, yerr = 1.96 * np.array(tti_std_error),
-                    # ls = '-',
                     label = tti_strat_formal,
                     color = f'C{tti_strat_idx}',
-                    # marker = '.',
                     capsize=2,
                     markersize = 10,
                     alpha = 0.7
                 )
 
-            # if metric in (RETURN_KEYS.reduced_r,):
-            #     ax.errorbar(
-            #         x = xlabels,
-            #         y = no_tti,
-            #         yerr = 1.96 * np.array(no_tti_std_error),
-            #         #ls = 'None',
-            #         label = 'No TTI',
-            #         # marker = '.',
-            #         capsize=2,
-            #         markersize = 10
-            #     )
-            # if metric in (RETURN_KEYS.quarantine,):
-            #     ax.errorbar(
-            #         x = xlabels,
-            #         y = no_tti,
-            #         yerr = 1.96 * np.array(no_tti_std_error),
-            #         #ls = 'None',
-            #         # marker = '.',
-            #         capsize=2,
-            #         markersize = 10
-            #     )
-
-
 
 
 
         ax.grid(False)
-        # ax.plot(xlabels, no_tti, alpha = 0.7, marker = 'x', label = 'No TTI')
-        # ax.plot(xlabels, tti, alpha = 0.7, marker = 'x', label = f'{tti_strat_formal}', color = f'C{col_idx + 1}')
-        #
-        # ax.fill_between(
-        #     xlabels,
-        #     np.array(no_tti) + (1.96*np.array(no_tti_std_error)),
-        #     np.array(no_tti) - (1.96*np.array(no_tti_std_error)),
-        #     alpha=0.5
-        # )
-        # ax.fill_between(
-        #     xlabels,
-        #     np.array(tti) + (1.96*np.array(tti_std_error)),
-        #     np.array(tti) - (1.96*np.array(tti_std_error)),
-        #     alpha=0.5,
-        #     color = f'C{col_idx + 1}'
-        # )
-
 
         ax.legend(loc = 2)
-    # for ax in axs.flat:
-    #     ax.label_outer()
 
     plt.savefig(os.path.join(args.output_folder, 'gov_measures.pdf'))
