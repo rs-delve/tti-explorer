@@ -12,7 +12,25 @@ RETURN_KEYS = SimpleNamespace(
         app_trace='# App Traces',
         tests='# Tests Needed',
         quarantine='# PersonDays Quarantined',
-        wasted_quarantine='# Wasted PersonDays Quarantined'
+        wasted_quarantine='# Wasted PersonDays Quarantined',
+        num_primary_symptomatic='# Primary Symptomatic Cases',
+        num_primary_asymptomatic='# Primary Asymptomatic Cases',
+        num_primary='# Primary Cases',
+        num_primary_symptomatic_missed='# Primary Symptomatic Cases Missed',
+        num_primary_asymptomatic_missed='# Primary Asymptomatic Cases Missed',
+        num_primary_missed='# Primary Cases Missed',
+        num_secondary_from_symptomatic='# Secondary Cases From Symptomatic Cases',
+        num_secondary_from_asymptomatic='# Secondary Cases From Asymptomatic Cases',
+        num_secondary='# Secondary Cases',
+        num_secondary_from_symptomatic_missed='# Secondary Cases From Symptomatic Cases Missed',
+        num_secondary_from_asymptomatic_missed='# Secondary Cases From Asymptomatic Cases Missed',
+        num_secondary_missed='# Secondary Cases Missed',
+        percent_primary_symptomatic_missed='% Primary Symptomatic Cases Missed',
+        percent_primary_asymptomatic_missed='% Primary Asymptomatic Cases Missed',
+        percent_primary_missed='% Primary Cases Missed',
+        percent_secondary_from_symptomatic_missed='% Secondary Cases from Symptomatic Cases Missed',
+        percent_secondary_from_asymptomatic_missed='% Secondary Cases from Asymptomatic Cases Missed',
+        percent_secondary_missed='% Secondary Cases Cases Missed',
     )
 
 
