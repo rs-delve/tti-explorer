@@ -23,29 +23,51 @@ def results_table(results_dct, index_name="scenario"):
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
     df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
 
-    df[RETURN_KEYS.percent_primary_symptomatic_missed] = df[RETURN_KEYS.num_primary_symptomatic_missed].sum() / df[RETURN_KEYS.num_primary_symptomatic].sum()
-    df[RETURN_KEYS.percent_primary_asymptomatic_missed] = df[RETURN_KEYS.num_primary_asymptomatic_missed].sum() / df[RETURN_KEYS.num_primary_asymptomatic].sum()
-    df[RETURN_KEYS.percent_primary_missed] = df[RETURN_KEYS.num_primary_missed].sum() / df[RETURN_KEYS.num_primary].sum()
+    interested_cases = df[RETURN_KEYS.covid] & df[RETURN_KEYS.symptomatic] & df[RETURN_KEYS.tested]
 
-    df[RETURN_KEYS.percent_secondary_from_symptomatic_missed] = df[RETURN_KEYS.num_secondary_from_symptomatic_missed].sum() / df[RETURN_KEYS.num_secondary_from_symptomatic].sum()
-    df[RETURN_KEYS.percent_secondary_from_asymptomatic_missed] = df[RETURN_KEYS.num_secondary_from_asymptomatic_missed].sum() / df[RETURN_KEYS.num_secondary_from_asymptomatic].sum()
-    df[RETURN_KEYS.percent_secondary_missed] = df[RETURN_KEYS.num_secondary_missed].sum() / df[RETURN_KEYS.num_secondary].sum()
+    r_stopped_by_isolation = df[interested_cases][RETURN_KEYS.cases_prevented].sum()
+    r_stopped_by_tracing = (df[interested_cases][RETURN_KEYS.base_r] - df[interested_cases][RETURN_KEYS.reduced_r] - df[interested_cases][RETURN_KEYS.cases_prevented]).sum()
+    r_remaining = df[interested_cases][RETURN_KEYS.reduced_r].sum()
+    num_secondary_cases = df[interested_cases][RETURN_KEYS.secondary_infections].sum()
+
+    df[RETURN_KEYS.stopped_by_isolation_percentage] = r_stopped_by_isolation / num_secondary_cases
+    df[RETURN_KEYS.stopped_by_tracing_percentage] = r_stopped_by_tracing / num_secondary_cases
+    df[RETURN_KEYS.not_stopped_by_tti] = r_remaining / num_secondary_cases
+
+    # df[RETURN_KEYS.percent_primary_symptomatic_missed] = df[RETURN_KEYS.num_primary_symptomatic_missed].sum() / df[RETURN_KEYS.num_primary_symptomatic].sum()
+    # df[RETURN_KEYS.percent_primary_asymptomatic_missed] = df[RETURN_KEYS.num_primary_asymptomatic_missed].sum() / df[RETURN_KEYS.num_primary_asymptomatic].sum()
+    # df[RETURN_KEYS.percent_primary_missed] = df[RETURN_KEYS.num_primary_missed].sum() / df[RETURN_KEYS.num_primary].sum()
+
+    # df[RETURN_KEYS.percent_secondary_from_symptomatic_missed] = df[RETURN_KEYS.num_secondary_from_symptomatic_missed].sum() / df[RETURN_KEYS.num_secondary_from_symptomatic].sum()
+    # df[RETURN_KEYS.percent_secondary_from_asymptomatic_missed] = df[RETURN_KEYS.num_secondary_from_asymptomatic_missed].sum() / df[RETURN_KEYS.num_secondary_from_asymptomatic].sum()
+    # df[RETURN_KEYS.percent_secondary_missed] = df[RETURN_KEYS.num_secondary_missed].sum() / df[RETURN_KEYS.num_secondary].sum()
+
+    # df.drop(columns=[
+    #     RETURN_KEYS.num_primary_symptomatic,
+    #     RETURN_KEYS.num_primary_asymptomatic,
+    #     RETURN_KEYS.num_primary,
+    #     RETURN_KEYS.num_primary_symptomatic_missed,
+    #     RETURN_KEYS.num_primary_asymptomatic_missed,
+    #     RETURN_KEYS.num_primary_missed,
+    #     RETURN_KEYS.num_secondary_from_symptomatic,
+    #     RETURN_KEYS.num_secondary_from_asymptomatic,
+    #     RETURN_KEYS.num_secondary,
+    #     RETURN_KEYS.num_secondary_from_symptomatic_missed,
+    #     RETURN_KEYS.num_secondary_from_asymptomatic_missed,
+    #     RETURN_KEYS.num_secondary_missed,
+    #     ], inplace=True
+    # )
 
     df.drop(columns=[
-        RETURN_KEYS.num_primary_symptomatic,
-        RETURN_KEYS.num_primary_asymptomatic,
-        RETURN_KEYS.num_primary,
-        RETURN_KEYS.num_primary_symptomatic_missed,
-        RETURN_KEYS.num_primary_asymptomatic_missed,
-        RETURN_KEYS.num_primary_missed,
-        RETURN_KEYS.num_secondary_from_symptomatic,
-        RETURN_KEYS.num_secondary_from_asymptomatic,
-        RETURN_KEYS.num_secondary,
-        RETURN_KEYS.num_secondary_from_symptomatic_missed,
-        RETURN_KEYS.num_secondary_from_asymptomatic_missed,
-        RETURN_KEYS.num_secondary_missed,
-        ], inplace=True
-    )
+        RETURN_KEYS.covid,
+        RETURN_KEYS.symptomatic,
+        RETURN_KEYS.tested,
+        RETURN_KEYS.secondary_infections,
+        RETURN_KEYS.cases_prevented,
+        RETURN_KEYS.fractional_r,
+    ], inplace=True)
+
+
 
     return pd.concat({'mean': df.mean(0), 'std': df.std(0)}, axis=1)
 
@@ -67,6 +89,9 @@ def scale_results(results, monte_carlo_factor, r_monte_carlo_factor, nppl):
         RETURN_KEYS.percent_secondary_from_symptomatic_missed,
         RETURN_KEYS.percent_secondary_from_asymptomatic_missed,
         RETURN_KEYS.percent_secondary_missed,
+        RETURN_KEYS.stopped_by_isolation_percentage,
+        RETURN_KEYS.stopped_by_tracing_percentage,
+        RETURN_KEYS.not_stopped_by_tti,
     ]
     
     scale = []
@@ -131,7 +156,7 @@ if __name__ == "__main__":
     parser.add_argument(
             "--scenarios",
             help=("Which scenarios to run from config.py."
-            "By default, if no value is given, all scenarios available for a given strategy are run.",
+                "By default, if no value is given, all scenarios available for a given strategy are run."),
             nargs="*"
         )
     parser.add_argument(
