@@ -9,6 +9,7 @@ from tti_explorer.case import Case
 from tti_explorer.contacts import Contacts, NCOLS
 from tti_explorer.strategies import RETURN_KEYS
 
+import warnings; warnings.filterwarnings('ignore')
 
 STATS_KEYS = SimpleNamespace(mean="mean", std="std")
 

@@ -37,6 +37,7 @@ _contacts_configs = {
              ),
          }
 
+_contacts_configs['oxteam-symptomatic'] = dict(**_contacts_configs['oxteam'])
 
 def get_contacts_config(name, _cfg_dct=_contacts_configs):
     try:
@@ -89,7 +90,32 @@ _case_configs = {
                     gamma_params={'a': 2.80, 'scale': 1/0.69}
                     )
             ).tolist()
+        ),
+        "oxteam-symptomatic": dict(
+            p_under18=0.21,
+            # following Kucharski.
+            # This is currently independent from everything else.
+
+            # symp covid neg, symp covid pos, asymp covid pos
+            infection_proportions={
+                'dist': [100/120, 1 * 20/120, 0 * 20/120],
+                'nppl': 120
+                },
+            # Distribution of day on which the case notices their symptoms
+            # This is conditinal on them being symptomatic at all
+            p_day_noticed_symptoms=[0, 0.25, 0.25, 0.2, 0.1, 0.05, 0.05, 0.05, 0.05, 0.00], # mean delay 3.05 days
+
+            # daily infectivity profile
+            # length of this determines simulation length
+            # should sum to 1
+            inf_profile=(
+                he_infection_profile(
+                    period=10,
+                    gamma_params={'a': 2.80, 'scale': 1/0.69}
+                    )
+            ).tolist()
         )
+
     }
 
 
@@ -539,8 +565,18 @@ _policy_configs = {
             "S1_test_based_TTI": {**S_levels["S1"], **contact_trace_options["test_based_TTI"]},
             "S1_test_based_TTI_test_contacts": {**S_levels["S1"], **contact_trace_options["test_based_TTI_test_contacts"]},
             "S0": S_levels["S0"]
-        }
+        },
 }
+
+_policy_configs['temporal_anne_flowchart'].update(
+        {
+            "S5_test_based_TTI_full_compliance": {**S_levels["S5"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+            "S4_test_based_TTI_full_compliance": {**S_levels["S4"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+            "S3_test_based_TTI_full_compliance": {**S_levels["S3"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+            "S2_test_based_TTI_full_compliance": {**S_levels["S2"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+            "S1_test_based_TTI_full_compliance": {**S_levels["S1"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+        }
+    )
 
 _global_defaults = {
     'cmmid': dict(
@@ -642,6 +678,7 @@ _global_defaults = {
     ),
 }
 
+
 _policy_configs = {
         name: {k: dict(_global_defaults[name], **params) for k, params in strat.items()}
         for name, strat in _policy_configs.items()
@@ -705,31 +742,8 @@ _policy_sensitivities = {
             ),
             trace_adherence=Sensitivity(
                 bounds=None,
-                values=np.linspace(0.5, 0.9, 5)
+                values=np.linspace(0.5, 1., 6)
             )
-            # These ones do not need to be used
-#             app_report_prob=Sensitivity(
-                # bounds=(0, 1),
-                # values=np.linspace(0.5, 1, num=4)
-            # ),
-            # manual_report_prob=Sensitivity(
-                # bounds=(0, 1),
-                # values=np.linspace(0.25, 0.75, num=4)
-            # ),
-#             # what are sensible values for this???
-            # met_before_o=Sensitivity(
-                # bounds=(0.5, 1.),
-                # values=np.linspace(0.5, 1, num=4)
-            # ),
-            # max_contacts=Sensitivity(
-                # bounds=None,  # what on earth to put for this?!!?
-                # values=[4, 2e3]  # what to put for these???
-            # ),
-            # wfh_prob=Sensitivity(
-                # bounds=(0, .65),
-                # values=np.linspace(0, 0.65, num=4)
-            # ),
-
         )
     }
 
