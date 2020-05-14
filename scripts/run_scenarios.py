@@ -9,6 +9,7 @@ from tti_explorer.case import Case
 from tti_explorer.contacts import Contacts, NCOLS
 from tti_explorer.strategies import RETURN_KEYS
 
+import warnings; warnings.filterwarnings('ignore')
 
 STATS_KEYS = SimpleNamespace(mean="mean", std="std")
 
@@ -131,7 +132,7 @@ if __name__ == "__main__":
     parser.add_argument(
             "--scenarios",
             help=("Which scenarios to run from config.py."
-            "By default, if no value is given, all scenarios available for a given strategy are run.",
+            " By default, if no value is given, all scenarios available for a given strategy are run."),
             nargs="*"
         )
     parser.add_argument(
