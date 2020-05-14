@@ -10,6 +10,7 @@ from tti_explorer.case import Case
 
 from tti_explorer.strategies import RETURN_KEYS
 from tti_explorer.utils import named_product
+import tti_explorer.config
 
 
 def find_results_file(folder, fname):
@@ -20,9 +21,10 @@ def load_results(fpath):
             fpath,
             index_col=[0],
             usecols=[
-                'statistic',
+                config.STATISTIC_COLNAME,
                 RETURN_KEYS.reduced_r, RETURN_KEYS.man_trace, RETURN_KEYS.tests, RETURN_KEYS.quarantine])
 
+    # We expect two rows: mean and standard error
     if len(results) > 2:
         raise ValueError(f"More than 1 population found in {fpath}")
 
@@ -48,7 +50,6 @@ if __name__ == "__main__":
 
     from tqdm import tqdm
 
-    import tti_explorer.config
     from tti_explorer.strategies import registry
 
     plt.style.use('seaborn-ticks')
