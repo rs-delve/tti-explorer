@@ -63,7 +63,7 @@ if __name__ == "__main__":
     parser.add_argument('--n-pops', help="Number of i.i.d. populations to draw. Ignored if seeds is given.", type=int, default=1)
     parser.add_argument(
             '--data-dir',
-            default=os.path.join( "data", "bbc-pandemic"),
+            default=os.path.join("data", "bbc-pandemic"),
             type=str,
             help="Folder containing empirical tables of contact numbers"
         )
