@@ -12,8 +12,6 @@ from .contacts import he_infection_profile
 
 PROP_COVID_SYMPTOMATIC = 0.6
 
-ALL_CFG_FLAG = "all"
-
 # used in run sensitivity
 STATISTIC_COLNAME = 'statistic'
 
@@ -650,23 +648,34 @@ _policy_configs = {
     }
 
 
-def get_strategy_config(strat, cfg_names, _cfg_dct=_policy_configs):
+def get_strategy_configs(strategy_name, config_names=None):
+    """
+    Returns configurations for specified strategy.
+
+    :param strategy_name: Name of the strategy
+    :param config_names: List of configurations. Each must be valid for a given strategy.
+                         If None, all configurations for a given strategy are returned.
+    """
     try:
-        strategy = _cfg_dct[strat.lower()]
+        strategy = _policy_configs[strategy_name.lower()]
     except KeyError:
-        raise ValueError(f"Cannot find strategy {strat} in config.py")
-    else:
-        if (len(cfg_names) == 1) and (cfg_names[0] == ALL_CFG_FLAG):
-            return dict(**strategy)
-        else:
-            output = dict()
-            for cfg_name in cfg_names:
-                try:
-                    output[cfg_name] = strategy[cfg_name]
-                except KeyError:
-                    raise ValueError(f"Cannot find configuration {cfg_name} under "
-                            f"strategy {strat} in config.py")
-            return output
+        raise ValueError(f"Cannot find strategy {strategy_name} in config.py")
+
+    if config_names is None:
+        return dict(**strategy)
+    
+    # to avoid confusing errors when string is passed
+    if isinstance(config_names, str):
+        config_names = [config_names]
+
+    output = dict()
+    for config_name in config_names:
+        try:
+            output[config_name] = strategy[config_name]
+        except KeyError:
+            raise ValueError(f"Cannot find configuration {config_name} under "
+                    f"strategy {strategy_name} in config.py")
+    return output
 
 
 Sensitivity = namedtuple(

@@ -80,8 +80,6 @@ if __name__ == "__main__":
             "--scenarios",
             help=("Which scenarios to run from config.py. If 'all' then all are run. "
             "Default %(default)s."),
-            default=[config.ALL_CFG_FLAG],
-            type=str,
             nargs="*"
         )
     parser.add_argument(
@@ -93,9 +91,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     strategy = registry[args.strategy]
-    strategy_configs = config.get_strategy_config(
+    strategy_configs = config.get_strategy_configs(
             args.strategy,
-            args.scenarios
+            args.scenarios # this will be None if not specified
         )
 
     scenario_results = defaultdict(dict)

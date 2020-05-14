@@ -56,8 +56,6 @@ if __name__ == "__main__":
     parser.add_argument(
             "--scenarios",
             help="Which scenarios to run from config.py. If not given then all are run.",
-            default=[config.ALL_CFG_FLAG],
-            type=str,
             nargs="*"
         )
     parser.add_argument(
@@ -87,7 +85,7 @@ if __name__ == "__main__":
         )
     args = parser.parse_args()
     strategy = strategies.registry[args.strategy]
-    strategy_configs = config.get_strategy_config(
+    strategy_configs = config.get_strategy_configs(
             args.strategy,
             args.scenarios
         )
