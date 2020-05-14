@@ -55,8 +55,8 @@ if __name__ == "__main__":
         )
     parser.add_argument(
             "--scenarios",
-            help="Which scenarios to run from config.py."
-            "By default, if no value is given, all scenarios available for a given strategy are run.,
+            help=("Which scenarios to run from config.py."
+            "By default, if no value is given, all scenarios available for a given strategy are run."),
             nargs="*"
         )
     parser.add_argument(
