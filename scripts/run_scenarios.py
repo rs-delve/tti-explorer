@@ -3,9 +3,9 @@ import json
 import numpy as np
 import pandas as pd
 
-from .contacts import Contacts, NCOLS
-from .generate_cases import Case
-from .strategies import RETURN_KEYS
+from tti_explorer.contacts import Contacts, NCOLS
+from scripts.generate_cases import Case
+from tti_explorer.strategies import RETURN_KEYS
 
 
 def results_table(results_dct, index_name="scenario"):
@@ -138,9 +138,8 @@ if __name__ == "__main__":
 
     from tqdm import tqdm
 
-    import config
-    from strategies import registry
-    import utils
+    from tti_explorer import config, utils
+    from tti_explorer.strategies import registry
     
     parser = ArgumentParser(fromfile_prefix_chars="@")
     parser.add_argument(

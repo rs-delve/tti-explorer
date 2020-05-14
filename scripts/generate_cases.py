@@ -2,7 +2,7 @@ from collections import namedtuple
 
 import numpy as np
 
-from .utils import bool_bernoulli, categorical
+from tti_explorer.utils import bool_bernoulli, categorical
 
 # TODO BE: remove the unwanted attributes of cases from teh codebase
 

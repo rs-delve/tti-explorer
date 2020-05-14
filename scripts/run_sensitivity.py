@@ -3,8 +3,8 @@ import json
 import numpy as np
 import pandas as pd
 
-from .contacts import Contacts, NCOLS
-from .generate_cases import Case
+from tti_explorer.contacts import Contacts, NCOLS
+from scripts.generate_cases import Case
 
 
 import warnings
@@ -79,11 +79,8 @@ if __name__ == "__main__":
 
     from tqdm import tqdm
 
-    import config
-    import sensitivity
-    import strategies
-
-    from run_scenarios import scale_results
+    from tti_explorer import config, sensitivity, strategies
+    from scripts.run_scenarios import scale_results
     
     parser = ArgumentParser("Run sensitivity analysis on strategy")
     parser.add_argument(
