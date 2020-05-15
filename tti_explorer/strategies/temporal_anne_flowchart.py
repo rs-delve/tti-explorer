@@ -65,7 +65,6 @@ def temporal_anne_flowchart(
     #   - n_app_traces : number of app traces caused. Not exclusive to manual traces
     #   - n_tests_performed : number of tests this cause caused to happen (i.e. in contacts + self).
     #   - person_days_quarantine : number of days all individuals affected spend in quarantine
-    #   - person_days_wasted_quarantine : number of days individuals without COVID were locked down
 ):
     """
     This is an implementation of flowchart produced by Anne Johnson and Guy Harling
@@ -280,35 +279,29 @@ def temporal_anne_flowchart(
         ## Compute the quarantine days
 
         person_days_quarantine = 0
-        person_days_wasted_quarantine = 0
 
         # If person has covid, require full quarantine
         if case.covid and (isolate_individual_on_symptoms or isolate_individual_on_positive):
             person_days_quarantine += quarantine_length
-        # If not, only require the test delay days of quarantine. These days are "wasted"
+        # If not, only require the test delay days of quarantine
         elif isolate_individual_on_symptoms:      
             person_days_quarantine += testing_delay
-            person_days_wasted_quarantine += testing_delay
         ## Don't add any if: not isolating at all, individual only isolating after test complete
 
-        # For household contacts, if isolating on symptoms and not covid, waste test delay days 
+        # For household contacts, if isolating on symptoms and not covid, count test delay days 
         if isolate_household_on_symptoms and not case.covid:
             # TODO: only counts home contacts that actually isolate
             person_days_quarantine += testing_delay * home_contacts_isolated.sum()
-            person_days_wasted_quarantine += testing_delay * home_contacts_isolated.sum()
         # If person has covid, whole house will have to do full lockdown for the period
         # TODO: might be able to let some out if the test negative?
         elif (isolate_household_on_positive or isolate_household_on_symptoms) and case.covid:
             person_days_quarantine += quarantine_length * home_contacts_isolated.sum()
-            # TODO: Count as wasted the time that house members who do not have covid locked down as wasted
-            person_days_wasted_quarantine += quarantine_length * (home_contacts_isolated & ~home_infections).sum()
         ## Don't add any if: Not isolating at all, or if waiting for positive test to isolate and doesn't have covid
 
-        # For traced contacts, if isolating on positive and doesn't have covid, waste test delay days
+        # For traced contacts, if isolating on positive and doesn't have covid, count test delay days
         ## NOTE: working with "quarantined" as this represents those traced who were still contacted and complied
         if isolate_contacts_on_symptoms and not case.covid:
             person_days_quarantine += testing_delay * (work_contacts_isolated.sum() + othr_contacts_isolated.sum())
-            person_days_wasted_quarantine += testing_delay * (work_contacts_isolated.sum() + othr_contacts_isolated.sum())
         elif (isolate_contacts_on_positive or isolate_contacts_on_symptoms) and case.covid:
             # NOTE: for now assume that people are tested on the same day as isolated. So for contacts, same day as
             # the primary case if isolating on the day of symptoms, 3 days later if delaying. Will be the same number of days regardless.
@@ -343,7 +336,6 @@ def temporal_anne_flowchart(
         total_tests_performed = 0
 
         person_days_quarantine = 0
-        person_days_wasted_quarantine = 0
 
 
     ## Compute the base reproduction rate
