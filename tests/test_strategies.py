@@ -43,5 +43,4 @@ def test_temporal_anne_flowchart_single_case_no_contacts(has_covid, s_level, con
     assert result[RETURN_KEYS.app_trace] == 0
     assert result[RETURN_KEYS.tests] == 0
     assert result[RETURN_KEYS.quarantine] == 0
-    assert result[RETURN_KEYS.wasted_quarantine] == 0
 

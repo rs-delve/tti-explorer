@@ -2,9 +2,13 @@ from collections import namedtuple
 from itertools import product, starmap
 import json
 import os
+import pathlib
 
 import numpy as np
 from matplotlib.backends.backend_pdf import PdfPages
+
+
+ROOT_DIR = pathlib.Path(__file__).parent.parent
 
 
 def bool_bernoulli(p, rng):

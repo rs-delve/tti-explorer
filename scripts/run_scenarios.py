@@ -26,12 +26,14 @@ def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
 
     interested_cases = df[RETURN_KEYS.covid] & df[RETURN_KEYS.symptomatic] & df[RETURN_KEYS.tested]
 
-    r_stopped_by_isolation = df[interested_cases][RETURN_KEYS.cases_prevented].sum()
-    r_stopped_by_tracing = (df[interested_cases][RETURN_KEYS.base_r] - df[interested_cases][RETURN_KEYS.reduced_r] - df[interested_cases][RETURN_KEYS.cases_prevented]).sum()
+    r_stopped_by_social_distancing = df[interested_cases][RETURN_KEYS.cases_prevented_social_distancing].sum()
+    r_stopped_by_symptom_isolating = df[interested_cases][RETURN_KEYS.cases_prevented_symptom_isolating].sum()
+    r_stopped_by_tracing = (df[interested_cases][RETURN_KEYS.base_r] - df[interested_cases][RETURN_KEYS.reduced_r]).sum() - r_stopped_by_social_distancing - r_stopped_by_symptom_isolating
     r_remaining = df[interested_cases][RETURN_KEYS.reduced_r].sum()
     num_secondary_cases = df[interested_cases][RETURN_KEYS.secondary_infections].sum()
 
-    df[RETURN_KEYS.stopped_by_isolation_percentage] = r_stopped_by_isolation / num_secondary_cases
+    df[RETURN_KEYS.stopped_by_social_distancing_percentage] = r_stopped_by_social_distancing / num_secondary_cases
+    df[RETURN_KEYS.stopped_by_symptom_isolating_percentage] = r_stopped_by_symptom_isolating / num_secondary_cases
     df[RETURN_KEYS.stopped_by_tracing_percentage] = r_stopped_by_tracing / num_secondary_cases
     df[RETURN_KEYS.not_stopped_by_tti] = r_remaining / num_secondary_cases
 
@@ -64,7 +66,8 @@ def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
         RETURN_KEYS.symptomatic,
         RETURN_KEYS.tested,
         RETURN_KEYS.secondary_infections,
-        RETURN_KEYS.cases_prevented,
+        RETURN_KEYS.cases_prevented_social_distancing,
+        RETURN_KEYS.cases_prevented_symptom_isolating,
         RETURN_KEYS.fractional_r,
     ], inplace=True)
 
@@ -90,7 +93,8 @@ def scale_results(results, monte_carlo_factor, r_monte_carlo_factor, nppl):
         RETURN_KEYS.percent_secondary_from_symptomatic_missed,
         RETURN_KEYS.percent_secondary_from_asymptomatic_missed,
         RETURN_KEYS.percent_secondary_missed,
-        RETURN_KEYS.stopped_by_isolation_percentage,
+        RETURN_KEYS.cases_prevented_social_distancing,
+        RETURN_KEYS.cases_prevented_symptom_isolating,
         RETURN_KEYS.stopped_by_tracing_percentage,
         RETURN_KEYS.not_stopped_by_tti,
     ]
