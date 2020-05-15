@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from config import get_case_config, get_case_sensitivities, STATISTIC_COLNAME
-import sensitivity, utils
-from strategies import RETURN_KEYS
+from tti_explorer.config import get_case_config, get_case_sensitivities, STATISTIC_COLNAME
+from tti_explorer import sensitivity, utils
+from tti_explorer.strategies import RETURN_KEYS
 
 
 pinch_point_params = [
@@ -30,12 +30,13 @@ sensitivity_params = [
 
 
 def nice_lockdown_name(name):
+    # this is so nasty!
     mapp = {
-
             'test_based_TTI_test_contacts': "Test-based TTI, test contacts",
             'no_TTI': 'No TTI',
             'symptom_based_TTI': 'Symptom-based TTI',
-            'test_based_TTI': 'Test-based TTI'
+            'test_based_TTI': 'Test-based TTI',
+            'test_based_TTI_full_compliance': 'Test-based TTI'
         }
     return mapp[name]
 
