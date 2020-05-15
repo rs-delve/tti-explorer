@@ -3,6 +3,7 @@
 import numpy as np
 
 from tti_explorer.case import simulate_case
+from tti_explorer.utils import ROOT_DIR
 
 
 def case_as_dict(case):
@@ -23,7 +24,6 @@ def contacts_as_dict(contacts):
 
 def load_csv(pth):
     return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
-
 
 if __name__ == "__main__":
     from argparse import ArgumentParser
@@ -63,9 +63,10 @@ if __name__ == "__main__":
     parser.add_argument('--n-pops', help="Number of i.i.d. populations to draw. Ignored if seeds is given.", type=int, default=1)
     parser.add_argument(
             '--data-dir',
-            default=os.path.join("data", "bbc-pandemic"),
+            default=os.path.join(ROOT_DIR, "data", "bbc-pandemic"),
             type=str,
-            help="Folder containing empirical tables of contact numbers"
+            help="Folder containing empirical tables of contact numbers. "
+                 "Two files are expected: contact_distributions_o18.csv and contact_distributions_u18.csv"
         )
     args = parser.parse_args()
     seeds = range(args.n_pops) if args.seeds == -1 else args.seeds
