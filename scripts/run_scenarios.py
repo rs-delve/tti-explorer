@@ -93,8 +93,8 @@ def scale_results(results, monte_carlo_factor, r_monte_carlo_factor, nppl):
         RETURN_KEYS.percent_secondary_from_symptomatic_missed,
         RETURN_KEYS.percent_secondary_from_asymptomatic_missed,
         RETURN_KEYS.percent_secondary_missed,
-        RETURN_KEYS.cases_prevented_social_distancing,
-        RETURN_KEYS.cases_prevented_symptom_isolating,
+        RETURN_KEYS.stopped_by_social_distancing_percentage,
+        RETURN_KEYS.stopped_by_symptom_isolating_percentage,
         RETURN_KEYS.stopped_by_tracing_percentage,
         RETURN_KEYS.not_stopped_by_tti,
     ]
