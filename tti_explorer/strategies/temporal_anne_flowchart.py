@@ -408,6 +408,11 @@ def temporal_anne_flowchart(
         work_infections_days_not_quarantined[work_infections_days_not_quarantined > len(cumulative_infectiousness)] = len(cumulative_infectiousness)
         othr_infections_days_not_quarantined[othr_infections_days_not_quarantined > len(cumulative_infectiousness)] = len(cumulative_infectiousness)
 
+        fractional_num_home = len(home_infections_days_not_quarantined)
+        fractional_num_work = len(work_infections_days_not_quarantined)
+        fractional_num_othr = len(othr_infections_days_not_quarantined)
+        fractional_num = fractional_num_home + fractional_num_work + fractional_num_othr
+
         # Only care about ones where there is more than zero days spent unisolated
         home_infections_days_not_quarantined = home_infections_days_not_quarantined[home_infections_days_not_quarantined > 0]
         work_infections_days_not_quarantined = work_infections_days_not_quarantined[work_infections_days_not_quarantined > 0]
@@ -419,16 +424,22 @@ def temporal_anne_flowchart(
         othr_cumulative_infectiousness = cumulative_infectiousness[othr_infections_days_not_quarantined - 1].sum()
 
         fractional_R = home_cumulative_infectiousness + work_cumulative_infectiousness + othr_cumulative_infectiousness
+        inverse_fractional_R = fractional_num  - fractional_R
+        home_fractional_R = home_cumulative_infectiousness
+        home_inverse_fractional_R = fractional_num_home - home_cumulative_infectiousness
     else:
         fractional_R = 0.
         home_cumulative_infectiousness = 0.
+        inverse_fractional_R = 0.
+        home_fractional_R = 0.
+        home_inverse_fractional_R = 0.
         
 
     # Count the reduced infection rate
     reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() + fractional_R
 
     social_distancing_infections_prevented = (work_contacts_wfh_limited & work_infections).sum() + (othr_contacts_limited & othr_infections).sum()
-    symptom_isolation_infections_prevented = (home_contacts_prevented & home_infections).sum() + (work_contacts_prevented & work_infections).sum() + (othr_contacts_prevented & othr_infections).sum() + home_cumulative_infectiousness - social_distancing_infections_prevented
+    symptom_isolation_infections_prevented = (home_contacts_prevented & home_infections).sum() + (work_contacts_prevented & work_infections).sum() + (othr_contacts_prevented & othr_infections).sum() + home_inverse_fractional_R - social_distancing_infections_prevented
 
     return {
             RETURN_KEYS.base_r: base_rr if case.covid else np.nan,
