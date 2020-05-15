@@ -139,6 +139,7 @@ class PdfDeck:
 class LatexTableDeck:
     table_template = r"""
     \begin{table}[H]
+        \centering
          %(table)s
         \caption{%(caption)s}
     \end{table}
@@ -157,8 +158,8 @@ class LatexTableDeck:
     \begin{document}
 
     """
-    clearpage_str = "\clearpage"
-    footer = "\n\end{document}"
+    clearpage_str = r"\clearpage"
+    footer = "\n" + r"\end{document}"
     new_section = r"\section{%s}"
     
     def __init__(self, table_template=None, header=None, footer=None, new_section=None, clearpage_str=None):
