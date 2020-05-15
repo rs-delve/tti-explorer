@@ -31,7 +31,8 @@ def home_daily_infectivity(base_mass):
     """home_daily_infectivity
 
     Args:
-        base_mass: infection profile for non-repeat contacts
+        base_mass (np.array[float]): infection profile for
+        non-repeat contacts
 
     Returns:
         infection_profile (np.array[float]):
