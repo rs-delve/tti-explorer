@@ -429,13 +429,14 @@ def temporal_anne_flowchart(
         fractional_R = home_cumulative_infectiousness + work_cumulative_infectiousness + othr_cumulative_infectiousness
     else:
         fractional_R = 0.
+        home_cumulative_infectiousness = 0.
         
 
     # Count the reduced infection rate
     reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() + fractional_R
 
     social_distancing_infections_prevented = (work_contacts_wfh_limited & work_infections).sum() + (othr_contacts_limited & othr_infections).sum()
-    symptom_isolation_infections_prevented = (home_contacts_prevented & home_infections).sum() + (work_contacts_prevented & work_infections).sum() + (othr_contacts_prevented & othr_infections).sum() - social_distancing_infections_prevented
+    symptom_isolation_infections_prevented = (home_contacts_prevented & home_infections).sum() + (work_contacts_prevented & work_infections).sum() + (othr_contacts_prevented & othr_infections).sum() + home_cumulative_infectiousness - social_distancing_infections_prevented
 
     return {
             RETURN_KEYS.base_r: base_rr if case.covid else np.nan,
@@ -451,7 +452,7 @@ def temporal_anne_flowchart(
 
             RETURN_KEYS.cases_prevented_social_distancing: social_distancing_infections_prevented,
             RETURN_KEYS.cases_prevented_symptom_isolating: symptom_isolation_infections_prevented,
-            RETURN_KEYS.fractional_r: fractional_R,
+            RETURN_KEYS.fractional_r: fractional_R - home_cumulative_infectiousness,
 
             # RETURN_KEYS.num_primary_symptomatic: 1 if case.covid and case.symptomatic else np.nan,
             # RETURN_KEYS.num_primary_asymptomatic: 1 if case.covid and (not case.symptomatic) else np.nan,

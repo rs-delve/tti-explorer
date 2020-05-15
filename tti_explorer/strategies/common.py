@@ -22,7 +22,7 @@ RETURN_KEYS = SimpleNamespace(
 
         # All for cases reporting symptoms only.
         stopped_by_social_distancing_percentage='% of Ongoing Transmission Prevented by Social Distancing',
-        stopped_by_symptom_isolating_percentage='% of Ongoing Transmission Prevented by Isolating Cases with Symptoms',
+        stopped_by_symptom_isolating_percentage='% of Ongoing Transmission Prevented by Isolating Cases with Symptoms and Quarantining Households',
         stopped_by_tracing_percentage='% of Ongoing Transmission Prevented by Tracing',
         not_stopped_by_tti='% of Ongoing Transmission Allowed Through by TTI Policy',
 
