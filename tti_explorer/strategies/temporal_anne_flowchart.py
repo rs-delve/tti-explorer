@@ -441,41 +441,28 @@ def temporal_anne_flowchart(
             RETURN_KEYS.app_trace: app_traces,
             RETURN_KEYS.tests: total_tests_performed,
             RETURN_KEYS.quarantine: person_days_quarantine,
-            RETURN_KEYS.wasted_quarantine: person_days_wasted_quarantine,
-            RETURN_KEYS.num_primary_symptomatic: 1 if case.covid and case.symptomatic else np.nan,
-            RETURN_KEYS.num_primary_asymptomatic: 1 if case.covid and (not case.symptomatic) else np.nan,
-            RETURN_KEYS.num_primary: 1 if case.covid else np.nan,
-            RETURN_KEYS.num_primary_symptomatic_missed: 1 if case.covid and case.symptomatic and (not test_performed) else np.nan,
-            RETURN_KEYS.num_primary_asymptomatic_missed: 1 if case.covid and (not case.symptomatic) and (not test_performed) else np.nan,
-            RETURN_KEYS.num_primary_missed: 1 if case.covid and (not test_performed) else np.nan,
-            RETURN_KEYS.num_secondary_from_symptomatic: (
-                home_infections_post_isolation.sum()
-                + work_infections_post_isolation.sum()
-                + othr_infections_post_isolation.sum() if case.covid and case.symptomatic else np.nan
+            RETURN_KEYS.covid: case.covid,
+            RETURN_KEYS.symptomatic: case.symptomatic,
+            RETURN_KEYS.tested: test_performed and do_symptom_testing,
+            RETURN_KEYS.secondary_infections: home_infections.sum() + work_infections.sum() + othr_infections.sum(),
+
+            RETURN_KEYS.cases_prevented: (
+            (home_contacts_prevented & home_infections).sum()
+            + (work_contacts_prevented & work_infections).sum()
+            + (othr_contacts_prevented & othr_infections).sum()
             ),
-            RETURN_KEYS.num_secondary_from_asymptomatic: (
-                home_infections_post_isolation.sum()
-                + work_infections_post_isolation.sum()
-                + othr_infections_post_isolation.sum() if case.covid and (not case.symptomatic) else np.nan
-            ),
-            RETURN_KEYS.num_secondary: (
-                home_infections_post_isolation.sum()
-                + work_infections_post_isolation.sum()
-                + othr_infections_post_isolation.sum() if case.covid else np.nan
-            ),
-            RETURN_KEYS.num_secondary_from_symptomatic_missed: (
-                home_infections_post_policy.sum()
-                + work_infections_post_policy.sum()
-                + othr_infections_post_policy.sum() if case.covid and case.symptomatic else np.nan
-            ),
-            RETURN_KEYS.num_secondary_from_asymptomatic_missed: (
-                home_infections_post_policy.sum()
-                + work_infections_post_policy.sum()
-                + othr_infections_post_policy.sum() if case.covid and (not case.symptomatic) else np.nan
-            ),
-            RETURN_KEYS.num_secondary_missed: (
-                home_infections_post_policy.sum()
-                + work_infections_post_policy.sum()
-                + othr_infections_post_policy.sum() if case.covid else np.nan
-            ),
+            RETURN_KEYS.fractional_r: fractional_R,
+
+            # RETURN_KEYS.num_primary_symptomatic: 1 if case.covid and case.symptomatic else np.nan,
+            # RETURN_KEYS.num_primary_asymptomatic: 1 if case.covid and (not case.symptomatic) else np.nan,
+            # RETURN_KEYS.num_primary: 1 if case.covid else np.nan,
+            # RETURN_KEYS.num_primary_symptomatic_missed: 1 if case.covid and case.symptomatic and (not test_performed) else np.nan,
+            # RETURN_KEYS.num_primary_asymptomatic_missed: 1 if case.covid and (not case.symptomatic) and (not test_performed) else np.nan,
+            # RETURN_KEYS.num_primary_missed: 1 if case.covid and (not test_performed) else np.nan,
+            # RETURN_KEYS.num_secondary_from_symptomatic: home_infections_post_isolation.sum() + work_infections_post_isolation.sum() + othr_infections_post_isolation.sum() if case.covid and case.symptomatic else np.nan,
+            # RETURN_KEYS.num_secondary_from_asymptomatic: home_infections_post_isolation.sum() + work_infections_post_isolation.sum() + othr_infections_post_isolation.sum() if case.covid and (not case.symptomatic) else np.nan,
+            # RETURN_KEYS.num_secondary: home_infections_post_isolation.sum() + work_infections_post_isolation.sum() + othr_infections_post_isolation.sum() if case.covid else np.nan,
+            # RETURN_KEYS.num_secondary_from_symptomatic_missed: home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() if case.covid and case.symptomatic else np.nan,
+            # RETURN_KEYS.num_secondary_from_asymptomatic_missed: home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() if case.covid and (not case.symptomatic) else np.nan,
+            # RETURN_KEYS.num_secondary_missed: home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() if case.covid else np.nan,
         }
