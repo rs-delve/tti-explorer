@@ -135,6 +135,7 @@ class PdfDeck:
 class LatexTableDeck:
     table_template = r"""
     \begin{table}[H]
+        \centering
          %(table)s
         \caption{%(caption)s}
     \end{table}
