@@ -144,3 +144,6 @@ data/populations
 #vim
 */**/.sw*
 *.swp
+
+# mac
+.DS_Store
