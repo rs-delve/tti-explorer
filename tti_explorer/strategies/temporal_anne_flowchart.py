@@ -308,6 +308,7 @@ def temporal_anne_flowchart(
             #  Probably would be an additional lag here.
 
             # If we are testing contacts on positive, then we will only need to quarantine those who are positive after the test
+            # TODO: testing might be inefficient during latent period, perhaps we should quarantine contacts for latent_period and then test?
             if test_contacts_on_positive:
                 # Those testing negative will spend 3 days in quarantine 
                 person_days_quarantine += testing_delay * (work_contacts_isolated & ~work_tested_positive).sum()
