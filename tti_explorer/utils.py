@@ -75,6 +75,10 @@ def swaplevel(dct_of_dct):
     return {in_k: {out_k: v[in_k] for out_k, v in dct_of_dct.items()} for in_k in keys}
 
 
+def map_lowest(func, dct):
+    return {k: map_lowest(func, v) if isinstance(v, dict) else func(v) for k, v in dct.items()}
+
+
 def read_json(fpath):
     with open(fpath, "r") as f:
         return json.loads(f.read())
@@ -136,6 +140,7 @@ class PdfDeck:
             fig.savefig(fpath, **savefig_kwds)
 
 
+# TODO: Make it so you can change the templates in here
 class LatexTableDeck:
     table_template = r"""
     \begin{table}[H]
@@ -180,7 +185,12 @@ class LatexTableDeck:
     def clearpage(self):
         self.strings.append(self.clearpage_str)
     
-    def make(self, fpath, joiner="\n\n"):
-        output = joiner.join([self.header, *self.strings, self.footer])
+    def to_str(self, joiner="\n"):
+        return joiner.join([self.header, *self.strings, self.footer])
+
+    def __str__(self):
+        return self.to_str(joiner="\n")
+   
+    def make(self, fpath, joiner="\n"):
         with open(fpath, "w") as f:
-            f.write(output)
+            f.write(self.to_str(joiner=joiner))
