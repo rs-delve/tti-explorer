@@ -20,7 +20,6 @@ def CMMID_strategy(
 
     met_before_w,
     met_before_s,
-    met_before_h,
     met_before_o,
     max_contacts,
 

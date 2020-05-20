@@ -24,8 +24,6 @@ def temporal_anne_flowchart(
 
     do_symptom_testing,             # Test symptomatic individuals
     app_cov,                        # % Coverage of the app
-    app_report_prob,                # Likelihood of reporting symptoms through app
-    manual_report_prob,             # Likelihood of manually reporting symptoms (will also do if has app but didn't report through it. See flowchart)
 
     testing_delay,                  # Delay between test and results
 
@@ -43,7 +41,6 @@ def temporal_anne_flowchart(
 
     go_to_school_prob,                # If schools are open
 
-    met_before_h,                   # Probability of having met a home contact before to be able to manually trace
     met_before_w,                   # Probability of having met a work contact before to be able to manually trace
     met_before_s,                   # Probability of having met a school contact before to be able to manually trace
     met_before_o,                   # Probability of having met a other contact before to be able to manually trace
@@ -69,11 +66,6 @@ def temporal_anne_flowchart(
     """
     This is an implementation of flowchart produced by Anne Johnson and Guy Harling
     """
-
-    # TODO: Janky - overriding manual_report_prob and app_report_prob
-    # NOT USING THESE AT ALL 
-    app_report_prob = trace_adherence
-    manual_report_prob = trace_adherence
 
     # If under 18, change wfh and likelihood of knowing contacts
     if case.under18:
