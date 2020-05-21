@@ -219,7 +219,7 @@ class TTIFlowModel():
         return trace_delay
 
 
-    def _get_days_not_quarantined(self, infection_days, trace_delay, isolate_on_symptoms, isolate_on_positive):
+    def _get_fractional_metrics(self, infection_days, trace_delay, isolate_on_symptoms, isolate_on_positive):
         infectiousness_by_day = self.case.inf_profile
         cumulative_infectiousness = np.cumsum(infectiousness_by_day)
         infectious_period = len(cumulative_infectiousness)
@@ -424,11 +424,11 @@ class TTIFlowModel():
             home_trace_delay = np.zeros_like(home_infection_days)
 
             fractional_num_home, home_cumulative_infectiousness = \
-                self._get_days_not_quarantined(home_infection_days, home_trace_delay, self.isolate_household_on_symptoms, self.isolate_household_on_positive)
+                self._get_fractional_metrics(home_infection_days, home_trace_delay, self.isolate_household_on_symptoms, self.isolate_household_on_positive)
             fractional_num_work, work_cumulative_infectiousness = \
-                self._get_days_not_quarantined(work_infection_days, work_trace_delay, self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive)
+                self._get_fractional_metrics(work_infection_days, work_trace_delay, self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive)
             fractional_num_othr, othr_cumulative_infectiousness = \
-                self._get_days_not_quarantined(othr_infection_days, othr_trace_delay, self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive)
+                self._get_fractional_metrics(othr_infection_days, othr_trace_delay, self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive)
 
             fractional_num = fractional_num_home + fractional_num_work + fractional_num_othr
             fractional_R = home_cumulative_infectiousness + work_cumulative_infectiousness + othr_cumulative_infectiousness
