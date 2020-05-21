@@ -295,6 +295,7 @@ class TTIFlowModel():
             ### TRACING CONTACTS
             work_contacts_trace_app = self._trace_contacts(self.do_app_tracing and self.report_app, self.app_cov, n_work, work_contacts_prevented)
             othr_contacts_trace_app = self._trace_contacts(self.do_app_tracing and self.report_app, self.app_cov, n_othr, othr_contacts_prevented)
+            # Even if the primary case reported symptoms via the app, we do manual tracing anyway as a safety net
             work_contacts_trace_manual = self._trace_contacts(self.do_manual_tracing, self.manual_work_trace_prob * self.met_before_w, n_work, work_contacts_prevented)
             othr_contacts_trace_manual = self._trace_contacts(self.do_manual_tracing, self.manual_othr_trace_prob * self.met_before_o, n_othr, othr_contacts_prevented)
 
@@ -448,6 +449,9 @@ class TTIFlowModel():
 
         social_distancing_infections_prevented = (work_contacts_wfh_limited & work_infections).sum() + (othr_contacts_limited & othr_infections).sum()
         symptom_isolation_infections_prevented = (home_contacts_prevented & home_infections).sum() + (work_contacts_prevented & work_infections).sum() + (othr_contacts_prevented & othr_infections).sum() + home_inverse_fractional_R - social_distancing_infections_prevented
+        contact_tracing_infections_prevented   = base_rr - reduced_rr - social_distancing_infections_prevented - symptom_isolation_infections_prevented
+
+
 
         return {
                 RETURN_KEYS.base_r: base_rr if self.case.covid else np.nan,
@@ -463,6 +467,7 @@ class TTIFlowModel():
 
                 RETURN_KEYS.cases_prevented_social_distancing: social_distancing_infections_prevented,
                 RETURN_KEYS.cases_prevented_symptom_isolating: symptom_isolation_infections_prevented,
+                RETURN_KEYS.cases_prevented_contact_tracing: contact_tracing_infections_prevented,
                 RETURN_KEYS.fractional_r: fractional_R - home_cumulative_infectiousness,
 
                 # RETURN_KEYS.num_primary_symptomatic: 1 if case.covid and case.symptomatic else np.nan,

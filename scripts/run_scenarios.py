@@ -24,18 +24,33 @@ def results_table(results_dct, index_name="scenario"):
 def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
     df = pd.DataFrame([strategy(*cc, rng, **strategy_cgf_dct) for cc in case_contacts])
 
-    interested_cases = df[RETURN_KEYS.covid] & df[RETURN_KEYS.symptomatic] & df[RETURN_KEYS.tested]
+    positive_symptomatic_tested = df[RETURN_KEYS.covid] & df[RETURN_KEYS.symptomatic] & df[RETURN_KEYS.tested]
+    positive_symptomatic_not_tested = df[RETURN_KEYS.covid] & df[RETURN_KEYS.symptomatic] & ~df[RETURN_KEYS.tested]
+    positive_asymptomatic = df[RETURN_KEYS.covid] & ~df[RETURN_KEYS.symptomatic]
+    positive = df[RETURN_KEYS.covid]
 
-    r_stopped_by_social_distancing = df[interested_cases][RETURN_KEYS.cases_prevented_social_distancing].sum()
-    r_stopped_by_symptom_isolating = df[interested_cases][RETURN_KEYS.cases_prevented_symptom_isolating].sum()
-    r_stopped_by_tracing = (df[interested_cases][RETURN_KEYS.base_r] - df[interested_cases][RETURN_KEYS.reduced_r]).sum() - r_stopped_by_social_distancing - r_stopped_by_symptom_isolating
-    r_remaining = df[interested_cases][RETURN_KEYS.reduced_r].sum()
-    num_secondary_cases = df[interested_cases][RETURN_KEYS.secondary_infections].sum()
+    r_stopped_by_social_distancing = df[RETURN_KEYS.cases_prevented_social_distancing].sum()
+
+    r_stopped_by_social_distancing_positive_compliant = df[positive_symptomatic_tested][RETURN_KEYS.cases_prevented_social_distancing].sum()
+
+    r_stopped_by_symptom_isolating = df[positive_symptomatic_tested][RETURN_KEYS.cases_prevented_symptom_isolating].sum()
+    
+    r_stopped_by_contact_tracing = df[positive_symptomatic_tested][RETURN_KEYS.cases_prevented_contact_tracing].sum()
+    
+    r_remaining_asymptomatic = df[positive_asymptomatic][RETURN_KEYS.reduced_r].sum()
+    r_remaining_positive_non_compliant = df[positive_symptomatic_not_tested][RETURN_KEYS.reduced_r].sum()
+    r_remaining_positive_compliant = df[positive_symptomatic_tested][RETURN_KEYS.reduced_r].sum()
+    
+    num_secondary_cases = df[RETURN_KEYS.secondary_infections].sum()
 
     df[RETURN_KEYS.stopped_by_social_distancing_percentage] = r_stopped_by_social_distancing / num_secondary_cases
     df[RETURN_KEYS.stopped_by_symptom_isolating_percentage] = r_stopped_by_symptom_isolating / num_secondary_cases
-    df[RETURN_KEYS.stopped_by_tracing_percentage] = r_stopped_by_tracing / num_secondary_cases
-    df[RETURN_KEYS.not_stopped_by_tti] = r_remaining / num_secondary_cases
+    df[RETURN_KEYS.stopped_by_tracing_percentage] = r_stopped_by_contact_tracing / num_secondary_cases
+    df[RETURN_KEYS.not_stopped_asymptomatic_percentage] = r_remaining_asymptomatic / num_secondary_cases
+    df[RETURN_KEYS.not_stopped_symptomatic_non_compliant_percentage] = r_remaining_positive_non_compliant / num_secondary_cases
+    df[RETURN_KEYS.not_stopped_by_tti_percentage] = r_remaining_positive_compliant / num_secondary_cases
+
+    df[RETURN_KEYS.stopped_by_social_distancing_symptomatic_compliant_percentage] = r_stopped_by_social_distancing_positive_compliant / num_secondary_cases
 
     # df[RETURN_KEYS.percent_primary_symptomatic_missed] = df[RETURN_KEYS.num_primary_symptomatic_missed].sum() / df[RETURN_KEYS.num_primary_symptomatic].sum()
     # df[RETURN_KEYS.percent_primary_asymptomatic_missed] = df[RETURN_KEYS.num_primary_asymptomatic_missed].sum() / df[RETURN_KEYS.num_primary_asymptomatic].sum()
@@ -68,6 +83,7 @@ def run_scenario(case_contacts, strategy, rng, strategy_cgf_dct):
         RETURN_KEYS.secondary_infections,
         RETURN_KEYS.cases_prevented_social_distancing,
         RETURN_KEYS.cases_prevented_symptom_isolating,
+        RETURN_KEYS.cases_prevented_contact_tracing,
         RETURN_KEYS.fractional_r,
     ], inplace=True)
 
@@ -86,24 +102,24 @@ def tidy_fname(fname, ending=".json"):
 
 def scale_results(results, monte_carlo_factor, r_monte_carlo_factor, nppl):
     rvals = [RETURN_KEYS.base_r, RETURN_KEYS.reduced_r]
-    percentages = [
-        RETURN_KEYS.percent_primary_symptomatic_missed,
-        RETURN_KEYS.percent_primary_asymptomatic_missed,
-        RETURN_KEYS.percent_primary_missed,
-        RETURN_KEYS.percent_secondary_from_symptomatic_missed,
-        RETURN_KEYS.percent_secondary_from_asymptomatic_missed,
-        RETURN_KEYS.percent_secondary_missed,
-        RETURN_KEYS.stopped_by_social_distancing_percentage,
-        RETURN_KEYS.stopped_by_symptom_isolating_percentage,
-        RETURN_KEYS.stopped_by_tracing_percentage,
-        RETURN_KEYS.not_stopped_by_tti,
-    ]
+    # percentages = [
+    #     RETURN_KEYS.percent_primary_symptomatic_missed,
+    #     RETURN_KEYS.percent_primary_asymptomatic_missed,
+    #     RETURN_KEYS.percent_primary_missed,
+    #     RETURN_KEYS.percent_secondary_from_symptomatic_missed,
+    #     RETURN_KEYS.percent_secondary_from_asymptomatic_missed,
+    #     RETURN_KEYS.percent_secondary_missed,
+    #     RETURN_KEYS.stopped_by_social_distancing_percentage,
+    #     RETURN_KEYS.stopped_by_symptom_isolating_percentage,
+    #     RETURN_KEYS.stopped_by_tracing_percentage,
+    #     RETURN_KEYS.not_stopped_by_tti,
+    # ]
     
     scale = []
     for k in results.index:
         if k in rvals:
             scale.append(1)
-        elif k in percentages:
+        elif '%' in k:
             scale.append(100)
         else:
             scale.append(nppl)
@@ -117,7 +133,7 @@ def scale_results(results, monte_carlo_factor, r_monte_carlo_factor, nppl):
     for k in results.index:
         if k in rvals:
             mc_scale.append(r_monte_carlo_factor)
-        elif k in percentages:
+        elif '%' in k:
             mc_scale.append(1)
         else:
             mc_scale.append(monte_carlo_factor)

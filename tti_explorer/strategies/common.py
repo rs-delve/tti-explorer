@@ -18,13 +18,18 @@ RETURN_KEYS = SimpleNamespace(
         secondary_infections='# Secondary Infections',
         cases_prevented_social_distancing='# Secondary Infections Prevented by Social Distancing',
         cases_prevented_symptom_isolating='# Secondary Infections Prevented by Isolating Cases with Symptoms',
+        cases_prevented_contact_tracing='# Secondary Infections Prevented by Contact Tracing',
         fractional_r='Fractional R',
 
         # All for cases reporting symptoms only.
         stopped_by_social_distancing_percentage='% of Ongoing Transmission Prevented by Social Distancing',
         stopped_by_symptom_isolating_percentage='% of Ongoing Transmission Prevented by Isolating Cases with Symptoms and Quarantining Households',
         stopped_by_tracing_percentage='% of Ongoing Transmission Prevented by Tracing',
-        not_stopped_by_tti='% of Ongoing Transmission Allowed Through by TTI Policy',
+        not_stopped_asymptomatic_percentage='% of Ongoing Transmissions Allowed Through by Asymptomatic Cases Not Being Caught',
+        not_stopped_symptomatic_non_compliant_percentage='% of Ongoing Transmission Allowed Through by Symptomatic Cases Not Complying',
+        not_stopped_by_tti_percentage='% of Ongoing Transmission Allowed Through by TTI Policy',
+
+        stopped_by_social_distancing_symptomatic_compliant_percentage='% of Ongoing Transmission Prevented by Social Distancing - Symptomatic Compliant Only',
 
         percent_primary_symptomatic_missed='% Primary Symptomatic Cases Missed',
         percent_primary_asymptomatic_missed='% Primary Asymptomatic Cases Missed',
