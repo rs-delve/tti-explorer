@@ -6,19 +6,19 @@ from .common import _limit_contact, RETURN_KEYS
 
 
 @registry('temporal_anne_flowchart')
-def temporal_anne_flowchart(*args, **kwargs):
+def temporal_anne_flowchart(case, contacts, rng, **kwargs):
     """
     This is an implementation of flowchart produced by Anne Johnson and Guy Harling
     """
 
-    model = TTIFlowModel(*args, **kwargs)
-    metrics = model.run()
+    strategy = TTIFlowModel(rng, **kwargs)
+    metrics = strategy(case, contacts)
     return metrics
 
 
 class TTIFlowModel():
     def __init__(self,
-                case, contacts, rng,
+                rng,
 
                 isolate_individual_on_symptoms, # Isolate the individual after they present with symptoms
                 isolate_individual_on_positive, # Isolate the individual after they test positive
@@ -64,8 +64,6 @@ class TTIFlowModel():
 
                 latent_period,                  # Length of a cases incubation period (from infection to start of infectious period)
     ):
-        self.case = case
-        self.contacts = contacts
         self.rng = rng
 
         self.isolate_individual_on_symptoms = isolate_individual_on_symptoms
@@ -96,9 +94,15 @@ class TTIFlowModel():
 
         self.trace_adherence = trace_adherence
 
+        self.go_to_school_prob = go_to_school_prob
+
+        self.met_before_w = met_before_w
+        self.met_before_s = met_before_s
         self.met_before_o = met_before_o
 
         self.max_contacts = max_contacts
+
+        self.wfh_prob = wfh_prob
 
         self.fractional_infections = fractional_infections
 
@@ -106,20 +110,24 @@ class TTIFlowModel():
 
         self.latent_period = latent_period
 
+    def _init_case_parameters(self):
+        if not hasattr(self, 'case'):
+            raise AttributeError('Case was not set')
+
         # If under 18, use school parameters
         if self.case.under18:
-            self.wfh = self.rng.uniform() < 1 - go_to_school_prob
-            self.met_before_w = met_before_s
+            self.wfh = self.rng.uniform() < 1 - self.go_to_school_prob
+            self.met_before_w = self.met_before_s
         else:
-            self.wfh = self.rng.uniform() < wfh_prob
-            self.met_before_w = met_before_w
+            self.wfh = self.rng.uniform() < self.wfh_prob
+            self.met_before_w = self.met_before_w
 
         # Test if user has the app
         has_app = self.rng.uniform() < self.app_cov
 
         # Assume if have app, this is how they will report. Assume reports on day noticed
         if self.case.symptomatic:
-            does_report = self.rng.uniform() < trace_adherence
+            does_report = self.rng.uniform() < self.trace_adherence
 
             if does_report:
                 if has_app:
@@ -142,7 +150,7 @@ class TTIFlowModel():
         self.test_performed = (report_app or report_manual)
         if self.test_performed:
             self.test_perform_day = self.case.day_noticed_symptoms
-            self.test_results_day = self.test_perform_day + testing_delay
+            self.test_results_day = self.test_perform_day + self.testing_delay
         
             # If isolate the person on day of test
             if self.isolate_individual_on_symptoms:
@@ -153,6 +161,16 @@ class TTIFlowModel():
             else:
                 # Don't isolate, set to something beyond simulation horizon
                 self.isolate_day = 200
+
+
+    def __call__(self, case, contacts):
+        self.case = case
+        self.contacts = contacts
+
+        self._init_case_parameters()
+        metrics = self._run()
+
+        return metrics
 
 
     def _trace_contacts(self, do_tracing, trace_prob, n_contacts, contacts_prevented):
@@ -249,7 +267,7 @@ class TTIFlowModel():
         return fractional_num, contact_cumulative_infectiousness
 
 
-    def run(self):
+    def _run(self):
         # Days on which individual made contact with their contacts. For home, earliest day of infectivity.
         home_contacts = self.contacts.home[:, 1]
         work_contacts = self.contacts.work[:, 1]
