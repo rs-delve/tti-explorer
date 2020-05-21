@@ -110,9 +110,8 @@ class TTIFlowModel():
 
         self.latent_period = latent_period
 
-    def _init_case_parameters(self):
-        if not hasattr(self, 'case'):
-            raise AttributeError('Case was not set')
+    def _init_case_parameters(self, case):
+        self.case = case
 
         # If under 18, use school parameters
         if self.case.under18:
@@ -164,10 +163,8 @@ class TTIFlowModel():
 
 
     def __call__(self, case, contacts):
-        self.case = case
+        self._init_case_parameters(case)
         self.contacts = contacts
-
-        self._init_case_parameters()
         metrics = self._run()
 
         return metrics
