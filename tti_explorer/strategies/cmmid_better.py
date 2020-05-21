@@ -25,7 +25,6 @@ def CMMID_strategy_better(
 
     met_before_w,
     met_before_s,
-    met_before_h,
     met_before_o,
     max_contacts,
 
@@ -88,7 +87,6 @@ def CMMID_strategy_better(
         # If policy of manual tracing
         if do_manual_tracing:
             # Prob of manual tracing is a base chance, modified by the chance the person knows who the contact is.
-            # home_contacts_trace_manual = rng.binomial(n=1, p=manual_home_trace_prob * met_before_h, size=n_home).astype(bool)
             work_contacts_trace_manual = rng.binomial(n=1, p=manual_work_trace_prob * met_before_w, size=n_work).astype(bool)
             othr_contacts_trace_manual = rng.binomial(n=1, p=manual_othr_trace_prob * met_before_o, size=n_othr).astype(bool)
         else:
