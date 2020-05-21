@@ -10,7 +10,7 @@ from tti_explorer.case import Case
 
 from tti_explorer.strategies import RETURN_KEYS
 from tti_explorer.utils import named_product
-import tti_explorer.config
+import tti_explorer.config as config
 
 
 def find_results_file(folder, fname):
