@@ -11,7 +11,7 @@ TEST_RANDOM_SEED = 42
 @pytest.mark.parametrize("has_covid", [True, False])
 @pytest.mark.parametrize("s_level", list(config.S_levels.keys()))
 @pytest.mark.parametrize("contact_trace_option", list(config.contact_trace_options.keys()))
-def test_temporal_anne_flowchart_single_case_no_contacts(has_covid, s_level, contact_trace_option):
+def test_temporal_anne_flowchart_no_contacts(has_covid, s_level, contact_trace_option):
     case = Case(
         under18=False,
         covid=has_covid,
