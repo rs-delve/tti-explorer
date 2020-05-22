@@ -25,7 +25,7 @@ RETURN_KEYS = SimpleNamespace(
         stopped_by_social_distancing_percentage='% of Ongoing Transmission Prevented by Social Distancing',
         stopped_by_symptom_isolating_percentage='% of Ongoing Transmission Prevented by Isolating Cases with Symptoms and Quarantining Households',
         stopped_by_tracing_percentage='% of Ongoing Transmission Prevented by Tracing',
-        not_stopped_asymptomatic_percentage='% of Ongoing Transmissions Allowed Through by Asymptomatic Cases Not Being Caught',
+        not_stopped_asymptomatic_percentage='% of Ongoing Transmission Allowed Through by Asymptomatic Cases Not Being Caught',
         not_stopped_symptomatic_non_compliant_percentage='% of Ongoing Transmission Allowed Through by Symptomatic Cases Not Complying',
         not_stopped_by_tti_percentage='% of Ongoing Transmission Allowed Through by TTI Policy',
 
