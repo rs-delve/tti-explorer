@@ -77,9 +77,12 @@ class EmpiricalContactsSimulator:
     def __init__(self, over18, under18, rng):
         """Simulate social contact using the BBC Pandemic dataset
 
+            Each row in input arrays consists of three numbers,
+            represeting number of contacts at: home, work, other
+
         Args:
-            over18 (np.array[int]): Contact data for over 18s.
-            under18 (np.array[int]): Contact data for under 18s.
+            over18 (np.array[int], Nx3): Contact data for over 18s.
+            under18 (np.array[int], Nx3): Contact data for under 18s.
             rng (np.random.RandomState): Random state.
 
         """
@@ -114,12 +117,12 @@ class EmpiricalContactsSimulator:
 
         Args:
             case (Case): Primary case.
-            home_sar (float): Secondary attack rate for household contacts. (Marginal
-            probability of infection over the whole simulation).
+            home_sar (float): Secondary attack rate for household contacts.
+                              (Marginal probability of infection over the whole simulation)
             work_sar (float): Secondary attack rate for contacts in the work category.
             other_sar (float): Secondary attack rate for contacts in the other category.
             asymp_factor (float): Factor by which to multiply the probabilty of secondary
-            infection if `case` is asymptomatic COVID positive.
+                                  infection if `case` is asymptomatic COVID positive.
             period (int): Duration of the simulation (days).
 
         Returns:
