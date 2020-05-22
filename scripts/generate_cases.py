@@ -25,6 +25,7 @@ def contacts_as_dict(contacts):
 def load_csv(pth):
     return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
 
+
 if __name__ == "__main__":
     from argparse import ArgumentParser
     from datetime import datetime
