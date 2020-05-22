@@ -23,7 +23,8 @@ def simulate_case(rng, p_under18, infection_proportions, p_day_noticed_symptoms,
     Args:
         rng (np.random.RandomState): random number generator.
         p_under18 (float): Probability of case being under 18
-        infection_proportions (list[float]): Probs of being symp covid neg, symp covid pos, asymp covid pos
+        infection_proportions (dict): Probs of being symp covid neg, symp covid pos, asymp covid pos
+                                      The only required key is 'dist', which contains list of the named probs, in that order.
         p_day_noticed_symptoms (np.array[float]): Distribution of day on which case notices
             their symptoms. (In our model this is same as reporting symptoms.)
             Conditional on being symptomatic.
