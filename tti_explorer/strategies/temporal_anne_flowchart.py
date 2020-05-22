@@ -175,6 +175,7 @@ def temporal_anne_flowchart(
             othr_contacts_trace_app = np.zeros(shape=n_othr, dtype=bool)
 
         # If policy of manual tracing
+        # Even if the primary case reported symptoms via the app, we do manual tracing anyway as a safety net
         if do_manual_tracing and (isolate_contacts_on_symptoms or (isolate_contacts_on_positive and case.covid)):
             # Prob of manual tracing is a base chance, modified by the chance the person knows who the contact is.
             work_contacts_trace_manual = rng.binomial(n=1, p=manual_work_trace_prob * met_before_w, size=n_work).astype(bool)
