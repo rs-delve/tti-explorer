@@ -140,7 +140,6 @@ S_levels = {
 
             "met_before_w": 0.79,
             "met_before_s": 0.9,
-            "met_before_h": 1,
             "met_before_o": 1,
 
             "wfh_prob": 0.65,
@@ -158,7 +157,6 @@ S_levels = {
 
             "met_before_w": 0.79,
             "met_before_s": 0.9,
-            "met_before_h": 1,
             "met_before_o": 1,
 
             "wfh_prob": 0.55,
@@ -176,7 +174,6 @@ S_levels = {
 
             "met_before_w": 0.79,
             "met_before_s": 0.9,
-            "met_before_h": 1,
             "met_before_o": 0.9,
 
             "wfh_prob": 0.45,
@@ -194,7 +191,6 @@ S_levels = {
 
             "met_before_w": 0.79,
             "met_before_s": 0.9,
-            "met_before_h": 1,
             "met_before_o": 0.75,
 
             "wfh_prob": 0.25,
@@ -210,7 +206,6 @@ S_levels = {
 
             "met_before_w": 0.79,
             "met_before_s": 0.9,
-            "met_before_h": 1,
             "met_before_o": 0.52,
         },
     "S0": {
@@ -592,7 +587,6 @@ _global_defaults = {
 
         met_before_w=0.79, # At work. At school=90%, which is defined in function later on
         met_before_s=0.9,  # At school. Will replace at work for under 18's
-        met_before_h=1,    # Within HH
         met_before_o=0.52, # In other settings
 
         max_contacts=2e3,     # Enforced limit on number of contacts. Default of 200 to represent no limits
@@ -619,7 +613,6 @@ _global_defaults = {
 
         met_before_w=0.79, # At work. At school=90%, which is defined in function later on
         met_before_s=0.9,  # At school. Will replace at work for under 18's
-        met_before_h=1,    # Within HH
         met_before_o=0.52, # In other settings
 
         max_contacts=2e3,     # Enforced limit on number of contacts. Default of 200 to represent no limits
@@ -642,8 +635,6 @@ _global_defaults = {
 
         do_symptom_testing=True,                # Test symptomatic individuals
         app_cov=0.35,                           # % Coverage of the app
-        app_report_prob=0.75,                   # Likelihood of reporting symptoms through app
-        manual_report_prob=0.5,                 # Likelihood of manually reporting symptoms (will also do if has app but didn't report through it. See flowchart)
 
         testing_delay=2,                        # Days delay between test and results
 
@@ -661,7 +652,6 @@ _global_defaults = {
 
         go_to_school_prob=1.0,                  # Fraction of school children attending school
 
-        met_before_h=1.0,                       # Probability of having met a home contact before to be able to manually trace
         met_before_w=1.0,                       # Probability of having met a work contact before to be able to manually trace
         met_before_s=1.0,                       # Probability of having met a school contact before to be able to manually trace
         met_before_o=1.0,                       # Probability of having met a other contact before to be able to manually trace

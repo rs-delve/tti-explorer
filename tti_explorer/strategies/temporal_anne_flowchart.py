@@ -24,8 +24,6 @@ def temporal_anne_flowchart(
 
     do_symptom_testing,             # Test symptomatic individuals
     app_cov,                        # % Coverage of the app
-    app_report_prob,                # Likelihood of reporting symptoms through app
-    manual_report_prob,             # Likelihood of manually reporting symptoms (will also do if has app but didn't report through it. See flowchart)
 
     testing_delay,                  # Delay between test and results
 
@@ -43,7 +41,6 @@ def temporal_anne_flowchart(
 
     go_to_school_prob,                # If schools are open
 
-    met_before_h,                   # Probability of having met a home contact before to be able to manually trace
     met_before_w,                   # Probability of having met a work contact before to be able to manually trace
     met_before_s,                   # Probability of having met a school contact before to be able to manually trace
     met_before_o,                   # Probability of having met a other contact before to be able to manually trace
@@ -69,11 +66,6 @@ def temporal_anne_flowchart(
     """
     This is an implementation of flowchart produced by Anne Johnson and Guy Harling
     """
-
-    # TODO: Janky - overriding manual_report_prob and app_report_prob
-    # NOT USING THESE AT ALL 
-    app_report_prob = trace_adherence
-    manual_report_prob = trace_adherence
 
     # If under 18, change wfh and likelihood of knowing contacts
     if case.under18:
@@ -183,6 +175,7 @@ def temporal_anne_flowchart(
             othr_contacts_trace_app = np.zeros(shape=n_othr, dtype=bool)
 
         # If policy of manual tracing
+        # Even if the primary case reported symptoms via the app, we do manual tracing anyway as a safety net
         if do_manual_tracing and (isolate_contacts_on_symptoms or (isolate_contacts_on_positive and case.covid)):
             # Prob of manual tracing is a base chance, modified by the chance the person knows who the contact is.
             work_contacts_trace_manual = rng.binomial(n=1, p=manual_work_trace_prob * met_before_w, size=n_work).astype(bool)
@@ -193,7 +186,7 @@ def temporal_anne_flowchart(
             othr_contacts_trace_manual = np.zeros(shape=n_othr, dtype=bool)
 
         # Assume all home contacts traced
-        if isolate_household_on_symptoms or (isolate_contacts_on_positive and case.covid):
+        if isolate_household_on_symptoms or (isolate_household_on_positive and case.covid):
             home_contacts_traced = np.ones_like(n_home, dtype=bool)
         else:
             home_contacts_traced = np.zeros(shape=n_home, dtype=bool)
@@ -441,6 +434,7 @@ def temporal_anne_flowchart(
 
     social_distancing_infections_prevented = (work_contacts_wfh_limited & work_infections).sum() + (othr_contacts_limited & othr_infections).sum()
     symptom_isolation_infections_prevented = (home_contacts_prevented & home_infections).sum() + (work_contacts_prevented & work_infections).sum() + (othr_contacts_prevented & othr_infections).sum() + home_inverse_fractional_R - social_distancing_infections_prevented
+    contact_tracing_infections_prevented   = base_rr - reduced_rr - social_distancing_infections_prevented - symptom_isolation_infections_prevented
 
     return {
             RETURN_KEYS.base_r: base_rr if case.covid else np.nan,
@@ -456,6 +450,7 @@ def temporal_anne_flowchart(
 
             RETURN_KEYS.cases_prevented_social_distancing: social_distancing_infections_prevented,
             RETURN_KEYS.cases_prevented_symptom_isolating: symptom_isolation_infections_prevented,
+            RETURN_KEYS.cases_prevented_contact_tracing: contact_tracing_infections_prevented,
             RETURN_KEYS.fractional_r: fractional_R - home_cumulative_infectiousness,
 
             # RETURN_KEYS.num_primary_symptomatic: 1 if case.covid and case.symptomatic else np.nan,
