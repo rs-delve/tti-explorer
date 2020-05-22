@@ -153,16 +153,15 @@ class LatexTableDeck:
     header = r"""
 
     \documentclass{article}
-
-    \usepackage{booktabs}
-    \usepackage{tabularx}
-    \usepackage{float}
+    
+    %(packages)s
 
     \restylefloat{table}
 
     \begin{document}
 
     """
+
     clearpage_str = r"\clearpage"
     footer = "\n" + r"\end{document}"
     new_section = r"\section{%s}"
@@ -172,21 +171,40 @@ class LatexTableDeck:
         self.header = header or self.header
         self.footer = footer or self.footer
         self.new_section = new_section or self.new_section
-        self.clearpage_str = clearpage_str or self.clearpage_str
+        self.clearpage_str = clearpage_str or self.clearpage_str 
+
 
         self.strings = list()
+        self.packages = [
+            r"\usepackage{booktabs}",
+            r"\usepackage{tabularx}",
+            r"\usepackage{float}",
+        ]
     
     def add_section(self, section_name):
         self.strings.append(self.new_section % section_name)
-        
+    
+    def add_string(self, string):
+        self.strings.append(string)
+
     def add_table(self, tex_table, caption):
         self.strings.append(self.table_template % dict(table=tex_table, caption=caption))
+
+    def add_package(self, package, options=None):
+        pstr = r"\usepackage"
+        if options is not None:
+             pstr += f"[{', '.join(options)}]"
+        pstr += f"{{{package}}}"
+        self.packages.append(pstr)
         
     def clearpage(self):
         self.strings.append(self.clearpage_str)
     
+    def _make_header(self):
+        return self.header % {'packages': "\n".join(self.packages)}
+
     def to_str(self, joiner="\n"):
-        return joiner.join([self.header, *self.strings, self.footer])
+        return joiner.join([self._make_header(), *self.strings, self.footer])
 
     def __str__(self):
         return self.to_str(joiner="\n")
