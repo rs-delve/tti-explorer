@@ -1,4 +1,4 @@
-from collections import namedtuple
+from dataclasses import dataclass
 
 import numpy as np
 from scipy.stats import gamma
@@ -7,6 +7,14 @@ from .utils import categorical
 
 NOT_INFECTED = -1
 NCOLS = 2
+
+
+@dataclass
+class Contacts:
+    n_daily: dict
+    home: np.array
+    work: np.array
+    other: np.array
 
 
 def he_infection_profile(period, gamma_params):
@@ -63,12 +71,6 @@ def day_infected_wo(rng, probs, first_encounter, not_infected=NOT_INFECTED):
         rng.binomial(n=1, p=probs),
         first_encounter,
         not_infected
-    )
-
-
-Contacts = namedtuple(
-        'Contacts',
-        ['n_daily', 'home', 'work', 'other']
     )
 
 
