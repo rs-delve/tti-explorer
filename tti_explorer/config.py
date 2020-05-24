@@ -28,7 +28,7 @@ _contacts_configs = {
             # noticing symptoms in p_day_noticed_symptoms.
             asymp_factor=0.5
             ),
-        "oxteam": dict(
+        "delve": dict(
              home_sar=0.3,
              work_sar=0.045,
              other_sar=0.045,
@@ -37,7 +37,7 @@ _contacts_configs = {
              ),
          }
 
-_contacts_configs['oxteam-symptomatic'] = dict(**_contacts_configs['oxteam'])
+_contacts_configs['delve-symptomatic'] = dict(**_contacts_configs['delve'])
 
 def get_contacts_config(name, _cfg_dct=_contacts_configs):
     try:
@@ -67,7 +67,7 @@ _case_configs = {
             # length of this determines simulation length
             inf_profile=np.full(5, 1/5).tolist()
         ),
-        "oxteam": dict(
+        "delve": dict(
             p_under18=0.21,
             # following Kucharski.
             # This is currently independent from everything else.
@@ -91,7 +91,7 @@ _case_configs = {
                     )
             ).tolist()
         ),
-        "oxteam-symptomatic": dict(
+        "delve-symptomatic": dict(
             p_under18=0.21,
             # following Kucharski.
             # This is currently independent from everything else.
@@ -120,9 +120,9 @@ _case_configs = {
 
 
 # for generating separate populations
-for i, name in enumerate(['oxteam-symp-covneg', 'oxteam-symp-covpos', 'oxteam-asymp-covpos']):
-    _contacts_configs[name] = dict(**_contacts_configs['oxteam'])
-    _case_configs[name] = dict(**_case_configs['oxteam'])
+for i, name in enumerate(['delve-symp-covneg', 'delve-symp-covpos', 'delve-asymp-covpos']):
+    _contacts_configs[name] = dict(**_contacts_configs['delve'])
+    _case_configs[name] = dict(**_case_configs['delve'])
     _case_configs[name]['infection_proportions'] = [int(k==i) for k in range(3)]
 
 
@@ -537,7 +537,7 @@ _policy_configs = {
                     "p_pop_test": 0.05,
                 },
         },
-        "temporal_anne_flowchart":
+        "delve":
         {
             "S5_no_TTI": {**S_levels["S5"], **contact_trace_options["no_TTI"]},
             "S5_symptom_based_TTI": {**S_levels["S5"], **contact_trace_options["symptom_based_TTI"]},
@@ -563,13 +563,13 @@ _policy_configs = {
         },
 }
 
-_policy_configs['temporal_anne_flowchart'].update(
+_policy_configs['delve'].update(
         {
-            "S5_test_based_TTI_full_compliance": {**S_levels["S5"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
-            "S4_test_based_TTI_full_compliance": {**S_levels["S4"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
-            "S3_test_based_TTI_full_compliance": {**S_levels["S3"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
-            "S2_test_based_TTI_full_compliance": {**S_levels["S2"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
-            "S1_test_based_TTI_full_compliance": {**S_levels["S1"], **contact_trace_options["test_based_TTI"], 'trace_adherence': 1.0},
+            "S5_test_based_TTI_full_compliance": {**S_levels["S5"], **contact_trace_options["test_based_TTI"], 'compliance': 1.0},
+            "S4_test_based_TTI_full_compliance": {**S_levels["S4"], **contact_trace_options["test_based_TTI"], 'compliance': 1.0},
+            "S3_test_based_TTI_full_compliance": {**S_levels["S3"], **contact_trace_options["test_based_TTI"], 'compliance': 1.0},
+            "S2_test_based_TTI_full_compliance": {**S_levels["S2"], **contact_trace_options["test_based_TTI"], 'compliance': 1.0},
+            "S1_test_based_TTI_full_compliance": {**S_levels["S1"], **contact_trace_options["test_based_TTI"], 'compliance': 1.0},
         }
     )
 
@@ -621,26 +621,20 @@ _global_defaults = {
         p_pop_test=0.05,      # Proportion mass tested (5% per week)
         policy_adherence=0.9, # Adherence to testing/trace and quarantine
     ),
-    "temporal_anne_flowchart": dict(
+    "delve": dict(
         isolate_individual_on_symptoms=True,    # Isolate the individual after they present with symptoms
         isolate_individual_on_positive=True,    # Isolate the individual after they test positive
-
         isolate_household_on_symptoms=False,    # Isolate the household after individual present with symptoms
         isolate_household_on_positive=True,     # Isolate the household after individual test positive
-
         isolate_contacts_on_symptoms=False,     # Isolate the contacts after individual present with symptoms
         isolate_contacts_on_positive=True,      # Isolate the contacts after individual test positive
-
-        test_contacts_on_positive=False,      # Do we test contacts of a positive case immediately, or wait for them to develop symptoms
-
+        test_contacts_on_positive=False,        # Do we test contacts of a positive case immediately, or wait for them to develop symptoms
         do_symptom_testing=True,                # Test symptomatic individuals
-        app_cov=0.35,                           # % Coverage of the app
-
-        testing_delay=2,                        # Days delay between test and results
-
         do_manual_tracing=True,                 # Perform manual tracing of contacts
         do_app_tracing=True,                    # Perform app tracing of contacts
+        fractional_infections=True,            # Include infected but traced individuals as a fraction of their infection period not isolated
 
+        testing_delay=2,                        # Days delay between test and results
         app_trace_delay=0,                      # Delay associated with tracing through the app
         manual_trace_delay=1,                   # Delay associated with tracing manually
 
@@ -648,25 +642,38 @@ _global_defaults = {
         manual_work_trace_prob=1.0,             # Probability of manually tracing a work contact
         manual_othr_trace_prob=1.0,             # Probability of manually tracing an other contact
 
-        trace_adherence=0.8,                    # Probability of a traced contact isolating correctly
-
-        go_to_school_prob=1.0,                  # Fraction of school children attending school
-
         met_before_w=1.0,                       # Probability of having met a work contact before to be able to manually trace
         met_before_s=1.0,                       # Probability of having met a school contact before to be able to manually trace
         met_before_o=1.0,                       # Probability of having met a other contact before to be able to manually trace
 
         max_contacts=2e3,                       # Place a limit on the number of other contacts per day
-
-        wfh_prob=0.,                            # Proportion or the population working from home
-
-        fractional_infections=True,            # Include infected but traced individuals as a fraction of their infection period not isolated
-
         quarantine_length=14,                   # Length of quarantine imposed on COVID cases (and household)
+        latent_period=3,                   # Length of a cases incubation period (from infection to start of infectious period)
 
-        latent_period=3                   # Length of a cases incubation period (from infection to start of infectious period)
+        # Parameters for CaseFactors simulation
+        app_cov=0.35,
+        compliance=0.8,                    # Probability of a traced contact isolating correctly
+        go_to_school_prob=1.0,                  # Fraction of school children attending school
+        wfh_prob=0.                        # Proportion or the population working from home
     ),
 }
+
+
+# this is a bit of a hack around weird design.
+def pop_case_factors(policy_cfg_dct):
+    """pop_case_factors
+
+    Args:
+        policy_cfg_dct (dict): 
+
+    Returns:
+
+    """
+    factors = dict()
+    factors['app_cov'] = policy_cfg_dct['app_cov']
+    for k in ['compliance', 'go_to_school_prob', 'wfh_prob']:
+        factors[k] = policy_cfg_dct.pop(k)
+    return factors
 
 
 _policy_configs = {
@@ -698,7 +705,7 @@ def get_strategy_configs(strategy_name, config_names=None):
     output = dict()
     for config_name in config_names:
         try:
-            output[config_name] = strategy[config_name]
+            output[config_name] = dict(**strategy[config_name])
         except KeyError:
             raise ValueError(f"Cannot find configuration {config_name} under "
                     f"strategy {strategy_name} in config.py")
@@ -712,12 +719,11 @@ Sensitivity = namedtuple(
 
 
 _policy_sensitivities = {
-        "temporal_anne_flowchart": dict(
+        "delve": dict(
             app_cov=Sensitivity(
                 bounds=(0, 1),
                 values=np.linspace(0.1, 1., num=10)
             ),
-
             testing_delay=Sensitivity(
                 bounds=None,
                 values=[1, 2, 3]
@@ -730,7 +736,7 @@ _policy_sensitivities = {
                 bounds=None,
                 values=[1, 2, 3]
             ),
-            trace_adherence=Sensitivity(
+            compliance=Sensitivity(
                 bounds=None,
                 values=np.linspace(0.5, 1., 6)
             )
@@ -779,7 +785,7 @@ _inf_prop_to_try.append(
 
 _case_sensitivities = {
         # to be decided!
-        "oxteam": dict(
+        "delve": dict(
             infection_proportions=Sensitivity(
                 bounds=None,
                 values=_inf_prop_to_try
@@ -821,7 +827,7 @@ _case_sensitivities = {
     }
 
 
-get_policy_sensitivities = partial(get_contacts_config, _cfg_dct=_policy_sensitivities)
+get_strategy_sensitivities = partial(get_contacts_config, _cfg_dct=_policy_sensitivities)
 get_case_sensitivities = partial(get_contacts_config, _cfg_dct=_case_sensitivities)
 
 
