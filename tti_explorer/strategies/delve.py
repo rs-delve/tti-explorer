@@ -1,22 +1,26 @@
 import numpy as np
 
 from .. import config
+from ..case import CaseFactors
 from . import registry
 from .common import _limit_contact, RETURN_KEYS
 
 
-@registry('temporal_anne_flowchart')
-def temporal_anne_flowchart(case, contacts, rng, **kwargs):
-    """
-    This is an implementation of flowchart produced by Anne Johnson and Guy Harling
-    """
 
-    strategy = TTIFlowModel(rng, **kwargs)
-    metrics = strategy(case, contacts)
+@registry('delve')
+def delve(case, contacts, rng, **kwds):
+    factor_cfg = config.pop_case_factors(kwds)
+    case_factors = CaseFactors.simulate_from(rng, case, **factor_cfg)
+    strategy = TTIFlowModel(rng, **kwds)
+    metrics = strategy(case, contacts, case_factors)
     return metrics
 
 
+# TODO: turn all these comments into (google style) docstring
 class TTIFlowModel():
+    """
+    This is an implementation of flowchart produced by Anne Johnson and Guy Harling
+    """
     def __init__(self,
                 rng,
 
@@ -32,7 +36,8 @@ class TTIFlowModel():
                 test_contacts_on_positive,      # Do we test contacts of a positive case immediately, or wait for them to develop symptoms
 
                 do_symptom_testing,             # Test symptomatic individuals
-                app_cov,                        # % Coverage of the app
+
+                app_cov,                 # Probability of tracing contact through app
 
                 testing_delay,                  # Delay between test and results
 
@@ -46,17 +51,11 @@ class TTIFlowModel():
                 manual_work_trace_prob,         # Probability of manually tracing a work contact
                 manual_othr_trace_prob,         # Probability of manually tracing an other contact
 
-                trace_adherence,                # Probability of a traced contact isolating correctly
-
-                go_to_school_prob,              # If schools are open
-
                 met_before_w,                   # Probability of having met a work contact before to be able to manually trace
                 met_before_s,                   # Probability of having met a school contact before to be able to manually trace
                 met_before_o,                   # Probability of having met a other contact before to be able to manually trace
 
                 max_contacts,                   # Place a limit on the number of other contacts per day
-
-                wfh_prob,                       # Proportion or the population working from home
 
                 fractional_infections,          # Include infected but traced individuals as a fraction of their infection period not isolated
 
@@ -92,84 +91,18 @@ class TTIFlowModel():
         self.manual_work_trace_prob = manual_work_trace_prob
         self.manual_othr_trace_prob = manual_othr_trace_prob
 
-        self.trace_adherence = trace_adherence
-
-        self.go_to_school_prob = go_to_school_prob
-
         self.met_before_w = met_before_w
         self.met_before_s = met_before_s
         self.met_before_o = met_before_o
 
         self.max_contacts = max_contacts
 
-        self.wfh_prob = wfh_prob
-
         self.fractional_infections = fractional_infections
 
         self.quarantine_length = quarantine_length
 
         self.latent_period = latent_period
-
-    def _init_case_parameters(self, case):
-        self.case = case
-
-        # If under 18, use school parameters
-        if self.case.under18:
-            self.wfh = self.rng.uniform() < 1 - self.go_to_school_prob
-            self.met_before_w = self.met_before_s
-        else:
-            self.wfh = self.rng.uniform() < self.wfh_prob
-            self.met_before_w = self.met_before_w
-
-        # Test if user has the app
-        has_app = self.rng.uniform() < self.app_cov
-
-        # Assume if have app, this is how they will report. Assume reports on day noticed
-        if self.case.symptomatic:
-            does_report = self.rng.uniform() < self.trace_adherence
-
-            if does_report:
-                if has_app:
-                    report_app = True
-                    report_manual = False
-                else:
-                    report_app = False
-                    report_manual = True
-            else:
-                report_app = False
-                report_manual = False
-        else:
-            report_app = False
-            report_manual = False
-
-        self.report_app = report_app
-        self.report_manual = report_manual
-
-        # Check if any test was performed
-        self.test_performed = (report_app or report_manual)
-        if self.test_performed:
-            self.test_perform_day = self.case.day_noticed_symptoms
-            self.test_results_day = self.test_perform_day + self.testing_delay
-        
-            # If isolate the person on day of test
-            if self.isolate_individual_on_symptoms:
-                self.isolate_day = self.test_perform_day
-            # If isolate on positive and would be positive
-            elif self.isolate_individual_on_positive and self.case.covid:
-                self.isolate_day = self.test_results_day
-            else:
-                # Don't isolate, set to something beyond simulation horizon
-                self.isolate_day = 200
-
-
-    def __call__(self, case, contacts):
-        self._init_case_parameters(case)
-        self.contacts = contacts
-        metrics = self._run()
-
-        return metrics
-
-
+       
     def _trace_contacts(self, do_tracing, trace_prob, n_contacts, contacts_prevented):
         contacts_traced = np.zeros(shape=n_contacts, dtype=bool)
         if do_tracing:
@@ -263,43 +196,65 @@ class TTIFlowModel():
 
         return fractional_num, contact_cumulative_infectiousness
 
+    def tti_chronology(self, case, case_factors):
+        """Calculate if and when a case was tested and isolated
 
-    def _run(self):
+        Args:
+            case:
+            case_factors:
+
+        Returns:
+        """
+        test_performed = case_factors.report_app or case_factors.report_manual
+        if not test_performed:
+            return test_performed, float('inf'), float('inf'), float('inf')
+        else:
+            test_perform_day = case.day_noticed_symptoms
+            test_results_day = test_perform_day + self.testing_delay
+        
+            if self.isolate_individual_on_symptoms:
+                isolate_day = test_perform_day
+            elif self.isolate_individual_on_positive and case.covid:
+                isolate_day = test_results_day
+            else:
+                # Don't isolate, set to something beyond simulation horizon
+                # Float is fine here as long as used only for comparison
+                isolate_day = float('inf')
+            return test_performed, test_perform_day, test_results_day, isolate_day
+
+    def __call__(self, case, contacts, case_factors):
+        test_performed, test_perform_day, test_results_day, isolate_day = self.tti_chronology(case, case_factors)
+
         # Days on which individual made contact with their contacts. For home, earliest day of infectivity.
-        home_contacts = self.contacts.home[:, 1]
-        work_contacts = self.contacts.work[:, 1]
-        othr_contacts = self.contacts.other[:, 1]
+        home_contacts = contacts.home[:, 1]
+        work_contacts = contacts.work[:, 1]
+        othr_contacts = contacts.other[:, 1]
 
         # Get the day on which a household member was infected
-        home_infected_day = self.contacts.home[:, 0]
+        home_infected_day = contacts.home[:, 0]
         # Get if an infection was caused in contacts
-        home_infections = (self.contacts.home[:, 0] >= 0).astype(bool)
-        work_infections = (self.contacts.work[:, 0] >= 0).astype(bool)
-        othr_infections = (self.contacts.other[:, 0] >= 0).astype(bool)
+        home_infections = (contacts.home[:, 0] >= 0).astype(bool)
+        work_infections = (contacts.work[:, 0] >= 0).astype(bool)
+        othr_infections = (contacts.other[:, 0] >= 0).astype(bool)
 
-        # Pre pull numbers of contacts for speed
         n_home = home_infections.shape[0]
         n_work = work_infections.shape[0]
         n_othr = othr_infections.shape[0]
-
 
         # Compute reduction in contacts due to contact limiting policy. Independent of test status.
         othr_contacts_limited = ~_limit_contact(othr_contacts, self.max_contacts)
 
         # Compute reduction in contacts due to wfh. Independent of test status.
-        if self.wfh:
+        if case_factors.wfh:
             work_contacts_wfh_limited = np.ones_like(work_contacts).astype(bool)
         else:
             work_contacts_wfh_limited = np.zeros_like(work_contacts).astype(bool)
 
-
-        # If the person got tested
-        if self.test_performed:
-
+        if test_performed:
             # Prevent contact after isolation day
-            home_contacts_prevented = (home_infected_day >= self.isolate_day).astype(bool)
-            work_contacts_prevented = (work_contacts >= self.isolate_day).astype(bool)
-            othr_contacts_prevented = (othr_contacts >= self.isolate_day).astype(bool)
+            home_contacts_prevented = (home_infected_day >= isolate_day).astype(bool)
+            work_contacts_prevented = (work_contacts >= isolate_day).astype(bool)
+            othr_contacts_prevented = (othr_contacts >= isolate_day).astype(bool)
 
             # Remove contacts not made due to work from home
             work_contacts_prevented = work_contacts_prevented | work_contacts_wfh_limited
@@ -308,25 +263,45 @@ class TTIFlowModel():
             othr_contacts_prevented = othr_contacts_prevented | othr_contacts_limited
 
             ### TRACING CONTACTS
-            work_contacts_trace_app = self._trace_contacts(self.do_app_tracing and self.report_app, self.app_cov, n_work, work_contacts_prevented)
-            othr_contacts_trace_app = self._trace_contacts(self.do_app_tracing and self.report_app, self.app_cov, n_othr, othr_contacts_prevented)
+            work_contacts_trace_app = self._trace_contacts(
+                    self.do_app_tracing and case_factors.report_app,
+                    self.app_cov,
+                    n_work,
+                    work_contacts_prevented
+                )
+            othr_contacts_trace_app = self._trace_contacts(
+                    self.do_app_tracing and case_factors.report_app,
+                    self.app_cov,
+                    n_othr,
+                    othr_contacts_prevented
+                )
             # Even if the primary case reported symptoms via the app, we do manual tracing anyway as a safety net
-            work_contacts_trace_manual = self._trace_contacts(self.do_manual_tracing, self.manual_work_trace_prob * self.met_before_w, n_work, work_contacts_prevented)
-            othr_contacts_trace_manual = self._trace_contacts(self.do_manual_tracing, self.manual_othr_trace_prob * self.met_before_o, n_othr, othr_contacts_prevented)
+            work_contacts_trace_manual = self._trace_contacts(
+                    self.do_manual_tracing,
+                    self.manual_work_trace_prob * self.met_before_w,
+                    n_work,
+                    work_contacts_prevented
+                )
+            othr_contacts_trace_manual = self._trace_contacts(
+                    self.do_manual_tracing,
+                    self.manual_othr_trace_prob * self.met_before_o,
+                    n_othr,
+                    othr_contacts_prevented
+                )
 
             # Assume all home contacts traced
-            if self.isolate_household_on_symptoms or (self.isolate_household_on_positive and self.case.covid):
+            if self.isolate_household_on_symptoms or (self.isolate_household_on_positive and case.covid):
                 home_contacts_traced = np.ones_like(n_home, dtype=bool)
             else:
                 home_contacts_traced = np.zeros(shape=n_home, dtype=bool)
 
             # Traced if traced either way and didn't isolate and prevent contact
-            work_contacts_traced = (work_contacts_trace_app | work_contacts_trace_manual)
-            othr_contacts_traced = (othr_contacts_trace_app | othr_contacts_trace_manual)
+            work_contacts_traced = work_contacts_trace_app | work_contacts_trace_manual
+            othr_contacts_traced = othr_contacts_trace_app | othr_contacts_trace_manual
 
             # Compute trace statistics
             # Only trace if we want to isolate
-            if self.isolate_contacts_on_symptoms or (self.isolate_contacts_on_positive and self.case.covid):
+            if self.isolate_contacts_on_symptoms or (self.isolate_contacts_on_positive and case.covid):
                 manual_traces = work_contacts_trace_manual.sum() + othr_contacts_trace_manual.sum()
                 app_traces = work_contacts_trace_app.sum() + othr_contacts_trace_app.sum()
             else:
@@ -336,7 +311,6 @@ class TTIFlowModel():
             home_contacts_isolated = self._isolate_contacts(n_home, home_contacts_traced, home_contacts_prevented)
             work_contacts_isolated = self._isolate_contacts(n_work, work_contacts_traced, work_contacts_prevented)
             othr_contacts_isolated = self._isolate_contacts(n_othr, othr_contacts_traced, othr_contacts_prevented)
-
 
             # Do tests on the positive contacts if we want to, and find out which are asymptomatic 
             if self.test_contacts_on_positive:
@@ -349,35 +323,38 @@ class TTIFlowModel():
                 work_tested_positive = None
                 othr_tested_positive = None
 
-
             total_tests_performed = 0
             # count own test
             # TODO: Janky - if no contact tracing is going on, do NOT test the person
-            if (self.do_app_tracing or self.do_manual_tracing or self.isolate_contacts_on_positive or self.isolate_contacts_on_symptoms):
+            if any(
+                self.do_app_tracing,
+                self.do_manual_tracing,
+                self.isolate_contacts_on_positive,
+                self.isolate_contacts_on_symptoms
+            ):
                 total_tests_performed += 1
             
             # If house isolated on symptoms, or on positive
             # These tests will not count against the primary case, as these would have been tested regardless.
-            if self.case.covid:
-                total_tests_performed += 0. # home_contacts_isolated.sum()
+            if case.covid:
+                total_tests_performed += 0.  # home_contacts_isolated.sum()
 
             # If contacts isolated on symptoms, or on positive
             # TODO: Again, after conversations, we will not test traced contacts unless a particular policy decision is made.
             # We do not count cases that would become positive and symptomatic against the primary case, but do count others. 
-            if self.case.covid: # and test_contacts_on_positive:
-                total_tests_performed += 0 # work_contacts_isolated.sum() + othr_contacts_isolated.sum()
+            if case.covid:  # and test_contacts_on_positive:
+                total_tests_performed += 0  # work_contacts_isolated.sum() + othr_contacts_isolated.sum()
             
             # Test contacts on positive test of the primary case. Only count the test excluding the symptomatic cases
-            if self.test_contacts_on_positive and self.case.covid:
+            if self.test_contacts_on_positive and case.covid:
                 total_tests_performed += (work_contacts_isolated & ~work_tested_symptomatic).sum()
                 total_tests_performed += (othr_contacts_isolated & ~othr_tested_symptomatic).sum()
 
             ## Compute the quarantine days
-
             person_days_quarantine = 0
 
             # If person has covid, require full quarantine
-            if self.case.covid and (self.isolate_individual_on_symptoms or self.isolate_individual_on_positive):
+            if case.covid and (self.isolate_individual_on_symptoms or self.isolate_individual_on_positive):
                 person_days_quarantine += self.quarantine_length
             # If not, only require the test delay days of quarantine
             elif self.isolate_individual_on_symptoms:      
@@ -427,7 +404,7 @@ class TTIFlowModel():
         othr_infections_post_policy = othr_infections_post_isolation & ~othr_contacts_isolated
             
         ## Count fractional cases - will only occur if got tested
-        if self.test_performed and self.fractional_infections:
+        if test_performed and self.fractional_infections:
 
             # Get the days on which infections that were quarantined happened
             home_infection_days = home_infected_day[home_infections & home_contacts_isolated]
@@ -457,7 +434,6 @@ class TTIFlowModel():
             inverse_fractional_R = 0.
             home_fractional_R = 0.
             home_inverse_fractional_R = 0.
-            
 
         # Count the reduced infection rate
         reduced_rr = home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() + fractional_R
@@ -466,35 +442,19 @@ class TTIFlowModel():
         symptom_isolation_infections_prevented = (home_contacts_prevented & home_infections).sum() + (work_contacts_prevented & work_infections).sum() + (othr_contacts_prevented & othr_infections).sum() + home_inverse_fractional_R - social_distancing_infections_prevented
         contact_tracing_infections_prevented   = base_rr - reduced_rr - social_distancing_infections_prevented - symptom_isolation_infections_prevented
 
-
-
         return {
-                RETURN_KEYS.base_r: base_rr if self.case.covid else np.nan,
-                RETURN_KEYS.reduced_r: reduced_rr if self.case.covid else np.nan,
+                RETURN_KEYS.base_r: base_rr if case.covid else np.nan,
+                RETURN_KEYS.reduced_r: reduced_rr if case.covid else np.nan,
                 RETURN_KEYS.man_trace: manual_traces,
                 RETURN_KEYS.app_trace: app_traces,
                 RETURN_KEYS.tests: total_tests_performed,
                 RETURN_KEYS.quarantine: person_days_quarantine,
-                RETURN_KEYS.covid: self.case.covid,
-                RETURN_KEYS.symptomatic: self.case.symptomatic,
-                RETURN_KEYS.tested: self.test_performed and self.do_symptom_testing,
+                RETURN_KEYS.covid: case.covid,
+                RETURN_KEYS.symptomatic: case.symptomatic,
+                RETURN_KEYS.tested: test_performed and self.do_symptom_testing,
                 RETURN_KEYS.secondary_infections: home_infections.sum() + work_infections.sum() + othr_infections.sum(),
-
                 RETURN_KEYS.cases_prevented_social_distancing: social_distancing_infections_prevented,
                 RETURN_KEYS.cases_prevented_symptom_isolating: symptom_isolation_infections_prevented,
                 RETURN_KEYS.cases_prevented_contact_tracing: contact_tracing_infections_prevented,
                 RETURN_KEYS.fractional_r: fractional_R - home_cumulative_infectiousness,
-
-                # RETURN_KEYS.num_primary_symptomatic: 1 if case.covid and case.symptomatic else np.nan,
-                # RETURN_KEYS.num_primary_asymptomatic: 1 if case.covid and (not case.symptomatic) else np.nan,
-                # RETURN_KEYS.num_primary: 1 if case.covid else np.nan,
-                # RETURN_KEYS.num_primary_symptomatic_missed: 1 if case.covid and case.symptomatic and (not test_performed) else np.nan,
-                # RETURN_KEYS.num_primary_asymptomatic_missed: 1 if case.covid and (not case.symptomatic) and (not test_performed) else np.nan,
-                # RETURN_KEYS.num_primary_missed: 1 if case.covid and (not test_performed) else np.nan,
-                # RETURN_KEYS.num_secondary_from_symptomatic: home_infections_post_isolation.sum() + work_infections_post_isolation.sum() + othr_infections_post_isolation.sum() if case.covid and case.symptomatic else np.nan,
-                # RETURN_KEYS.num_secondary_from_asymptomatic: home_infections_post_isolation.sum() + work_infections_post_isolation.sum() + othr_infections_post_isolation.sum() if case.covid and (not case.symptomatic) else np.nan,
-                # RETURN_KEYS.num_secondary: home_infections_post_isolation.sum() + work_infections_post_isolation.sum() + othr_infections_post_isolation.sum() if case.covid else np.nan,
-                # RETURN_KEYS.num_secondary_from_symptomatic_missed: home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() if case.covid and case.symptomatic else np.nan,
-                # RETURN_KEYS.num_secondary_from_asymptomatic_missed: home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() if case.covid and (not case.symptomatic) else np.nan,
-                # RETURN_KEYS.num_secondary_missed: home_infections_post_policy.sum() + work_infections_post_policy.sum() + othr_infections_post_policy.sum() if case.covid else np.nan,
             }
