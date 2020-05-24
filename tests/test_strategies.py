@@ -26,7 +26,7 @@ def test_temporal_anne_flowchart_no_contacts(has_covid, s_level, contact_trace_o
 
     rng = np.random.RandomState(seed=TEST_RANDOM_SEED)
 
-    strategy = registry['temporal_anne_flowchart']
+    strategy = registry['delve']
     result = strategy(case, contacts, rng, **parameters)
 
     if has_covid:
