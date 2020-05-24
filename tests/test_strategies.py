@@ -20,13 +20,9 @@ def test_temporal_anne_flowchart_no_contacts(has_covid, s_level, contact_trace_o
         inf_profile=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     )
     contacts = Contacts(0, np.empty((0,2), dtype=int), np.empty((0,2), dtype=int), np.empty((0,2), dtype=int))
-    scenario = s_level + "_" + contact_trace_option
+    scenario = s_level + "_" + contact_trace_option if s_level != "S0" else s_level
 
-    try:
-        parameters = config.get_strategy_configs("temporal_anne_flowchart", [scenario])[scenario]
-    except ValueError:
-        assert s_level == "S0"
-        return
+    parameters = config.get_strategy_configs("delve", [scenario])[scenario]
 
     rng = np.random.RandomState(seed=TEST_RANDOM_SEED)
 
