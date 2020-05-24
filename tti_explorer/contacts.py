@@ -15,6 +15,14 @@ class Contacts:
     home: np.array
     work: np.array
     other: np.array
+    
+    def to_dict(self):
+        return dict(
+                n_daily=self.n_daily,
+                home=self.home,
+                work=self.work,
+                other=self.other
+            )
 
 
 def he_infection_profile(period, gamma_params):

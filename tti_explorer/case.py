@@ -13,6 +13,15 @@ class Case:
     day_noticed_symptoms: int
     inf_profile: list
 
+    def to_dict(self):
+        return dict(
+                under18=self.under18,
+                covid=self.covid,
+                symptomatic=self.symptomatic,
+                day_noticed_symptoms=self.day_noticed_symptoms,
+                inf_profile=self.inf_profile
+            )
+
 
 @dataclass
 class CaseFactors:
@@ -35,7 +44,7 @@ class CaseFactors:
 
         Returns:
         """
-        p = 1 - go_to_school_prob if case.under18 else wfh_prob
+        p = (1 - go_to_school_prob) if case.under18 else wfh_prob
         wfh = bool_bernoulli(p, rng)
 
         has_app = bool_bernoulli(app_cov, rng)

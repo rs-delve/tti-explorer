@@ -671,7 +671,8 @@ def pop_case_factors(policy_cfg_dct):
     """
     factors = dict()
     factors['app_cov'] = policy_cfg_dct['app_cov']
-    for k in ['compliance', 'go_to_school_prob', 'wfh_prob']:
+    factors['compliance'] = policy_cfg_dct['compliance']
+    for k in ['go_to_school_prob', 'wfh_prob']:
         factors[k] = policy_cfg_dct.pop(k)
     return factors
 
