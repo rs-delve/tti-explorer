@@ -1,20 +1,54 @@
-from collections import namedtuple
+from dataclasses import dataclass
 
 import numpy as np
 
 from .utils import bool_bernoulli, categorical
 
 
-Case = namedtuple(
-        'Case',
-        [
-            "under18",
-            "covid",
-            "symptomatic",
-            "day_noticed_symptoms",
-            "inf_profile"
-        ]
-    )
+@dataclass
+class Case:
+    under18: bool
+    covid: bool
+    symptomatic: bool
+    day_noticed_symptoms: int
+    inf_profile: list
+
+
+@dataclass
+class CaseFactors:
+    wfh: bool
+    has_app: bool
+    report_app: bool
+    report_manual: bool
+
+    @classmethod
+    def simulate_from(cls, rng, case, app_cov, go_to_school_prob, wfh_prob, compliance):
+        """Simulate case factors
+
+        Args:
+            rng:
+            case:
+            app_cov:
+            go_to_school_prob:
+            wfh_prob:
+            compliance:
+
+        Returns:
+        """
+        p = 1 - go_to_school_prob if case.under18 else wfh_prob
+        wfh = bool_bernoulli(p, rng)
+
+        has_app = bool_bernoulli(app_cov, rng)
+        does_report = case.symptomatic and bool_bernoulli(compliance, rng)
+        report_app = does_report and has_app
+        report_manual = does_report and not has_app
+
+        return cls(
+                wfh=wfh,
+                has_app=has_app,
+                report_app=report_app,
+                report_manual=report_manual
+            )
 
 
 def simulate_case(rng, p_under18, infection_proportions, p_day_noticed_symptoms, inf_profile):
@@ -62,3 +96,4 @@ def simulate_case(rng, p_under18, infection_proportions, p_day_noticed_symptoms,
                 day_noticed_symptoms=categorical(p_day_noticed_symptoms, rng),
                 inf_profile=profile
             )
+
