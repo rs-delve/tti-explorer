@@ -7,7 +7,7 @@ from tti_explorer.utils import ROOT_DIR
 
 
 def case_as_dict(case):
-    dct = case._asdict()
+    dct = case.to_dict()
     dct['inf_profile'] = dct['inf_profile'].tolist()
     return dct
 
@@ -16,9 +16,9 @@ def contacts_as_dict(contacts):
     contacts_dct = {
             k:
             v.tolist() if isinstance(v, np.ndarray) else v
-            for k, v in contacts._asdict().items()
+            for k, v in contacts.to_dict().items()
         }
-    contacts_dct['n_daily'] = {k: int(v) for k,v in contacts_dct['n_daily'].items()}
+    contacts_dct['n_daily'] = {k: int(v) for k, v in contacts_dct['n_daily'].items()}
     return contacts_dct
 
 

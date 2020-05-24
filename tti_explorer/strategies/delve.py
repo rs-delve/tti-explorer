@@ -61,6 +61,7 @@ class TTIFlowModel():
 
                 quarantine_length,              # Length of quarantine imposed on COVID cases (and household)
 
+                compliance,
                 latent_period,                  # Length of a cases incubation period (from infection to start of infectious period)
     ):
         self.rng = rng
@@ -100,13 +101,14 @@ class TTIFlowModel():
         self.fractional_infections = fractional_infections
 
         self.quarantine_length = quarantine_length
+        self.compliance = compliance
 
         self.latent_period = latent_period
        
-    def _trace_contacts(self, do_tracing, trace_prob, n_contacts, contacts_prevented):
+    def _trace_contacts(self, case, do_tracing, trace_prob, n_contacts, contacts_prevented):
         contacts_traced = np.zeros(shape=n_contacts, dtype=bool)
         if do_tracing:
-            if self.isolate_contacts_on_symptoms or (self.isolate_contacts_on_positive and self.case.covid):
+            if self.isolate_contacts_on_symptoms or (self.isolate_contacts_on_positive and case.covid):
                 contacts_traced = self.rng.binomial(n=1, p=trace_prob, size=n_contacts).astype(bool)
         
         contacts_traced = contacts_traced & ~contacts_prevented
@@ -116,7 +118,7 @@ class TTIFlowModel():
 
     def _isolate_contacts(self, n_contacts, contacts_traced, contacts_prevented):
         # Work out if each contact will adhere to the policy
-        contacts_adherence = self.rng.binomial(n=1, p=self.trace_adherence, size=n_contacts).astype(bool)
+        contacts_adherence = self.rng.binomial(n=1, p=self.compliance, size=n_contacts).astype(bool)
         # Compute which contact will isolate because of the contact trace
         contacts_isolated = contacts_traced & contacts_adherence & ~contacts_prevented 
 
@@ -131,13 +133,13 @@ class TTIFlowModel():
         return symptomatic, asymptomatic
 
 
-    def _count_contacts_quarantine_days(self,
+    def _count_contacts_quarantine_days(self, case,
                                         isolate_on_symptoms, isolate_on_positive, contacts_isolated,
                                         test_contacts_on_positive, contacts_tested_positive):
         ## NOTE: working with "quarantined" as this represents those traced who were still contacted and complied
-        if isolate_on_symptoms and not self.case.covid:
+        if isolate_on_symptoms and not case.covid:
             return self.testing_delay * contacts_isolated.sum()
-        elif (isolate_on_symptoms or isolate_on_positive) and self.case.covid:
+        elif (isolate_on_symptoms or isolate_on_positive) and case.covid:
             # NOTE: for now assume that people are tested on the same day as isolated.
 
             # If we are testing contacts on positive, then we will only need to quarantine those who are positive after the test
@@ -167,8 +169,8 @@ class TTIFlowModel():
         return trace_delay
 
 
-    def _get_fractional_metrics(self, infection_days, trace_delay, isolate_on_symptoms, isolate_on_positive):
-        infectiousness_by_day = self.case.inf_profile
+    def _get_fractional_metrics(self, case, test_perform_day, test_results_day, infection_days, trace_delay, isolate_on_symptoms, isolate_on_positive):
+        infectiousness_by_day = case.inf_profile
         cumulative_infectiousness = np.cumsum(infectiousness_by_day)
         infectious_period = len(cumulative_infectiousness)
 
@@ -176,9 +178,9 @@ class TTIFlowModel():
         infectious_start = infection_days + self.latent_period
 
         if isolate_on_symptoms:
-            days_not_quarantined = (self.test_perform_day + trace_delay) - infectious_start
+            days_not_quarantined = (test_perform_day + trace_delay) - infectious_start
         elif isolate_on_positive:
-            days_not_quarantined = (self.test_results_day + trace_delay) - infectious_start
+            days_not_quarantined = (test_results_day + trace_delay) - infectious_start
         else:
             # If neither of these are true, then the case would not have made it to here
             days_not_quarantined = infectious_period * np.ones(len(infectious_start), dtype=int)
@@ -264,12 +266,14 @@ class TTIFlowModel():
 
             ### TRACING CONTACTS
             work_contacts_trace_app = self._trace_contacts(
+                    case,
                     self.do_app_tracing and case_factors.report_app,
                     self.app_cov,
                     n_work,
                     work_contacts_prevented
                 )
             othr_contacts_trace_app = self._trace_contacts(
+                    case,
                     self.do_app_tracing and case_factors.report_app,
                     self.app_cov,
                     n_othr,
@@ -277,12 +281,14 @@ class TTIFlowModel():
                 )
             # Even if the primary case reported symptoms via the app, we do manual tracing anyway as a safety net
             work_contacts_trace_manual = self._trace_contacts(
+                    case,
                     self.do_manual_tracing,
-                    self.manual_work_trace_prob * self.met_before_w,
+                    self.manual_work_trace_prob * (self.met_before_s if case.under18 else self.met_before_w),
                     n_work,
                     work_contacts_prevented
                 )
             othr_contacts_trace_manual = self._trace_contacts(
+                    case,
                     self.do_manual_tracing,
                     self.manual_othr_trace_prob * self.met_before_o,
                     n_othr,
@@ -326,12 +332,12 @@ class TTIFlowModel():
             total_tests_performed = 0
             # count own test
             # TODO: Janky - if no contact tracing is going on, do NOT test the person
-            if any(
+            if any([
                 self.do_app_tracing,
                 self.do_manual_tracing,
                 self.isolate_contacts_on_positive,
                 self.isolate_contacts_on_symptoms
-            ):
+                ]):
                 total_tests_performed += 1
             
             # If house isolated on symptoms, or on positive
@@ -361,14 +367,14 @@ class TTIFlowModel():
                 person_days_quarantine += self.testing_delay
             ## Don't add any if: not isolating at all, individual only isolating after test complete
 
-            person_days_quarantine += self._count_contacts_quarantine_days(
+            person_days_quarantine += self._count_contacts_quarantine_days(case,
                                         self.isolate_household_on_symptoms, self.isolate_household_on_positive, home_contacts_isolated,
                                         # irrelevant parameters for household
                                         test_contacts_on_positive=False, contacts_tested_positive=None)
-            person_days_quarantine += self._count_contacts_quarantine_days(
+            person_days_quarantine += self._count_contacts_quarantine_days(case,
                                         self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive, work_contacts_isolated,
                                         self.test_contacts_on_positive, work_tested_positive)
-            person_days_quarantine += self._count_contacts_quarantine_days(
+            person_days_quarantine += self._count_contacts_quarantine_days(case,
                                         self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive, othr_contacts_isolated,
                                         self.test_contacts_on_positive, othr_tested_positive)
 
@@ -417,11 +423,14 @@ class TTIFlowModel():
             home_trace_delay = np.zeros_like(home_infection_days)
 
             fractional_num_home, home_cumulative_infectiousness = \
-                self._get_fractional_metrics(home_infection_days, home_trace_delay, self.isolate_household_on_symptoms, self.isolate_household_on_positive)
+                self._get_fractional_metrics(case, test_perform_day, test_results_day,
+                        home_infection_days, home_trace_delay, self.isolate_household_on_symptoms, self.isolate_household_on_positive)
             fractional_num_work, work_cumulative_infectiousness = \
-                self._get_fractional_metrics(work_infection_days, work_trace_delay, self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive)
+                self._get_fractional_metrics(case, test_perform_day, test_results_day,
+                        work_infection_days, work_trace_delay, self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive)
             fractional_num_othr, othr_cumulative_infectiousness = \
-                self._get_fractional_metrics(othr_infection_days, othr_trace_delay, self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive)
+                self._get_fractional_metrics(case, test_perform_day, test_results_day,
+                        othr_infection_days, othr_trace_delay, self.isolate_contacts_on_symptoms, self.isolate_contacts_on_positive)
 
             fractional_num = fractional_num_home + fractional_num_work + fractional_num_othr
             fractional_R = home_cumulative_infectiousness + work_cumulative_infectiousness + othr_cumulative_infectiousness
