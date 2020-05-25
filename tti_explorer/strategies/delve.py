@@ -225,6 +225,15 @@ class TTIFlowModel():
             return test_performed, test_perform_day, test_results_day, isolate_day
 
     def __call__(self, case, contacts, case_factors):
+        """Run a TTI strategy
+
+        Args:
+            case:
+            contacts:
+            case_factors:
+
+        Returns:
+        """
         test_performed, test_perform_day, test_results_day, isolate_day = self.tti_chronology(case, case_factors)
 
         # Days on which individual made contact with their contacts. For home, earliest day of infectivity.
@@ -259,10 +268,10 @@ class TTIFlowModel():
             othr_contacts_prevented = (othr_contacts >= isolate_day).astype(bool)
 
             # Remove contacts not made due to work from home
-            work_contacts_prevented = work_contacts_prevented | work_contacts_wfh_limited
+            work_contacts_prevented = (work_contacts_prevented | work_contacts_wfh_limited)
 
             # Remove other contact limiting contacts
-            othr_contacts_prevented = othr_contacts_prevented | othr_contacts_limited
+            othr_contacts_prevented = (othr_contacts_prevented | othr_contacts_limited)
 
             ### TRACING CONTACTS
             work_contacts_trace_app = self._trace_contacts(
