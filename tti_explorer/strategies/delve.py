@@ -1,18 +1,20 @@
 import numpy as np
 
-from .. import config
+from .. import config, utils
 from ..case import CaseFactors
 from . import registry
 from .common import _limit_contact, RETURN_KEYS
 
 
-
 @registry('delve')
 def delve(case, contacts, rng, **kwds):
-    factor_cfg = config.pop_case_factors(kwds)
+    strategy_factors = utils.get_sub_dictionary(kwds, config.DELVE_STRATEGY_FACTOR_KEYS)
+    strategy = TTIFlowModel(rng, **strategy_factors)
+
+    factor_cfg = utils.get_sub_dictionary(kwds, config.DELVE_CASE_FACTOR_KEYS)
     case_factors = CaseFactors.simulate_from(rng, case, **factor_cfg)
-    strategy = TTIFlowModel(rng, **kwds)
     metrics = strategy(case, contacts, case_factors)
+
     return metrics
 
 

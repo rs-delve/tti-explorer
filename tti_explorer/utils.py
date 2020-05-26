@@ -92,6 +92,10 @@ def sort_by(lst, by, return_idx=False):
     return (res, idx) if return_idx else res
 
 
+def get_sub_dictionary(adict, keys):
+    return {k:adict[k] for k in keys if k in adict}
+
+
 class Registry:
     "Case insensitive registry"
     def __init__(self):
