@@ -659,22 +659,9 @@ _global_defaults = {
 }
 
 
-# this is a bit of a hack around weird design.
-def pop_case_factors(policy_cfg_dct):
-    """pop_case_factors
-
-    Args:
-        policy_cfg_dct (dict): 
-
-    Returns:
-
-    """
-    factors = dict()
-    factors['app_cov'] = policy_cfg_dct['app_cov']
-    factors['compliance'] = policy_cfg_dct['compliance']
-    for k in ['go_to_school_prob', 'wfh_prob']:
-        factors[k] = policy_cfg_dct.pop(k)
-    return factors
+# strategy factors include all parameters except a few
+DELVE_STRATEGY_FACTOR_KEYS = tuple( k for k in _global_defaults['delve'].keys() if k not in ('go_to_school_prob', 'wfh_prob') )
+DELVE_CASE_FACTOR_KEYS = ('app_cov', 'compliance', 'go_to_school_prob', 'wfh_prob')
 
 
 _policy_configs = {

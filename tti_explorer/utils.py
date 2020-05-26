@@ -17,20 +17,18 @@ def bool_bernoulli(p, rng):
 
 
 def categorical(pvals, rng, n=1):
-    """categorical
+    """ Sample from categories according to their probabilities.
 
     Args:
-        pvals (iterable[float]): probabilities
+        pvals (iterable[float]): probabilities of each category, should sum to 1
         rng (np.random.RandomState): random state from which to draw
-        n (int): Number of iid samples
+        n (int): Number of iid samples, defaults to 1
 
     Returns:
-        result (int or np.array[int]): depending on whether `n`==1
+        Indexes of drawn categories, np.array[int] of shape (n,)
     """
     outputs = np.argmax(rng.multinomial(1, pvals, size=n), axis=-1)
-    return outputs.item() if n == 1 else outputs
-# BE, weird to have different output types but also weird to return
-# a 1 item array
+    return outputs
 
 
 def load_cases(fpath):
@@ -93,6 +91,10 @@ def write_json(stuff, fpath):
 def sort_by(lst, by, return_idx=False):
     idx, res = zip(*sorted(zip(by, lst)))
     return (res, idx) if return_idx else res
+
+
+def get_sub_dictionary(adict, keys):
+    return {k:adict[k] for k in keys if k in adict}
 
 
 class Registry:
