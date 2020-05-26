@@ -85,7 +85,7 @@ def simulate_case(rng, p_under18, infection_proportions, p_day_noticed_symptoms,
                 p_symptomatic_covid_neg,
                 p_symptomatic_covid_pos,
             ]
-    illness = categorical(illness_pvals, rng)
+    illness = categorical(illness_pvals, rng).item()
 
     if illness == 0:
         return Case(
@@ -102,7 +102,7 @@ def simulate_case(rng, p_under18, infection_proportions, p_day_noticed_symptoms,
                 covid=covid,
                 symptomatic=True,
                 under18=under18,
-                day_noticed_symptoms=categorical(p_day_noticed_symptoms, rng),
+                day_noticed_symptoms=categorical(p_day_noticed_symptoms, rng).item(),
                 inf_profile=profile
             )
 
