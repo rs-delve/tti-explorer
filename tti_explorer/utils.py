@@ -12,9 +12,7 @@ ROOT_DIR = pathlib.Path(__file__).parent.parent
 
 
 def bool_bernoulli(p, rng):
-    #return bool(rng.binomial(1, p))
-    #return rng.uniform() < p
-    return rng.uniform() <= p
+    return bool(rng.binomial(1, p))
 
 
 def categorical(pvals, rng, n=1):
