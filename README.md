@@ -22,7 +22,8 @@ For an introduction to the functionality offered by `tti-explorer`, start with t
 
 ## Setup:
 ```bash
-    git clone https://github.com/rs-delve/tti-explorer
-    cd tti-explorer
-    pip install .
+git clone https://github.com/rs-delve/tti-explorer
+cd tti-explorer
+pip install -r requirements.txt
+pip install .
 ```
