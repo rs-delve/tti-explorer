@@ -3,7 +3,7 @@ This is a repository for `tti-explorer`, a library for simulating infection spre
 
 ## Introductory notebook: 
 
-For an introduction to the functionality offered by `tti-explorer`, start with the [tti-experiment notebook](https://github.com/rs-delve/tti-explorer/blob/master/notebooks/tti-experiment.ipynb).
+For an introduction to the functionality offered by `tti-explorer`, start with the [tti-experiment notebook](https://colab.research.google.com/github/rs-delve/tti-explorer/blob/master/notebooks/tti-experiment.ipynb).
 
 ## Requirements:
 ### tti_explorer
