@@ -11,6 +11,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/rs-delve/tti-explorer",
+    python_requires='>=3.8',
     packages=setuptools.find_packages(),
     # The following may be untrue and needs to be checked!
     classifiers=[
