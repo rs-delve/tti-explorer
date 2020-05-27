@@ -6,10 +6,14 @@ This is a repository for `tti-explorer`, a library for simulating infection spre
 For an introduction to the functionality offered by `tti-explorer`, start with the [tti-experiment notebook](https://github.com/rs-delve/tti-explorer/blob/master/notebooks/tti-experiment.ipynb).
 
 ## Requirements:
+### tti_explorer
 - Python >= 3.8
 - numpy
-- matplotlib
+- scipy
 - pandas
+- matplotlib
+### scripts, tests and notebooks
+- jupyter
 - tqdm
 - pytest
 
