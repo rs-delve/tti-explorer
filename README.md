@@ -23,6 +23,6 @@ For an introduction to the functionality offered by `tti-explorer`, start with t
 ## Setup:
 ```bash
     git clone https://github.com/rs-delve/tti-explorer
-    python setup.py sdist bdist_wheel
+    cd tti-explorer
     pip install .
 ```
