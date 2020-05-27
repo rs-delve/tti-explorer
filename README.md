@@ -9,7 +9,7 @@ For an introduction to the functionality offered by `tti-explorer`, start with t
 
 ## Requirements:
 ### tti_explorer
-- Python >= 3.8
+- Python 3.7+
 - numpy
 - scipy
 - pandas
