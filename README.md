@@ -9,11 +9,12 @@ For an introduction to the functionality offered by `tti-explorer`, start with t
 
 ## Requirements:
 ### tti_explorer
-- Python 3.7+
+- Python 3.6+
 - numpy
 - scipy
 - pandas
 - matplotlib
+- dataclasses (for Python 3.6)
 ### scripts, tests and notebooks
 - jupyter
 - tqdm
