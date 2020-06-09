@@ -5,7 +5,7 @@ from .common import _limit_contact, RETURN_KEYS
 
 
 @registry("CMMID_better")  # noqa: C901
-def CMMID_strategy_better(
+def CMMID_strategy_better(  # noqa: C901
     case,
     contacts,
     rng,
