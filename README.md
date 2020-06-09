@@ -1,5 +1,6 @@
 # tti-explorer
 ![Python Tests](https://github.com/rs-delve/tti-explorer/workflows/Python%20Tests/badge.svg)
+![codecov](https://codecov.io/gh/rs-delve/tti-explorer/branch/master/graph/badge.svg)
 
 This is a repository for `tti-explorer`, a library for simulating infection spread. This library is built to explore the impact of various test-trace-isolate strategies and social distancing measures on the spread of COVID-19 in the UK.
 
