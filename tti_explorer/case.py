@@ -15,12 +15,12 @@ class Case:
 
     def to_dict(self):
         return dict(
-                under18=self.under18,
-                covid=self.covid,
-                symptomatic=self.symptomatic,
-                day_noticed_symptoms=self.day_noticed_symptoms,
-                inf_profile=self.inf_profile
-            )
+            under18=self.under18,
+            covid=self.covid,
+            symptomatic=self.symptomatic,
+            day_noticed_symptoms=self.day_noticed_symptoms,
+            inf_profile=self.inf_profile,
+        )
 
 
 @dataclass
@@ -53,14 +53,13 @@ class CaseFactors:
         report_manual = does_report and not has_app
 
         return cls(
-                wfh=wfh,
-                has_app=has_app,
-                report_app=report_app,
-                report_manual=report_manual
-            )
+            wfh=wfh, has_app=has_app, report_app=report_app, report_manual=report_manual
+        )
 
 
-def simulate_case(rng, p_under18, infection_proportions, p_day_noticed_symptoms, inf_profile):
+def simulate_case(
+    rng, p_under18, infection_proportions, p_day_noticed_symptoms, inf_profile
+):
     """simulate_case
 
     Args:
@@ -76,33 +75,36 @@ def simulate_case(rng, p_under18, infection_proportions, p_day_noticed_symptoms,
 
     Returns (Case): case with attributes populated.
     """
-    p_symptomatic_covid_neg, p_symptomatic_covid_pos, p_asymptomatic_covid_pos = infection_proportions['dist']
+    (
+        p_symptomatic_covid_neg,
+        p_symptomatic_covid_pos,
+        p_asymptomatic_covid_pos,
+    ) = infection_proportions["dist"]
 
     under18 = bool_bernoulli(p_under18, rng)
 
     illness_pvals = [
-                p_asymptomatic_covid_pos,
-                p_symptomatic_covid_neg,
-                p_symptomatic_covid_pos,
-            ]
+        p_asymptomatic_covid_pos,
+        p_symptomatic_covid_neg,
+        p_symptomatic_covid_pos,
+    ]
     illness = categorical(illness_pvals, rng).item()
 
     if illness == 0:
         return Case(
-                covid=True,
-                symptomatic=False,
-                under18=under18,
-                day_noticed_symptoms=-1,
-                inf_profile=np.array(inf_profile)
-            )
+            covid=True,
+            symptomatic=False,
+            under18=under18,
+            day_noticed_symptoms=-1,
+            inf_profile=np.array(inf_profile),
+        )
     else:
         covid = illness == 2
         profile = np.array(inf_profile) if covid else np.zeros(len(inf_profile))
         return Case(
-                covid=covid,
-                symptomatic=True,
-                under18=under18,
-                day_noticed_symptoms=categorical(p_day_noticed_symptoms, rng).item(),
-                inf_profile=profile
-            )
-
+            covid=covid,
+            symptomatic=True,
+            under18=under18,
+            day_noticed_symptoms=categorical(p_day_noticed_symptoms, rng).item(),
+            inf_profile=profile,
+        )

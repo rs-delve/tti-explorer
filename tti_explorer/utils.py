@@ -52,20 +52,20 @@ def load_cases(fpath):
     meta = raw
     pairs = list()
     for dct in cases:
-        case = Case(**dct['case'])
-        contacts_dct = dct['contacts']
-        n_daily = contacts_dct.pop('n_daily')
+        case = Case(**dct["case"])
+        contacts_dct = dct["contacts"]
+        n_daily = contacts_dct.pop("n_daily")
         contacts_dct = {
-                k: np.array(v, dtype=int).reshape(-1, NCOLS)
-                for k, v in contacts_dct.items()
-                }
+            k: np.array(v, dtype=int).reshape(-1, NCOLS)
+            for k, v in contacts_dct.items()
+        }
         contacts = Contacts(n_daily=n_daily, **contacts_dct)
         pairs.append((case, contacts))
     return pairs, meta
 
 
 def named_product(**items):
-    Product = namedtuple('Product', items.keys())
+    Product = namedtuple("Product", items.keys())
     return starmap(Product, product(*items.values()))
 
 
@@ -75,7 +75,10 @@ def swaplevel(dct_of_dct):
 
 
 def map_lowest(func, dct):
-    return {k: map_lowest(func, v) if isinstance(v, dict) else func(v) for k, v in dct.items()}
+    return {
+        k: map_lowest(func, v) if isinstance(v, dict) else func(v)
+        for k, v in dct.items()
+    }
 
 
 def read_json(fpath):
@@ -94,11 +97,12 @@ def sort_by(lst, by, return_idx=False):
 
 
 def get_sub_dictionary(adict, keys):
-    return {k:adict[k] for k in keys if k in adict}
+    return {k: adict[k] for k in keys if k in adict}
 
 
 class Registry:
     "Case insensitive registry"
+
     def __init__(self):
         self._register = dict()
 
@@ -109,6 +113,7 @@ class Registry:
         def add(thing):
             self._register[name.lower()] = thing
             return thing
+
         return add
 
 
@@ -120,10 +125,10 @@ class PdfDeck:
     @classmethod
     def save_as_pdf(cls, figs, fpath):
         return cls(figs).make(fpath)
-    
+
     def default_figname(self):
         return f"{repr(self).replace(' ', '_')}_figure_{len(self.figs)}"
-    
+
     def add_figure(self, fig, *, position=None, name=None):
         if position is None:
             self.figs.append(fig)
@@ -135,11 +140,11 @@ class PdfDeck:
         with PdfPages(fpath) as pdf:
             for fig in self.figs:
                 pdf.savefig(fig)
-    
+
     def make_individual(self, folder=None, **savefig_kwds):
         folder = folder or os.cwd()
         for fig, name in zip(self.figs, self.fignames):
-            fpath = os.path.join(folder, name+"."+savefig_kwds.get("format", "pdf"))
+            fpath = os.path.join(folder, name + "." + savefig_kwds.get("format", "pdf"))
             fig.savefig(fpath, **savefig_kwds)
 
 
@@ -156,7 +161,7 @@ class LatexTableDeck:
     header = r"""
 
     \documentclass{article}
-    
+
     %(packages)s
 
     \restylefloat{table}
@@ -168,14 +173,20 @@ class LatexTableDeck:
     clearpage_str = r"\clearpage"
     footer = "\n" + r"\end{document}"
     new_section = r"\section{%s}"
-    
-    def __init__(self, table_template=None, header=None, footer=None, new_section=None, clearpage_str=None):
+
+    def __init__(
+        self,
+        table_template=None,
+        header=None,
+        footer=None,
+        new_section=None,
+        clearpage_str=None,
+    ):
         self.table_template = table_template or self.table_template
         self.header = header or self.header
         self.footer = footer or self.footer
         self.new_section = new_section or self.new_section
-        self.clearpage_str = clearpage_str or self.clearpage_str 
-
+        self.clearpage_str = clearpage_str or self.clearpage_str
 
         self.strings = list()
         self.packages = [
@@ -183,35 +194,37 @@ class LatexTableDeck:
             r"\usepackage{tabularx}",
             r"\usepackage{float}",
         ]
-    
+
     def add_section(self, section_name):
         self.strings.append(self.new_section % section_name)
-    
+
     def add_string(self, string):
         self.strings.append(string)
 
     def add_table(self, tex_table, caption):
-        self.strings.append(self.table_template % dict(table=tex_table, caption=caption))
+        self.strings.append(
+            self.table_template % dict(table=tex_table, caption=caption)
+        )
 
     def add_package(self, package, options=None):
         pstr = r"\usepackage"
         if options is not None:
-             pstr += f"[{', '.join(options)}]"
+            pstr += f"[{', '.join(options)}]"
         pstr += f"{{{package}}}"
         self.packages.append(pstr)
-        
+
     def clearpage(self):
         self.strings.append(self.clearpage_str)
-    
+
     def _make_header(self):
-        return self.header % {'packages': "\n".join(self.packages)}
+        return self.header % {"packages": "\n".join(self.packages)}
 
     def to_str(self, joiner="\n"):
         return joiner.join([self._make_header(), *self.strings, self.footer])
 
     def __str__(self):
         return self.to_str(joiner="\n")
-   
+
     def make(self, fpath, joiner="\n"):
         with open(fpath, "w") as f:
             f.write(self.to_str(joiner=joiner))

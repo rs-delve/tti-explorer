@@ -4,11 +4,11 @@ from .utils import Registry
 
 registry = Registry()
 
-CONFIG_KEY = 'config'
-TARGET_KEY = 'sensitivity_target'
+CONFIG_KEY = "config"
+TARGET_KEY = "sensitivity_target"
 
 
-@registry('grid')
+@registry("grid")
 def grid_variation(cfg, sensitivities):
     """grid_variation
     Try all combinations of values in variations
@@ -26,12 +26,12 @@ def grid_variation(cfg, sensitivities):
     vals = (a.values for a in sensitivities.values() if a.values is not None)
     for comb in product(*vals):
         yield {
-                CONFIG_KEY: dict(cfg, **dict(zip(sensitivities.keys(), comb))),
-                TARGET_KEY: list(sensitivities.keys())
-                }
+            CONFIG_KEY: dict(cfg, **dict(zip(sensitivities.keys(), comb))),
+            TARGET_KEY: list(sensitivities.keys()),
+        }
 
 
-@registry('axis')
+@registry("axis")
 def axis_variation(cfg, sensitivities):
     """axis_variation
     Vary one parameter at a time in variations, keeping others fixed
@@ -49,4 +49,3 @@ def axis_variation(cfg, sensitivities):
     for k, sensitivity in sensitivities.items():
         for value in sensitivity.values:
             yield {CONFIG_KEY: dict(cfg, **{k: value}), TARGET_KEY: k}
-

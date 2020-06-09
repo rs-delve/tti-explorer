@@ -1,12 +1,11 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.stats import gamma
 
 from tti_explorer.contacts import he_infection_profile
 
 plt.style.use('default')
-loc =  0
+loc = 0
 # taken from He et al
 gamma_params = {
     'a': 2.11,

@@ -15,14 +15,11 @@ class Contacts:
     home: np.array
     work: np.array
     other: np.array
-    
+
     def to_dict(self):
         return dict(
-                n_daily=self.n_daily,
-                home=self.home,
-                work=self.work,
-                other=self.other
-            )
+            n_daily=self.n_daily, home=self.home, work=self.work, other=self.other
+        )
 
 
 def he_infection_profile(period, gamma_params):
@@ -56,7 +53,7 @@ def home_daily_infectivity(base_mass):
     """
     fail_prod = np.cumprod(1 - base_mass)
     fail_prod = np.roll(fail_prod, 1)
-    np.put(fail_prod, 0, 1.)
+    np.put(fail_prod, 0, 1.0)
     skewed_mass = fail_prod * base_mass
     return skewed_mass / np.sum(skewed_mass)
 
@@ -75,15 +72,12 @@ def day_infected_wo(rng, probs, first_encounter, not_infected=NOT_INFECTED):
         day_infected (np.array[int]): The day on which the contacts were infected,
         if not infected then the element for that contact will be NOT_INFECTED.
     """
-    return np.where(
-        rng.binomial(n=1, p=probs),
-        first_encounter,
-        not_infected
-    )
+    return np.where(rng.binomial(n=1, p=probs), first_encounter, not_infected)
 
 
 class EmpiricalContactsSimulator:
     """Simulate social contact using BBC Pandemic data"""
+
     def __init__(self, over18, under18, rng):
         """Simulate social contact using the BBC Pandemic dataset
 
@@ -155,26 +149,32 @@ class EmpiricalContactsSimulator:
             home_day_inf = np.where(home_is_infected, day_infected, NOT_INFECTED)
 
             work_day_inf = day_infected_wo(
-                    self.rng,
-                    probs=work_sar * scale * period * case.inf_profile[work_first_encounter],
-                    first_encounter=work_first_encounter,
-                    not_infected=NOT_INFECTED
-                )
+                self.rng,
+                probs=work_sar
+                * scale
+                * period
+                * case.inf_profile[work_first_encounter],
+                first_encounter=work_first_encounter,
+                not_infected=NOT_INFECTED,
+            )
 
             other_day_inf = day_infected_wo(
-                    self.rng,
-                    probs=other_sar * scale * period * case.inf_profile[other_first_encounter],
-                    first_encounter=other_first_encounter,
-                    not_infected=NOT_INFECTED
-                )
+                self.rng,
+                probs=other_sar
+                * scale
+                * period
+                * case.inf_profile[other_first_encounter],
+                first_encounter=other_first_encounter,
+                not_infected=NOT_INFECTED,
+            )
         else:
             home_day_inf = np.full_like(home_first_encounter, -1)
             work_day_inf = np.full_like(work_first_encounter, -1)
             other_day_inf = np.full_like(other_first_encounter, -1)
 
         return Contacts(
-                n_daily=dict(zip("home work other".split(), row)),
-                home=np.column_stack((home_day_inf, home_first_encounter)),
-                work=np.column_stack((work_day_inf, work_first_encounter)),
-                other=np.column_stack((other_day_inf, other_first_encounter))
-            )
+            n_daily=dict(zip("home work other".split(), row)),
+            home=np.column_stack((home_day_inf, home_first_encounter)),
+            work=np.column_stack((work_day_inf, work_first_encounter)),
+            other=np.column_stack((other_day_inf, other_first_encounter)),
+        )

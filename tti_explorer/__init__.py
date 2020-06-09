@@ -1,2 +1,2 @@
-from .case import Case
-from .contacts import Contacts
+from .case import Case  # noqa: F401
+from .contacts import Contacts  # noqa: F401
