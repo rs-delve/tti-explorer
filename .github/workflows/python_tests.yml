@@ -1,4 +1,4 @@
-name: Python Versions Tests
+name: Python Tests
 
 on:
   push:
