@@ -28,7 +28,7 @@ jobs:
           pip install .
       - name: Run coverage
         run: |
-          coverage run -m pytest
+          coverage run --omit="tests/*" -m pytest
       - name: Run codecov
         if: success()
         env:
