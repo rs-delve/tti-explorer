@@ -37,7 +37,7 @@ def get_generator_configs(config_name, sensitivity_method):
         case_configs = [
             {sensitivity.CONFIG_KEY: base_case_config, sensitivity.TARGET_KEY: None}
         ]
-    
+
     return case_configs, contacts_config    
 
 
@@ -45,7 +45,6 @@ class CaseGenerator():
     def __init__(self, random_seed, over18_contacts, under18_contacts):
         self.rng = np.random.RandomState(seed=random_seed)
         self.contacts_simulator = EmpiricalContactsSimulator(over18_contacts, under18_contacts, self.rng)
-
 
     def generate_case_with_contacts(self, case_config, contacts_config):
         case = simulate_case(self.rng, **case_config)
