@@ -1,42 +1,32 @@
 """Generate case files"""
 
+from argparse import ArgumentParser
+from datetime import datetime
+import json
+import os
+
+
 import numpy as np
+from tqdm import trange
 
-from tti_explorer.case import simulate_case
+
+from tti_explorer import sensitivity
 from tti_explorer.utils import ROOT_DIR
-
-
-def case_as_dict(case):
-    dct = case.to_dict()
-    dct["inf_profile"] = dct["inf_profile"].tolist()
-    return dct
-
-
-def contacts_as_dict(contacts):
-    contacts_dct = {
-        k: v.tolist() if isinstance(v, np.ndarray) else v
-        for k, v in contacts.to_dict().items()
-    }
-    contacts_dct["n_daily"] = {k: int(v) for k, v in contacts_dct["n_daily"].items()}
-    return contacts_dct
+from tti_explorer.case_generator import get_generator_configs, CaseGenerator
 
 
 def load_csv(pth):
     return np.loadtxt(pth, dtype=int, skiprows=1, delimiter=",")
 
 
+def get_output_file_name(config_name, target, i, seed):
+    if target is not None:
+        return f"{config_name}_{target}{i}_seed{seed}.json"
+    else:
+        return f"{config_name}_seed{seed}.json"
+
+
 if __name__ == "__main__":
-    from argparse import ArgumentParser
-    from datetime import datetime
-    import json
-    import os
-    import time
-
-    from tqdm import trange
-
-    from tti_explorer import config, sensitivity
-    from tti_explorer.contacts import EmpiricalContactsSimulator
-
     parser = ArgumentParser(description="Generate JSON files of cases and contacts")
     parser.add_argument(
         "config_name",
@@ -86,39 +76,22 @@ if __name__ == "__main__":
 
     os.makedirs(args.output_folder, exist_ok=True)
 
-    start = time.time()
-
-    base_case_config = config.get_case_config(args.config_name)
-    contacts_config = config.get_contacts_config(args.config_name)
-
-    if args.sensitivity:
-        config_generator = sensitivity.registry[args.sensitivity]
-        cfgs = config_generator(
-            base_case_config, config.get_case_sensitivities(args.config_name)
-        )
-    else:
-        cfgs = [
-            {sensitivity.CONFIG_KEY: base_case_config, sensitivity.TARGET_KEY: None}
-        ]
+    case_configs, contacts_config = get_generator_configs(args.config_name, args.sensitivity)
 
     over18 = load_csv(os.path.join(args.data_dir, "contact_distributions_o18.csv"))
     under18 = load_csv(os.path.join(args.data_dir, "contact_distributions_u18.csv"))
 
-    for i, dct in enumerate(cfgs):
+    for i, dct in enumerate(case_configs):
         case_config = dct[sensitivity.CONFIG_KEY]
+        target = dct[sensitivity.TARGET_KEY]
+        print(target)
+
         for seed in seeds:
-            rng = np.random.RandomState(seed=seed)
-            contacts_simulator = EmpiricalContactsSimulator(over18, under18, rng)
+            case_generator = CaseGenerator(seed, over18, under18)
 
             cases_and_contacts = list()
-            for _ in trange(
-                args.ncases, smoothing=0, desc=f"Generating case set with seed {seed}."
-            ):
-                case = simulate_case(rng, **case_config)
-                contacts = contacts_simulator(case, **contacts_config)
-                output = dict()
-                output["case"] = case_as_dict(case)
-                output["contacts"] = contacts_as_dict(contacts)
+            for _ in trange(args.ncases, smoothing=0, desc=f"Generating case set with seed {seed}."):
+                output = case_generator.generate_case_with_contacts(case_config, contacts_config)
                 cases_and_contacts.append(output)
 
             full_output = dict(
@@ -129,11 +102,6 @@ if __name__ == "__main__":
                 cases=cases_and_contacts,
             )
 
-            target = dct.get(sensitivity.TARGET_KEY)
-            fname = (
-                f"{args.config_name}_{target}{i}_seed{seed}.json"
-                if target is not None
-                else f"{args.config_name}_seed{seed}.json"
-            )
+            fname = get_output_file_name(args.config_name, target, i, seed)
             with open(os.path.join(args.output_folder, fname), "w") as f:
                 json.dump(full_output, f)

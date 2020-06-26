@@ -10,6 +10,9 @@ from matplotlib.backends.backend_pdf import PdfPages
 
 ROOT_DIR = pathlib.Path(__file__).parent.parent
 
+CASE_KEY = "case"
+CONTACTS_KEY = "contacts"
+
 
 def bool_bernoulli(p, rng):
     return rng.uniform() < p
@@ -52,8 +55,8 @@ def load_cases(fpath):
     meta = raw
     pairs = list()
     for dct in cases:
-        case = Case(**dct["case"])
-        contacts_dct = dct["contacts"]
+        case = Case(**dct[CASE_KEY])
+        contacts_dct = dct[CONTACTS_KEY]
         n_daily = contacts_dct.pop("n_daily")
         contacts_dct = {
             k: np.array(v, dtype=int).reshape(-1, NCOLS)
