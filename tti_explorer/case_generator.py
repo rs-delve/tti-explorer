@@ -38,7 +38,7 @@ def get_generator_configs(config_name, sensitivity_method):
             {sensitivity.CONFIG_KEY: base_case_config, sensitivity.TARGET_KEY: None}
         ]
 
-    return case_configs, contacts_config    
+    return case_configs, contacts_config
 
 
 class CaseGenerator():
