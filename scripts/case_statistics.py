@@ -1,16 +1,11 @@
 """Print basic statistics of cases in a case file"""
-import numpy as np
+from argparse import ArgumentParser
 
-
-def n_infected(contacts):
-    return np.sum(contacts[:, 0] >= 0)
+from tti_explorer import utils
+from tti_explorer.case_statistics import CaseStatistics
 
 
 if __name__ == "__main__":
-    from argparse import ArgumentParser
-
-    from tti_explorer import utils
-
     parser = ArgumentParser()
     parser.add_argument(
         "cases_path", type=str, help="File from which to load cases, should be .json."
@@ -18,26 +13,17 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     case_contacts, metadata = utils.load_cases(args.cases_path)
-    n_covid = 0
-    outputs = list()
-    for case, contacts in case_contacts:
-        if case.covid:
-            n_covid += 1
-            home = n_infected(contacts.home)
-            work = n_infected(contacts.work)
-            other = n_infected(contacts.other)
-            total = home + work + other
-            outputs.append((home, work, other, total))
-    outputs = np.array(outputs)
+    stats = CaseStatistics(case_contacts)
+
     print(
         "R values (mean). home: {:.2f} work: {:.2f} other: {:.2f} total: {:.2f}.".format(
-            *outputs.mean(0)
+            *(stats.mean_R)
         )
     )
     print(
         "R values  (std). home: {:.2f} work: {:.2f} other: {:.2f} total: {:.2f}.".format(
-            *outputs.std(0)
+            *(stats.std_R)
         )
     )
-    n_cases = len(case_contacts)
-    print(f"{n_covid}/{n_cases} = {n_covid / n_cases} have covid")
+
+    print(f"{stats.covid_count}/{stats.case_count} = {stats.covid_count / stats.case_count} have covid")

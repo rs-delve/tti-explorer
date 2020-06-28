@@ -41,9 +41,10 @@ def load_cases(fpath):
     Args:
         fpath (str): path to file.
 
-    Returns (tuple[list[tuple[Case, Contact], dict]):
-        pairs: list of Case, Contact pairs
-        meta: dictionary of meta-data for case/contact generation
+    Return:
+        Tuple of:
+            pairs: list of tuples (Case, Contacts)
+            meta: dictionary of meta-data for case/contact generation
     """
     from tti_explorer.case import Case
     from tti_explorer.contacts import Contacts, NCOLS
