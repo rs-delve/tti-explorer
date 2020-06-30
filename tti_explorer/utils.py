@@ -104,6 +104,14 @@ def get_sub_dictionary(adict, keys):
     return {k: adict[k] for k in keys if k in adict}
 
 
+def find_case_files(folder, ending=".json"):
+    return list(filter(lambda x: x.endswith(ending), os.listdir(folder)))
+
+
+def tidy_fname(fname, ending=".json"):
+    return fname.rstrip(ending)
+
+
 class Registry:
     "Case insensitive registry"
 
@@ -111,6 +119,8 @@ class Registry:
         self._register = dict()
 
     def __getitem__(self, key):
+        if key.lower() not in self._register:
+            raise ValueError(f"{key} isn't registered")
         return self._register[key.lower()]
 
     def __call__(self, name):

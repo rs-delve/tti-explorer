@@ -1,35 +1,18 @@
+from argparse import ArgumentParser
+from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor
+import os
+
 import numpy as np
 import pandas as pd
-
-from run_scenarios import run_scenario
-
-
-def results_table(results_dct, index_name="scenario"):
-    df = pd.concat({k: v.T for k, v in results_dct.items()})
-    df.index.names = [index_name, config.STATISTIC_COLNAME]
-    return df
+from tqdm import tqdm
 
 
-def find_case_files(folder, ending=".json"):
-    return list(filter(lambda x: x.endswith(ending), os.listdir(folder)))
-
-
-def tidy_fname(fname, ending=".json"):
-    return fname.rstrip(ending)
+from tti_explorer import config, sensitivity, strategies, utils
+from tti_explorer.scenario import get_monte_carlo_factors, run_scenario, results_table, scale_results
 
 
 if __name__ == "__main__":
-    from argparse import ArgumentParser
-    from collections import defaultdict
-    from concurrent.futures import ProcessPoolExecutor
-    import os
-
-    from tqdm import tqdm
-
-    from tti_explorer import config, sensitivity, strategies, utils
-
-    from run_scenarios import scale_results
-
     parser = ArgumentParser("Run sensitivity analysis on strategy")
     parser.add_argument("strategy", help="The name of the strategy to use", type=str)
     parser.add_argument(
@@ -83,11 +66,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     strategy = strategies.registry[args.strategy]
     strategy_configs = config.get_strategy_configs(args.strategy, args.scenarios)
-    config_generator = (
-        sensitivity.registry[args.sensitivity] if args.sensitivity else None
-    )
+    config_generator = sensitivity.SensitivityConfigGenerator(args.sensitivity, args.parameters)
 
-    case_files = find_case_files(args.population)
+    case_files = utils.find_case_files(args.population)
     scenario_results = defaultdict(lambda: defaultdict(dict))
     configs_dct = defaultdict(lambda: defaultdict(dict))
     with ProcessPoolExecutor(max_workers=args.nprocs) as executor:
@@ -97,39 +78,12 @@ if __name__ == "__main__":
                 os.path.join(args.population, case_file)
             )
 
-            # Can we turn this into something like calculate_confidence_interval?
+            _, symp_covid_pos, asymp_covid_pos = metadata["case_config"]["infection_proportions"]["dist"]
+            monte_carlo_factor, r_monte_carlo_factor = get_monte_carlo_factors(len(case_contacts), symp_covid_pos, asymp_covid_pos)
+
             nppl = metadata["case_config"]["infection_proportions"]["nppl"]
-            n_monte_carlo_samples = len(case_contacts)
-            n_r_monte_carlo_samples = len(case_contacts) * (
-                metadata["case_config"]["infection_proportions"]["dist"][1]
-                + metadata["case_config"]["infection_proportions"]["dist"][2]
-            )
-
-            monte_carlo_factor = 1.0 / np.sqrt(n_monte_carlo_samples)
-            r_monte_carlo_factor = 1.0 / np.sqrt(n_r_monte_carlo_samples)
-
-            n_monte_carlo_samples = len(case_contacts)
-            n_r_monte_carlo_samples = len(case_contacts) * (
-                metadata["case_config"]["infection_proportions"]["dist"][1]
-                + metadata["case_config"]["infection_proportions"]["dist"][2]
-            )
-
-            monte_carlo_factor = 1.0 / np.sqrt(n_monte_carlo_samples)
-            r_monte_carlo_factor = 1.0 / np.sqrt(n_r_monte_carlo_samples)
-            #
-
             for scenario, cfg_dct in strategy_configs.items():
-                policy_sensitivities = config.get_policy_sensitivities(args.strategy)
-                if args.parameters is not None:
-                    policy_sensitivities = dict(
-                        (k, policy_sensitivities[k]) for k in args.parameters
-                    )
-
-                cfgs = (
-                    config_generator(cfg_dct, policy_sensitivities)
-                    if args.sensitivity
-                    else [{sensitivity.CONFIG_KEY: cfg_dct, sensitivity.TARGET_KEY: ""}]
-                )
+                cfgs = config_generator.generate_for_strategy(args.strategy, cfg_dct)
 
                 for i, cfg in enumerate(cfgs):
                     future = executor.submit(
@@ -159,7 +113,7 @@ if __name__ == "__main__":
         for i, ((scenario, case_file, cfg), arguments) in enumerate(futures):
             # this is so uglY!
             future = arguments[0]
-            scenario_results[scenario][i][tidy_fname(case_file)] = (
+            scenario_results[scenario][i][utils.tidy_fname(case_file)] = (
                 scale_results(future.result(), *arguments[1:]),
                 cfg,
             )
