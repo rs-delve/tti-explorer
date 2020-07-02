@@ -130,6 +130,7 @@ def scale_results(results, monte_carlo_factor, r_monte_carlo_factor, nppl):
     :param nppl: Total population count to scale to
     :returns: Pandas dataframe with results scaled
     """
+    results = results.copy()
     rvals = [RETURN_KEYS.base_r, RETURN_KEYS.reduced_r]
 
     scale = []
